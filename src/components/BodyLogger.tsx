@@ -2,6 +2,7 @@
 /* eslint-disable react-hooks/purity */
 
 import { useEffect, useState } from "react";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 type Entry = { date: string; weight: number; height: number };
 
@@ -43,17 +44,18 @@ export default function BodyLogger() {
         <button onClick={add} className="rounded-full bg-primary text-white px-5 text-sm">Log today</button>
       </div>
       <div className="rounded-xl bg-paper border p-3">
-        <div className="text-xs font-semibold">Trend (weekly)</div>
-        <div className="flex items-end gap-1 h-16 mt-1">
-          {entries.map((e) => {
-            const min = Math.min(...entries.map((x) => x.weight));
-            const max = Math.max(...entries.map((x) => x.weight));
-            const range = max - min || 1;
-            const hgt = ((e.weight - min) / range) * 80 + 10;
-            return <div key={e.date} title={`${e.date} ${e.weight}kg`} className="flex-1 bg-primary rounded-t" style={{ height: `${hgt}%` }} />;
-          })}
+        <div className="text-xs font-semibold">Trend (weekly) — graph</div>
+        <div className="h-36">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={entries.map((e) => ({ date: e.date.slice(5), weight: e.weight }))}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#3F194D20" />
+              <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+              <YAxis domain={["dataMin - 1", "dataMax + 1"]} tick={{ fontSize: 10 }} />
+              <Tooltip />
+              <Line type="monotone" dataKey="weight" stroke="#68097E" strokeWidth={3} dot={{ r: 4 }} name="kg" />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
-        <div className="flex justify-between text-xs text-muted mt-1"><span>{entries[0]?.date}</span><span>{entries[entries.length - 1]?.date}</span></div>
       </div>
       <div className="text-xs bg-primary/5 border border-primary/10 rounded-lg px-3 py-2">7-day avg Δ: <b>{avgDelta.toFixed(2)} kg/wk</b> • {suggestion} (from Essentials weekly adjust ±100-150).</div>
       <div className="text-xs space-y-1">

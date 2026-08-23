@@ -1,6 +1,8 @@
 "use client";
 
-// Suggested idea: Overall stats — 4-Ring + Streak Strip
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+
+// Suggested idea: Overall stats — 4-Ring + Streak Strip — now with graph
 export default function StatRings() {
   return (
     <div className="rounded-2xl bg-white border border-black/5 p-4 sm:p-6">
@@ -32,16 +34,20 @@ export default function StatRings() {
             <Kpi label="Workouts" value="4/5" sub="This week" trend="neutral" />
             <Kpi label="Habits done" value="18/21" sub="7 days" trend="up" />
           </div>
-          {/* sparkline mimic */}
           <div className="rounded-xl bg-paper p-3">
-            <div className="text-xs font-semibold text-primary-dark mb-2">7-day weight & volume</div>
-            <div className="flex items-end gap-1 h-16">
-              {[42, 55, 48, 70, 62, 58, 72].map((h, i) => (
-                <div key={i} className="flex-1 bg-primary rounded-t" style={{ height: `${h}%` }} />
-              ))}
-            </div>
-            <div className="flex justify-between text-[10px] text-foreground/50 mt-1">
-              <span>Mon</span><span>Sun</span>
+            <div className="text-xs font-semibold text-primary-dark mb-2">7-day weight & volume — graph</div>
+            <div className="h-28">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={[{ d: "Mon", w: 72.8, v: 42 }, { d: "Tue", w: 72.6, v: 55 }, { d: "Wed", w: 72.4, v: 48 }, { d: "Thu", w: 72.2, v: 70 }, { d: "Fri", w: 72, v: 62 }, { d: "Sat", w: 71.8, v: 58 }, { d: "Sun", w: 71.6, v: 72 }]}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#3F194D20" />
+                  <XAxis dataKey="d" tick={{ fontSize: 10 }} />
+                  <YAxis yAxisId="left" tick={{ fontSize: 10 }} />
+                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} />
+                  <Tooltip />
+                  <Line yAxisId="left" type="monotone" dataKey="w" stroke="#68097E" strokeWidth={3} dot={{ r: 3 }} name="kg" />
+                  <Line yAxisId="right" type="monotone" dataKey="v" stroke="#C91C7A" strokeWidth={2} dot={false} name="volume" />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>

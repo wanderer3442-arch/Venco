@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     "BMI, BMR, TDEE & macros, auto exercise + meal plans (800 foods), logger, AI V chatbot. Subscription ₹500/mo ₹3000/yr.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"

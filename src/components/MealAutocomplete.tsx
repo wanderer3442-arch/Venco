@@ -22,9 +22,9 @@ export default function MealAutocomplete({
 
   useEffect(() => {
     const id = setTimeout(() => {
-      const s = value.trim();
-      if (s.length < 2) { setResults([]); return; }
-      setResults(searchFoods(s, 8));
+      const last = value.split(",").pop()!.trim();
+      if (last.length < 2) { setResults([]); return; }
+      setResults(searchFoods(last, 10));
     }, 120);
     return () => clearTimeout(id);
   }, [value]);
@@ -55,7 +55,15 @@ export default function MealAutocomplete({
             <button
               key={f.id}
               onClick={() => {
-                onChange(f.name);
+                const hasComma = value.includes(",");
+                if (hasComma) {
+                  const parts = value.split(",");
+                  parts[parts.length - 1] = f.name;
+                  const next = parts.map((s) => s.trim()).filter(Boolean).join(", ") + ", ";
+                  onChange(next);
+                } else {
+                  onChange(f.name);
+                }
                 onPick?.(f);
                 setOpen(false);
               }}

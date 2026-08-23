@@ -36,7 +36,7 @@ export default function TermsPage() {
         <h2>8. Governing law</h2>
         <p>India, DPDP Act 2023. Disputes: Bangalore courts. Contact legal@venco.fit.</p>
 
-        <p className="text-xs text-foreground/50"><a href="/privacy">Privacy</a> • Pricing color3 #146466 • Stitch design system 10369891614704217499</p>
+        <p className="text-xs text-foreground/50"><a href="/privacy">Privacy</a> • Stitch design system 10369891614704217499</p>
       </main>
     </>
   );

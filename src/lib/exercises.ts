@@ -42,6 +42,17 @@ export const EXERCISES: ExerciseDef[] = [
   { id: "arnold", name: "Arnold Press", muscle: "shoulders", equipment: "dumbbell", description: "Shoulders" },
   { id: "hammer", name: "Hammer Curl", muscle: "arms", equipment: "dumbbell", description: "Brachialis" },
   { id: "dip", name: "Dip", muscle: "chest", equipment: "bodyweight", description: "Chest/triceps", contraindication: "Shoulder strain → do Bench Dip" },
+  // Home-specific (no gym) — bodyweight/band/dumbbell only
+  { id: "bw_squat", name: "Bodyweight Squat", muscle: "legs", equipment: "bodyweight", description: "Home legs, no equipment" },
+  { id: "glute_bridge", name: "Glute Bridge", muscle: "legs", equipment: "bodyweight", description: "Glutes, floor" },
+  { id: "pike_pushup", name: "Pike Push-up", muscle: "shoulders", equipment: "bodyweight", description: "Home shoulders" },
+  { id: "band_row", name: "Band Row", muscle: "back", equipment: "band", description: "Back with resistance band" },
+  { id: "band_pullapart", name: "Band Pull-apart", muscle: "shoulders", equipment: "band", description: "Rear delts, band" },
+  { id: "goblet_squat", name: "Goblet Squat", muscle: "legs", equipment: "dumbbell", description: "Dumbbell front squat, home friendly" },
+  { id: "jumping_jack", name: "Jumping Jack", muscle: "full", equipment: "bodyweight", description: "Cardio warm-up", contraindication: "High impact — knee pain → March in place" },
+  { id: "door_row", name: "Doorframe Row", muscle: "back", equipment: "bodyweight", description: "Back, use sturdy door" },
+  { id: "floor_press", name: "Floor Press", muscle: "chest", equipment: "dumbbell", description: "Chest, floor dumbbells" },
+  { id: "bird_dog", name: "Bird Dog", muscle: "core", equipment: "bodyweight", description: "Core stability, home" },
 ];
 
 export type PlannedExercise = ExerciseDef & { sets: number; reps: string; rpe?: number };
@@ -116,17 +127,36 @@ export const TEMPLATES: Plan[] = [
     name: "Template — Home Dumbbell (3×)",
     goal: "maintenance",
     days: [
-      { day: "Mon", title: "Home A", exercises: ["pushup", "lunge", "row_bb", "plank"].map((id) => withSets(id, "maintenance")) },
-      { day: "Wed", title: "Home B", exercises: ["incline_db", "rdl", "lateral", "russian"].map((id) => withSets(id, "maintenance")) },
-      { day: "Fri", title: "Home C", exercises: ["hip_thrust", "bicep_curl", "tricep_push", "stepup"].map((id) => withSets(id, "maintenance")) },
+      { day: "Mon", title: "Home A", exercises: ["pushup", "band_row", "goblet_squat", "plank"].map((id) => withSets(id, "maintenance")) },
+      { day: "Wed", title: "Home B", exercises: ["floor_press", "rdl", "lateral", "russian"].map((id) => withSets(id, "maintenance")) },
+      { day: "Fri", title: "Home C", exercises: ["glute_bridge", "bicep_curl", "pike_pushup", "stepup"].map((id) => withSets(id, "maintenance")) },
+    ],
+  },
+  {
+    name: "Template — Home Bodyweight Only (No Gym) 3×",
+    goal: "fat_loss",
+    days: [
+      { day: "Mon", title: "Home Full A", exercises: ["bw_squat", "pushup", "door_row", "plank"].map((id) => withSets(id, "fat_loss")) },
+      { day: "Wed", title: "Home Full B", exercises: ["glute_bridge", "pike_pushup", "bird_dog", "mountain"].map((id) => withSets(id, "fat_loss")) },
+      { day: "Fri", title: "Home Full C", exercises: ["stepup", "band_pullapart", "jumping_jack", "crunch"].map((id) => withSets(id, "fat_loss")) },
+    ],
+  },
+  {
+    name: "Template — Home Band+Dumbbell 4×",
+    goal: "maintenance",
+    days: [
+      { day: "Mon", title: "Upper Home", exercises: ["floor_press", "band_row", "pike_pushup", "hammer"].map((id) => withSets(id, "maintenance")) },
+      { day: "Tue", title: "Lower Home", exercises: ["goblet_squat", "rdl", "glute_bridge", "plank"].map((id) => withSets(id, "maintenance")) },
+      { day: "Thu", title: "Upper Home", exercises: ["pushup", "door_row", "lateral", "bird_dog"].map((id) => withSets(id, "maintenance")) },
+      { day: "Fri", title: "Lower Home", exercises: ["bw_squat", "hip_thrust", "stepup", "russian"].map((id) => withSets(id, "maintenance")) },
     ],
   },
   {
     name: "Template — Minimal (2×, busy)",
     goal: "fat_loss",
     days: [
-      { day: "Mon", title: "Full", exercises: ["squat", "pushup", "row_bb", "plank"].map((id) => withSets(id, "fat_loss")) },
-      { day: "Thu", title: "Full", exercises: ["deadlift", "incline_db", "lat_pulldown", "mountain"].map((id) => withSets(id, "fat_loss")) },
+      { day: "Mon", title: "Full", exercises: ["bw_squat", "pushup", "band_row", "plank"].map((id) => withSets(id, "fat_loss")) },
+      { day: "Thu", title: "Full", exercises: ["glute_bridge", "floor_press", "door_row", "mountain"].map((id) => withSets(id, "fat_loss")) },
     ],
   },
 ];

@@ -8,47 +8,16 @@ export default function PricingPage() {
       <Header />
       <main className="mx-auto max-w-6xl w-full px-4 sm:px-6 py-8">
         <div className="text-center">
-          <h1 className="font-display text-3xl font-bold text-primary-dark">Subscription</h1>
-          <p className="text-sm text-foreground/60 mt-1">Privacy-first. Health data never sold.</p>
+          <h1 className="font-display text-5xl font-black tracking-tighter text-primary-dark">SUBSCRIPTION <span className="text-secondary">— pick your pace</span></h1>
+          <p className="text-sm text-foreground/60 mt-1">Privacy-first. Health data never sold. Dark insane, no yellow.</p>
         </div>
-        <div className="mt-8 grid gap-6 md:grid-cols-3">
-          <Tier
-            name="Free"
-            price="₹0"
-            period=""
-            features={["Essentials + auto plans", "Logger (all trackers)", "V: 5 msgs/day", "Health 🔒", "Download 🔒"]}
-            cta="Current"
-            highlight={false}
-          />
-          <Tier
-            name="Pro"
-            price="₹500"
-            period="/month"
-            features={["Unlimited V (OpenRouter)", "Health (WHO+Mayo)", "Download PDF for checkups", "Priority calibration", "Cancel anytime"]}
-            cta="Upgrade — Razorpay"
-            highlight
-            badge="Most popular"
-          />
-          <Tier
-            name="Annual"
-            price="₹3000"
-            period="/year"
-            save="Save ₹3000 vs monthly"
-            features={["Everything in Pro", "2 months free", "Annual health summary", "Early features"]}
-            cta="Go Annual"
-            highlight={false}
-          />
+        <div className="mt-8 grid gap-6 lg:grid-cols-12">
+          <div className="lg:col-span-3 rotate-[-0.6deg]"><Tier name="Free" price="₹0" period="" features={["Essentials + auto plans", "Logger (all trackers)", "V: 5 msgs/day", "Health 🔒", "Download 🔒"]} cta="Current" highlight={false} /></div>
+          <div className="lg:col-span-6 rotate-[0.7deg]"><Tier name="Pro" price="₹500" period="/month" features={["Unlimited V (OpenRouter)", "Health (WHO+Mayo)", "Download PDF for checkups", "Priority calibration", "Cancel anytime"]} cta="Upgrade — Razorpay" highlight badge="Most popular" /></div>
+          <div className="lg:col-span-3 rotate-[0.4deg]"><Tier name="Annual" price="₹3000" period="/year" save="Save ₹3000 vs monthly" features={["Everything in Pro", "2 months free", "Annual health summary", "Early features"]} cta="Go Annual" highlight={false} /></div>
         </div>
         <div className="mt-8 rounded-2xl bg-white border p-6 text-sm">
-          <h2 className="font-semibold text-primary-dark">Why color3?</h2>
-          <p className="text-foreground/60">Palette #146466 / #c92f1c / #5aaba9 / #e2e2c4 — deep teal trust + vermilion energy — used across Stitch system (ROUND_EIGHT, Inter/Manrope).</p>
-          <div className="mt-3 flex gap-2">
-            <span className="h-6 w-12 rounded bg-primary" title="#146466" />
-            <span className="h-6 w-12 rounded bg-accent" title="#c92f1c" />
-            <span className="h-6 w-12 rounded bg-secondary" title="#5aaba9" />
-            <span className="h-6 w-12 rounded bg-paper border" title="#e2e2c4" />
-          </div>
-          <p className="text-xs text-foreground/50 mt-3">Payments via Razorpay test mode (₹0 setup) → live 2% fee. Free mock gate during dev.</p>
+          <p className="text-xs text-foreground/60">Payments via Razorpay test mode (₹0 setup) → live 2% fee. Free mock gate during dev. Cancel anytime.</p>
           <Link href="/" className="mt-4 inline-block rounded-full bg-primary text-white px-6 py-2.5 text-sm">Back to app</Link>
         </div>
       </main>

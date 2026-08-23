@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { EXERCISES, TEMPLATES, generateAutoPlan, calibrateExercise, type Plan, type Goal } from "@/lib/exercises";
+import healthDb from "../../data/health-db.json";
 
 export default function ExercisePlanner() {
   const [goal, setGoal] = useState<Goal>("maintenance");
   const [plan, setPlan] = useState<Plan>(() => generateAutoPlan("maintenance"));
   const [bmi, setBmi] = useState<number | undefined>(undefined);
   const [msg, setMsg] = useState<string | null>(null);
+  const [mode, setMode] = useState<"gym" | "home">("gym");
+  const [health, setHealth] = useState<(typeof healthDb)[number] | null>(null);
 
   useEffect(() => {
     fetch("/api/onboarding").then(async (r) => {
@@ -20,7 +23,21 @@ export default function ExercisePlanner() {
         setPlan(generateAutoPlan(g));
       }
     });
+    const local = typeof window !== "undefined" ? localStorage.getItem("venco_health") : null;
+    fetch("/api/health").then(async (r) => {
+      if (!r.ok) return;
+      const j = await r.json();
+      const slug = j.healthSlug ?? local;
+      if (slug) {
+        const found = (healthDb as typeof healthDb).find((h) => h.slug === slug);
+        if (found) setHealth(found);
+      }
+    });
   }, []);
+
+  useEffect(() => {
+    try { localStorage.setItem("venco_last_exercise_plan", JSON.stringify(plan).slice(0, 3000)); } catch {}
+  }, [plan]);
 
   function applyTemplate(name: string) {
     const t = TEMPLATES.find((x) => x.name === name);
@@ -67,9 +84,13 @@ export default function ExercisePlanner() {
           <option value="lean_bulk">Lean bulk</option>
           <option value="maintenance">Maintenance</option>
         </select>
+        <div className="flex rounded-full border bg-paper p-1 text-xs">
+          <button onClick={() => setMode("gym")} className={`px-4 py-1.5 rounded-full ${mode === "gym" ? "bg-primary text-white" : "text-foreground/70"}`}>Gym</button>
+          <button onClick={() => setMode("home")} className={`px-4 py-1.5 rounded-full ${mode === "home" ? "bg-secondary text-white" : "text-foreground/70"}`}>Gym at Home</button>
+        </div>
         <button onClick={() => setPlan(generateAutoPlan(goal))} className="rounded-full bg-primary text-white px-5 py-2 text-sm">Regenerate auto</button>
         <button onClick={deletePlan} className="rounded-full border border-accent text-accent px-5 py-2 text-sm">Delete plan</button>
-        <span className="text-xs text-muted">Auto uses TDEE & goal • BMI {bmi ? bmi.toFixed(1) : "—"}</span>
+        <span className="text-xs text-muted">Auto uses TDEE & goal • BMI {bmi ? bmi.toFixed(1) : "—"} • {mode === "home" ? "Home: bodyweight/band/dumbbell only" : "Gym: all equipment"}</span>
       </div>
 
       <div className="rounded-2xl bg-white border p-5">
@@ -85,6 +106,7 @@ export default function ExercisePlanner() {
         </div>
       </div>
 
+      {health && <div className="rounded-xl bg-secondary/20 border border-secondary/30 p-3 text-xs"><b>Health tweak ({health.title}):</b> {health.exerciseGuidance}</div>}
       {msg && <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-sm text-amber-900">{msg}</div>}
 
       <div className="rounded-2xl bg-white border p-5">
@@ -105,8 +127,8 @@ export default function ExercisePlanner() {
                     className="rounded-full border bg-white px-3 py-1.5 text-xs"
                   >
                     <option value="">+ Add exercise…</option>
-                    {EXERCISES.map((ex) => (
-                      <option key={ex.id} value={ex.id}>{ex.name} ({ex.muscle})</option>
+                    {(mode === "home" ? EXERCISES.filter((ex) => ["bodyweight", "dumbbell", "band"].includes(ex.equipment)) : EXERCISES).map((ex) => (
+                      <option key={ex.id} value={ex.id}>{ex.name} ({ex.muscle} • {ex.equipment})</option>
                     ))}
                   </select>
                 </div>

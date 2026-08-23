@@ -7,7 +7,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 
 const CredentialsSchema = z.object({
-  email: z.string().email(),
+  identifier: z.string().min(1),
   password: z.string().min(6),
 });
 
@@ -23,20 +23,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // allow any Google account; Gmail is Google’s email anyway
     }),
     Credentials({
-      name: "Email + Password",
+      name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "email" },
+        identifier: { label: "Mail or Username", type: "text" },
         password: { label: "Password", type: "password" },
       },
       async authorize(creds) {
         const parsed = CredentialsSchema.safeParse(creds);
         if (!parsed.success) return null;
-        const { email, password } = parsed.data;
-        const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
-        if (!user || !user.password) return null;
-        const ok = await bcrypt.compare(password, user.password);
+        const { identifier, password } = parsed.data;
+        const idLower = identifier.toLowerCase().trim();
+        const found = await prisma.user.findFirst({
+          where: { OR: [{ email: idLower }, { username: idLower }] },
+        });
+        if (!found || !found.password) return null;
+        const ok = await bcrypt.compare(password, found.password);
         if (!ok) return null;
-        return { id: user.id, email: user.email!, name: user.name ?? null, image: user.image ?? null };
+        return { id: found.id, email: found.email!, name: found.name ?? found.username ?? null, image: found.image ?? null };
       },
     }),
   ],
@@ -44,9 +47,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = (user as { id: string }).id;
-        // fetch subscription for gating
-        const dbUser = await prisma.user.findUnique({ where: { id: (user as { id: string }).id }, select: { subscriptionTier: true } });
+        const dbUser = await prisma.user.findUnique({
+          where: { id: (user as { id: string }).id },
+          select: { subscriptionTier: true, username: true },
+        });
         (token as unknown as Record<string, unknown>).tier = dbUser?.subscriptionTier ?? "free";
+        (token as unknown as Record<string, unknown>).username = dbUser?.username ?? null;
       }
       return token;
     },
@@ -54,6 +60,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token?.id && session.user) {
         (session.user as unknown as Record<string, unknown>).id = token.id;
         (session.user as unknown as Record<string, unknown>).tier = (token as unknown as Record<string, unknown>).tier ?? "free";
+        (session.user as unknown as Record<string, unknown>).username = (token as unknown as Record<string, unknown>).username ?? null;
       }
       return session;
     },

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 export default function MealRing() {
   const [kcal, setKcal] = useState(1820);
@@ -18,9 +19,8 @@ export default function MealRing() {
         {/* SVG ring */}
         <div className="relative">
           <svg width="160" height="160" viewBox="0 0 160 160" className="rotate-[-90deg]">
-            <circle cx="80" cy="80" r="60" stroke="#e2e2c4" strokeWidth="16" fill="none" />
-            <circle cx="80" cy="80" r="60" stroke="#146466" strokeWidth="16" fill="none" strokeDasharray={`${(kcal / target.kcal) * 376} 376`} strokeLinecap="round" />
-            {/* satellites mimic via smaller circles overlapped - simplified as arcs offset */}
+            <circle cx="80" cy="80" r="60" stroke="#2a1430" strokeWidth="16" fill="none" />
+            <circle cx="80" cy="80" r="60" stroke="#68097E" strokeWidth="16" fill="none" strokeDasharray={`${(kcal / target.kcal) * 376} 376`} strokeLinecap="round" />
           </svg>
           <div className="absolute inset-0 grid place-items-center text-center">
             <div>
@@ -42,11 +42,17 @@ export default function MealRing() {
         </div>
       </div>
       <div className="rounded-xl bg-paper border p-3">
-        <div className="text-xs font-semibold">7-day intake</div>
-        <div className="flex items-end gap-1 h-12 mt-1">
-          {[62, 78, 70, 84, 76, 60, 82].map((h, i) => (
-            <div key={i} className="flex-1 bg-secondary rounded-t" style={{ height: `${h}%` }} />
-          ))}
+        <div className="text-xs font-semibold">7-day intake — graph</div>
+        <div className="h-36">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={[62, 78, 70, 84, 76, 60, 82].map((v, i) => ({ day: `D${i + 1}`, kcal: 1500 + v * 8 }))}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#3F194D20" />
+              <XAxis dataKey="day" tick={{ fontSize: 10 }} />
+              <YAxis tick={{ fontSize: 10 }} />
+              <Tooltip />
+              <Line type="monotone" dataKey="kcal" stroke="#C91C7A" strokeWidth={3} dot={{ r: 3 }} name="kcal" />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </div>
       <p className="text-xs text-foreground/50">Rings: center Meal, satellites calories/carbs/protein/vitamins. Graph shows trend — vit ring is illustrative.</p>

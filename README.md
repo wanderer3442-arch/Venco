@@ -1,6 +1,6 @@
 # VencoFit — Health & Fitness OS
 
-Next.js 15 + Stitch + Tailwind 4 • palette **color3** `#146466` `#c92f1c` `#5aaba9` `#e2e2c4` • Manrope + Inter
+Next.js 15 + Stitch + Tailwind 4 • palette **color1** `#3F194D` `#68097E` `#C91C7A` `#E8675C` (dark insane, no yellow) • Manrope + Inter
 
 Stitch project `5846846511258656053` • design system `10369891614704217499` (TONAL_SPOT, ROUND_EIGHT)
 

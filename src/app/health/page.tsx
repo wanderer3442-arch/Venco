@@ -12,13 +12,14 @@ export default async function HealthPage() {
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-3xl w-full px-6 py-6 space-y-4">
-        <div className={`rounded-2xl border p-4 flex items-center justify-between ${isPro ? "bg-primary text-white border-primary" : "bg-accent/10 border-accent/20"}`}>
+      <main className="mx-auto max-w-5xl w-full px-4 sm:px-6 py-6 space-y-6">
+        <div className="rounded-[24px] bg-white border p-6 flex items-center justify-between">
           <div>
-            <div className="font-semibold text-sm">Health • WHO + Mayo • Pro {isPro ? "✓ unlocked" : "locked"}</div>
-            <div className="text-xs opacity-80">{isPro ? "Full guidance integrates into Meal/Exercise." : "Demo shows search; integration requires Pro ₹500/mo."}</div>
+            <h1 className="font-display text-4xl font-black tracking-tighter text-primary-dark">HEALTH <span className="text-secondary">— WHO×Mayo</span></h1>
+            <div className={`inline-flex mt-2 rounded-full px-3 py-1 text-xs font-bold ${isPro ? "bg-primary text-white" : "bg-accent text-white"}`}>Pro {isPro ? "✓ unlocked" : "locked — preview only"}</div>
+            <div className="text-xs text-foreground/60 mt-1">{isPro ? "Full guidance integrates into Meal/Exercise (both storages)." : "Demo shows search; Pro persists to both."}</div>
           </div>
-          {!isPro && <Link href="/pricing" className="rounded-full bg-accent text-white px-4 py-2 text-xs font-semibold">Unlock</Link>}
+          {!isPro && <Link href="/pricing" className="rounded-full bg-accent text-white px-5 py-2.5 text-sm font-bold">Unlock ₹500</Link>}
         </div>
         <HealthSearch />
         {!session && <div className="text-xs text-center text-muted">Sign in to save health preferences to your profile.</div>}

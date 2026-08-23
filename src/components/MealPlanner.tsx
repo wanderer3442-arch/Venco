@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import MealAutocomplete from "./MealAutocomplete";
 import { generatePlan, scoreOtherFood, type PlanOutput } from "@/lib/meal";
+import healthDb from "../../data/health-db.json";
 
 function splitList(v: string): string[] {
   return v
@@ -22,12 +23,24 @@ export default function MealPlanner({ otherInitial }: { otherInitial?: string })
     otherInitial ? scoreOtherFood(otherInitial) : null,
   );
   const [calc, setCalc] = useState<{ targetKcal: number; proteinG: number; fatG: number; carbsG: number } | null>(null);
+  const [health, setHealth] = useState<(typeof healthDb)[number] | null>(null);
 
   useEffect(() => {
     fetch("/api/onboarding").then(async (r) => {
       if (!r.ok) return;
       const data = await r.json();
       if (data?.calc) setCalc({ targetKcal: data.calc.targetKcal, proteinG: data.calc.proteinG, fatG: data.calc.fatG, carbsG: data.calc.carbsG });
+    });
+    // health pro-only both
+    const local = typeof window !== "undefined" ? localStorage.getItem("venco_health") : null;
+    fetch("/api/health").then(async (r) => {
+      if (!r.ok) return;
+      const j = await r.json();
+      const slug = j.healthSlug ?? local;
+      if (slug) {
+        const found = (healthDb as typeof healthDb).find((h) => h.slug === slug);
+        if (found) setHealth(found);
+      }
     });
   }, []);
 
@@ -41,6 +54,7 @@ export default function MealPlanner({ otherInitial }: { otherInitial?: string })
       targetMacros: calc ? { proteinG: calc.proteinG, fatG: calc.fatG, carbsG: calc.carbsG } : null,
     });
     setPlan(p);
+    try { localStorage.setItem("venco_last_meal_plan", JSON.stringify(p).slice(0, 2000)); } catch {}
     if (other.trim()) setOtherScore(scoreOtherFood(other));
     else setOtherScore(null);
   }
@@ -78,11 +92,17 @@ export default function MealPlanner({ otherInitial }: { otherInitial?: string })
         </button>
       </div>
 
+      {health && (
+        <div className="rounded-xl bg-secondary/20 border border-secondary/30 p-3 text-xs">
+          <b>Health tweak ({health.title}):</b> {health.mealGuidance} <a href="/health" className="underline text-primary">Change</a>
+        </div>
+      )}
+
       {/* Plan */}
       {plan && (
         <div className="rounded-2xl bg-white border p-6 space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <h2 className="font-display font-bold text-primary-dark">Your meal plan</h2>
+            <h2 className="font-display font-bold text-primary-dark">Your meal plan {health ? `• for ${health.title}` : ""}</h2>
             <span className="text-xs bg-paper border px-3 py-1.5 rounded-full">Daily total: <b>{plan.total.kcal} kcal</b> • P {plan.total.protein}g • C {plan.total.carbs}g • F {plan.total.fat}g</span>
           </div>
           <div className="grid md:grid-cols-3 gap-3">

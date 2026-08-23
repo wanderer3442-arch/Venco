@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 type Habit = { id: string; name: string; dates: string[] }; // dates as YYYY-MM-DD where done
 
@@ -56,17 +57,24 @@ export default function HabitTracker() {
         <button onClick={add} className="rounded-full bg-primary text-white px-5 text-sm">Add</button>
       </div>
 
-      {/* graph — 7 day bars */}
+      {/* graph — 7 day line */}
       <div className="rounded-xl bg-paper border p-3">
-        <div className="text-xs font-semibold mb-2">7-day completion</div>
-        <div className="flex items-end gap-1 h-16">
-          {last7.map((d) => {
-            const done = habits.filter((h) => h.dates.includes(d)).length;
-            const pct = habits.length ? (done / habits.length) * 100 : 0;
-            return <div key={d} title={`${d} ${done}/${habits.length}`} className="flex-1 bg-primary rounded-t" style={{ height: `${Math.max(8, pct)}%` }} />;
-          })}
+        <div className="text-xs font-semibold mb-2">7-day completion — graph</div>
+        <div className="h-36">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={last7.map((d) => {
+              const done = habits.filter((h) => h.dates.includes(d)).length;
+              const pct = habits.length ? Math.round((done / habits.length) * 100) : 0;
+              return { date: d.slice(5), pct };
+            })}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#3F194D20" />
+              <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+              <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} />
+              <Tooltip />
+              <Line type="monotone" dataKey="pct" stroke="#68097E" strokeWidth={3} dot={{ r: 3 }} name="%" />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
-        <div className="flex justify-between text-xs text-muted mt-1"><span>7d ago</span><span>today</span></div>
       </div>
 
       {/* calendar 28 days per habit */}

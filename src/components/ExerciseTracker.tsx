@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 export default function ExerciseTracker() {
   const [doneDates, setDoneDates] = useState<string[]>(() => {
@@ -28,12 +29,17 @@ export default function ExerciseTracker() {
         ))}
       </div>
       <div className="rounded-xl bg-paper border p-3">
-        <div className="text-xs font-semibold">Volume last 7d (sets)</div>
-        <div className="flex items-end gap-1 h-12 mt-1">
-          {last7.map((d) => {
-            const sets = doneDates.includes(d) ? 12 + Math.round(Math.random() * 6) : 2;
-            return <div key={d} className="flex-1 bg-accent rounded-t" style={{ height: `${sets * 5}%` }} />;
-          })}
+        <div className="text-xs font-semibold">Volume last 7d (sets) — graph</div>
+        <div className="h-36">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={last7.map((d) => ({ date: d.slice(5), sets: doneDates.includes(d) ? 12 + Math.round(Math.random() * 6) : 2 }))}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#3F194D20" />
+              <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+              <YAxis tick={{ fontSize: 10 }} />
+              <Tooltip />
+              <Line type="monotone" dataKey="sets" stroke="#E8675C" strokeWidth={3} dot={{ r: 3 }} name="sets" />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>

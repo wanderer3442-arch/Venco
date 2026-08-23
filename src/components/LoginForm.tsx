@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function LoginForm() {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
   const router = useRouter();
@@ -14,7 +14,7 @@ export default function LoginForm() {
   async function onLogin(e: React.FormEvent) {
     e.preventDefault();
     setMsg("");
-    const res = await signIn("credentials", { email, password, redirect: false });
+    const res = await signIn("credentials", { identifier, password, redirect: false });
     if (res?.error) setMsg(res.error);
     else if (res?.ok) router.push("/");
     else setMsg("Check credentials");
@@ -31,30 +31,29 @@ export default function LoginForm() {
       <div className="text-center text-xs text-muted">or</div>
       <form onSubmit={onLogin} className="space-y-3">
         <input
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="email"
-          type="email"
+          value={identifier}
+          onChange={(e) => setIdentifier(e.target.value)}
+          placeholder="Mail / Username"
+          type="text"
           required
           className="w-full rounded-full border px-4 py-3 text-sm bg-paper/60 focus:border-primary outline-none"
         />
         <input
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="password (≥6 chars)"
+          placeholder="Password"
           type="password"
           required
           className="w-full rounded-full border px-4 py-3 text-sm bg-paper/60 focus:border-primary outline-none"
         />
         <button type="submit" className="w-full rounded-full bg-primary text-white py-3 text-sm font-semibold hover:bg-primary-dark">
-          Sign in
+          Log in
         </button>
       </form>
       {msg && <p className="text-xs text-accent">{msg}</p>}
       <p className="text-xs text-center text-foreground/60">
-        No account? <Link href="/register" className="text-primary underline">Register</Link> • <Link href="/" className="underline">Home</Link>
+        No account? <Link href="/register" className="text-primary underline">Sign up</Link> • <Link href="/" className="underline">Home</Link>
       </p>
-      <p className="text-xs text-foreground/50">Test without Google: register with any email → sign in with credentials.</p>
     </div>
   );
 }

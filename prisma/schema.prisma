@@ -2,9 +2,8 @@
 // Learn more: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider        = "prisma-client-js"
-  output          = "../src/generated/prisma"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -17,6 +16,7 @@ model User {
   id            String    @id @default(cuid())
   name          String?
   email         String?   @unique
+  username      String?   @unique
   emailVerified DateTime?
   image         String?
   password      String?   // bcrypt for Credentials; null for OAuth users
@@ -82,6 +82,7 @@ model Profile {
   activityFactor Float    // 1.2 - 1.9
   goal           String   // fat_loss | lean_bulk | maintenance
   allergies      String   @default("[]") // JSON array string
+  healthSlug     String?  // selected HealthCondition slug (pro only)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)

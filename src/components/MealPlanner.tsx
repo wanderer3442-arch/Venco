@@ -52,6 +52,7 @@ export default function MealPlanner({ otherInitial }: { otherInitial?: string })
       allergies: splitList(allergies),
       targetKcal: calc?.targetKcal ?? null,
       targetMacros: calc ? { proteinG: calc.proteinG, fatG: calc.fatG, carbsG: calc.carbsG } : null,
+      healthSlug: health?.slug ?? null,
     });
     setPlan(p);
     try { localStorage.setItem("venco_last_meal_plan", JSON.stringify(p).slice(0, 2000)); } catch {}
@@ -105,27 +106,29 @@ export default function MealPlanner({ otherInitial }: { otherInitial?: string })
             <h2 className="font-display font-bold text-foreground">Your meal plan {health ? `• for ${health.title}` : ""}</h2>
             <span className="text-xs bg-paper border px-3 py-1.5 rounded-full">Daily total: <b>{plan.total.kcal} kcal</b> • P {plan.total.protein}g • C {plan.total.carbs}g • F {plan.total.fat}g</span>
           </div>
+          {plan.healthNote && <div className="rounded-xl bg-accent/10 border border-accent/20 p-3 text-xs"><b>Health note:</b> {plan.healthNote}</div>}
           <div className="grid md:grid-cols-3 gap-3">
             {plan.meals.map((m) => (
               <div key={m.label} className="rounded-xl border bg-paper/60 p-3">
                 <div className="text-sm font-bold text-foreground">{m.label}</div>
                 {m.items.length === 0 ? <div className="text-xs text-muted mt-1">No items (allergic or not found) — try different food.</div> : m.items.map((it) => (
                   <div key={it.food.id} className="mt-2 rounded-lg bg-paper border p-2.5 text-xs">
-                    <div className="font-semibold">{it.food.name} <span className="text-muted font-normal">— {it.qtyG}g</span></div>
+                    <div className="font-semibold">{it.food.name} <span className="text-muted font-normal">— {it.qtyG}g</span> {it.healthNote && <span className="ml-1 text-accent">⚠</span>}</div>
                     <div className="text-foreground/60">{it.kcal} kcal • P {it.protein}g • C {it.carbs}g • F {it.fat}g</div>
                     <div className="text-xs text-muted">{it.food.region} • allergens: {it.food.allergens.join(", ") || "none"}</div>
+                    {it.healthNote && <div className="text-xs text-accent mt-1">{it.healthNote}</div>}
                   </div>
                 ))}
               </div>
             ))}
           </div>
           <div className="grid sm:grid-cols-3 gap-3 text-xs">
-            <Card title="Avoid" items={plan.avoid} color="accent" />
+            <Card title="Avoid — What to avoid" items={plan.avoid} color="accent" />
             <Card title="Eat less" items={plan.eatLess} color="muted" />
-            <Card title="Eat more" items={plan.eatMore} color="primary" />
+            <Card title="Eat more — What to eat" items={plan.eatMore} color="primary" />
           </div>
           <div>
-            <div className="text-sm font-semibold text-foreground">Try new foods (not in your list, allergy-safe)</div>
+            <div className="text-sm font-semibold text-foreground">Try new foods (not in your list, allergy-safe, {health ? `good for ${health.title}` : "balanced"})</div>
             <div className="mt-2 grid sm:grid-cols-2 gap-2">
               {plan.tryNew.map((f) => (
                 <div key={f.id} className="rounded-lg border bg-paper p-2.5 text-xs flex justify-between">

@@ -32,16 +32,15 @@ export default function HealthSearch() {
 
   const persist = async (entry: Entry) => {
     setSelected(entry); setQ(entry.title);
+    // always keep in localStorage so Meal/Exercise can show preview immediately
+    localStorage.setItem("venco_health", entry.slug);
     const isPro = tier !== "free";
     if (isPro) {
-      localStorage.setItem("venco_health", entry.slug);
       const res = await fetch("/api/health", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slug: entry.slug }) });
       const j = await res.json().catch(() => ({}));
-      setMsg(res.ok ? "Saved for Pro — Meal & Exercise will show this." : j.error ?? "Failed");
+      setMsg(res.ok ? "Saved for Pro — Meal & Exercise will show this (both storages)." : j.error ?? "Failed");
     } else {
-      // free: show but not persist
-      localStorage.removeItem("venco_health");
-      setMsg("Preview only — upgrade to Pro to persist and apply to Meal/Exercise.");
+      setMsg("Preview — you will see what to eat/avoid in Meal after typing foods. Upgrade to Pro to save permanently (both storages).");
     }
   };
 

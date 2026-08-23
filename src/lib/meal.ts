@@ -51,27 +51,77 @@ export type PlanInput = {
   allergies: string[];
   targetKcal: number | null;
   targetMacros?: { proteinG: number; fatG: number; carbsG: number } | null;
+  healthSlug?: string | null;
 };
 
 export type PlanOutput = {
   total: { kcal: number; protein: number; carbs: number; fat: number };
-  meals: { label: string; items: { food: Food; qtyG: number; kcal: number; protein: number; carbs: number; fat: number }[] }[];
+  meals: { label: string; items: { food: Food; qtyG: number; kcal: number; protein: number; carbs: number; fat: number; healthNote?: string }[] }[];
   avoid: string[];
   eatLess: string[];
   eatMore: string[];
   tryNew: Food[];
+  healthNote?: string | null;
 };
 
 function qtyFor(food: Food, meal: string): number {
-  // heuristics: breakfast lighter, lunch/dinner heavier; high-kcal dense → smaller qty
   if (food.kcal > 450) return meal === "Breakfast" ? 80 : 120;
   if (food.kcal < 150) return meal === "Breakfast" ? 150 : 180;
   return 130;
 }
 
+function healthRules(slug?: string | null) {
+  if (!slug) return null;
+  const s = slug.toLowerCase();
+  if (s.includes("diabetes") || s.includes("pre-diabetes"))
+    return {
+      avoid: ["white rice", "sugar", "jalebi", "gulab", "biscuit", "maida", "sweet", "cola"],
+      limit: ["rice", "potato"],
+      prefer: ["millet", "oats", "dal", "sprouts", "brown rice", "bhel"],
+      note: "Diabetes: avoid added sugar & white rice, prefer low-GI millets/oats/dal — small frequent meals.",
+    };
+  if (s.includes("hypertension"))
+    return {
+      avoid: ["pickle", "papad", "namkeen", "samosa", "fried", "namkeen", "mixture"],
+      limit: ["salt", "papad"],
+      prefer: ["banana", "curd", "oats", "dal"],
+      note: "Hypertension: keep sodium <2000mg — avoid pickle/papad/namkeen, choose banana/curd.",
+    };
+  if (s.includes("low-muscle"))
+    return {
+      avoid: ["low protein"],
+      limit: [],
+      prefer: ["paneer", "chicken", "egg", "dal", "sprouts", "milk"],
+      note: "Low muscle: need protein 2.0g/kg — add paneer/chicken/egg/dal each meal.",
+    };
+  if (s.includes("obesity"))
+    return {
+      avoid: ["fried", "samosa", "namkeen", "sugar", "cola"],
+      limit: ["rice", "oil"],
+      prefer: ["salad", "millet", "dal", "sprouts"],
+      note: "Obesity: keep deficit, high satiety protein+fiber — avoid fried/sugar.",
+    };
+  if (s.includes("hyperlipidemia") || s.includes("cholesterol"))
+    return {
+      avoid: ["fried", "ghee", "butter"],
+      limit: ["oil", "fried"],
+      prefer: ["oats", "dal", "nuts", "olive"],
+      note: "Cholesterol: limit saturated fat — avoid fried/ghee, prefer oats/nuts.",
+    };
+  if (s.includes("anemia"))
+    return {
+      avoid: ["tea"],
+      limit: [],
+      prefer: ["millet", "leafy", "spinach", "dal"],
+      note: "Anemia: pair iron foods with vitamin C, avoid tea with meals.",
+    };
+  return { avoid: [], limit: [], prefer: [], note: null as string | null };
+}
+
 export function generatePlan(input: PlanInput): PlanOutput {
   const allFoods = foods as Food[];
   const allergySet = new Set(input.allergies.map((a) => a.toLowerCase()));
+  const hr = healthRules(input.healthSlug);
 
   const pick = (names: string[], label: string) => {
     const items: PlanOutput["meals"][number]["items"] = [];
@@ -79,16 +129,20 @@ export function generatePlan(input: PlanInput): PlanOutput {
     for (const n of names) {
       let f = findExact(n);
       if (!f) {
-        // fuzzy
         const results = searchFoods(n, 3);
         f = results[0];
       }
       if (!f) continue;
-      // allergy filter
       const hasAllergy = f.allergens.some((al) => allergySet.has(al.toLowerCase()));
-      if (hasAllergy) continue; // skip allergic, will be in avoid
+      if (hasAllergy) continue;
       const qty = qtyFor(f, label);
       const factor = qty / 100;
+      let healthNote: string | undefined;
+      if (hr) {
+        const low = f.name.toLowerCase();
+        if (hr.avoid.some((t) => low.includes(t))) healthNote = `Avoid for ${input.healthSlug}: try ${hr.prefer[0] ?? "millet"}`;
+        else if (hr.limit.some((t) => low.includes(t))) healthNote = `Eat less for ${input.healthSlug}`;
+      }
       const entry = {
         food: f,
         qtyG: qty,
@@ -96,6 +150,7 @@ export function generatePlan(input: PlanInput): PlanOutput {
         protein: Math.round(f.protein * factor * 10) / 10,
         carbs: Math.round(f.carbs * factor * 10) / 10,
         fat: Math.round(f.fat * factor * 10) / 10,
+        healthNote,
       };
       items.push(entry);
       total.kcal += entry.kcal;
@@ -117,7 +172,7 @@ export function generatePlan(input: PlanInput): PlanOutput {
     fat: Math.round((b.total.fat + l.total.fat + d.total.fat) * 10) / 10,
   };
 
-  // Avoid / alternatives
+  // Avoid / alternatives (allergies)
   const avoid: string[] = [];
   const allergenHits = allFoods.filter((f) =>
     input.breakfast.concat(input.lunch, input.dinner).some((n) => f.name.toLowerCase() === n.toLowerCase()) &&
@@ -128,8 +183,28 @@ export function generatePlan(input: PlanInput): PlanOutput {
     avoid.push(`${f.name} — contains ${al} → try ${suggestSwap(f.name)}`);
   }
 
+  // Health-aware avoid/limit
+  let healthNote: string | null = null;
+  if (hr) {
+    healthNote = hr.note;
+    const allTyped = input.breakfast.concat(input.lunch, input.dinner).map((n) => n.toLowerCase());
+    for (const name of allTyped) {
+      if (hr.avoid.some((t) => name.includes(t))) avoid.push(`${name} — avoid for ${input.healthSlug}: ${hr.note} → try ${hr.prefer[0] ?? "millet"}`);
+      else if (hr.limit.some((t) => name.includes(t))) {
+        // will be handled in eatLess
+      }
+    }
+  }
+
   const eatLess: string[] = [];
   const eatMore: string[] = [];
+  if (hr) {
+    // health-specific eats
+    for (const name of input.breakfast.concat(input.lunch, input.dinner).map((n) => n.toLowerCase())) {
+      if (hr.limit.some((t) => name.includes(t))) eatLess.push(`${name} — eat less for ${input.healthSlug}`);
+    }
+    eatMore.push(`For ${input.healthSlug}: ${hr.note} Prefer: ${hr.prefer.join(", ")}`);
+  }
   if (input.targetKcal) {
     if (total.kcal > input.targetKcal + 150) eatLess.push(`Calories ${total.kcal} > target ${input.targetKcal} — reduce fried items, use 80g portions, add salad.`);
     else if (total.kcal < input.targetKcal - 150) eatMore.push(`Calories ${total.kcal} < target ${input.targetKcal} — add 30g nuts or 1 extra roti / millet.`);
@@ -139,8 +214,6 @@ export function generatePlan(input: PlanInput): PlanOutput {
     if (total.fat > input.targetMacros.fatG * 1.3) eatLess.push(`Fat ${total.fat}g high vs ${input.targetMacros.fatG}g — use less oil, avoid deep-fried.`);
     if (total.carbs > input.targetMacros.carbsG * 1.3) eatLess.push(`Carbs ${total.carbs}g high — swap white rice → millets / brown rice.`);
   }
-
-  // generic
   if (eatLess.length === 0 && eatMore.length === 0) {
     eatMore.push("Balanced — keep portions as suggested; walk 10 min post-meal.");
   }
@@ -149,8 +222,12 @@ export function generatePlan(input: PlanInput): PlanOutput {
   const tryNew = allFoods
     .filter((f) => !hadNames.has(f.name.toLowerCase()) && !f.allergens.some((al) => allergySet.has(al.toLowerCase())))
     .sort((a, b) => {
-      // prefer moderate kcal, higher protein, Indian first
-      const score = (f: Food) => (f.region === "Indian" ? 0.5 : 0) + f.protein * 0.1 - Math.abs(f.kcal - 250) * 0.005;
+      const score = (f: Food) => {
+        let s = (f.region === "Indian" ? 0.5 : 0) + f.protein * 0.1 - Math.abs(f.kcal - 250) * 0.005;
+        if (hr && hr.prefer.some((t) => f.name.toLowerCase().includes(t))) s += 1.2;
+        if (hr && hr.avoid.some((t) => f.name.toLowerCase().includes(t))) s -= 1.5;
+        return s;
+      };
       return score(b) - score(a);
     })
     .slice(0, 4);
@@ -166,6 +243,7 @@ export function generatePlan(input: PlanInput): PlanOutput {
     eatLess,
     eatMore,
     tryNew,
+    healthNote,
   };
 }
 

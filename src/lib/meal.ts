@@ -2,17 +2,25 @@ import foods from "../../data/food-db.json";
 
 export type Food = (typeof foods)[number];
 
-export function searchFoods(q: string, limit = 8): Food[] {
+export function searchFoods(q: string, limit = 10): Food[] {
   const s = q.trim().toLowerCase();
   if (!s) return [];
-  // prefix + substring rank
   const scored = (foods as Food[])
     .map((f) => {
       const name = f.name.toLowerCase();
+      const tokens = name.split(/[\s\-\/]+/);
       let score = -1;
-      if (name.startsWith(s)) score = 2;
-      else if (name.includes(s)) score = 1;
+      if (name.startsWith(s)) score = 3;
+      else if (tokens.some((t) => t === s)) score = 3; // exact word: bread → Brown Bread (token bread)
+      else if (tokens.some((t) => t.startsWith(s))) score = 2.2;
+      else if (name.includes(s)) score = 1.2;
       else if (f.region.toLowerCase().includes(s)) score = 0.5;
+      if (score >= 0) {
+        if (f.region === "Indian") score += 0.05;
+        if (/\d{2,}/.test(f.name)) score -= 0.6;
+        if (f.name === "Brown Bread" || f.name === "Whole Wheat Bread" || f.name === "White Bread" || f.name === "Multigrain Bread" || f.name === "Brown Rice" || f.name === "Breakfast Cereal" || f.name === "Bhel Puri") score += 0.45;
+        if (f.name.length < 18 && !/\d/.test(f.name)) score += 0.05;
+      }
       return { f, score };
     })
     .filter((x) => x.score >= 0)

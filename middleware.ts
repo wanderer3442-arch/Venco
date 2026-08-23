@@ -3,11 +3,8 @@ import { NextResponse } from "next/server";
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
-  const isHealth = pathname.startsWith("/health");
   const isDownload = pathname.startsWith("/download");
-  // allow public
-  if (!isHealth && !isDownload) return NextResponse.next();
-  // health/download Pro-gated — require session
+  if (!isDownload) return NextResponse.next();
   if (!req.auth) {
     const url = new URL("/login", req.nextUrl.origin);
     url.searchParams.set("next", pathname);
@@ -21,5 +18,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/health/:path*", "/download/:path*"],
+  matcher: ["/download/:path*"],
 };

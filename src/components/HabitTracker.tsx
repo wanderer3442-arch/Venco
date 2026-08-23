@@ -1,0 +1,98 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+type Habit = { id: string; name: string; dates: string[] }; // dates as YYYY-MM-DD where done
+
+function todayStr(d = new Date()) { return d.toISOString().slice(0, 10); }
+function lastNDays(n: number) {
+  return Array.from({ length: n }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() - (n - 1 - i));
+    return d.toISOString().slice(0, 10);
+  });
+}
+
+export default function HabitTracker() {
+  const [habits, setHabits] = useState<Habit[]>(() => [
+    { id: "1", name: "Walk", dates: [todayStr()] },
+    { id: "2", name: "Water 2L", dates: [] },
+  ]);
+  const [newName, setNewName] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("venco_habits");
+    if (saved) try { setHabits(JSON.parse(saved)); } catch {}
+    setMounted(true);
+  }, []);
+  useEffect(() => { if (mounted) localStorage.setItem("venco_habits", JSON.stringify(habits)); }, [habits, mounted]);
+
+  const days = lastNDays(28);
+  const toggle = (hid: string, date: string) => {
+    setHabits((hs) => hs.map((h) => h.id === hid ? { ...h, dates: h.dates.includes(date) ? h.dates.filter((d) => d !== date) : [...h.dates, date] } : h));
+  };
+
+  const add = () => {
+    const n = newName.trim(); if (!n) return;
+    if (habits.some((h) => h.name.toLowerCase() === n.toLowerCase())) return;
+    setHabits((hs) => [...hs, { id: String(Date.now()), name: n, dates: [] }]);
+    setNewName("");
+  };
+  const del = (id: string) => setHabits((hs) => hs.filter((h) => h.id !== id));
+
+  // completion % last 7 days
+  const last7 = lastNDays(7);
+  const completion = habits.length ? Math.round((habits.flatMap((h) => last7.filter((d) => h.dates.includes(d))).length / (habits.length * 7)) * 100) : 0;
+
+  return (
+    <div className="rounded-2xl bg-white border p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="font-semibold text-primary-dark">Habit tracker — tick from To Do or here</h3>
+        <span className="text-xs bg-paper border px-2.5 py-1 rounded-full">{completion}% last 7d</span>
+      </div>
+
+      <div className="flex gap-2">
+        <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Add habit: Walk, Sleep 8h..." className="flex-1 rounded-full border px-4 py-2 text-sm bg-paper/60" />
+        <button onClick={add} className="rounded-full bg-primary text-white px-5 text-sm">Add</button>
+      </div>
+
+      {/* graph — 7 day bars */}
+      <div className="rounded-xl bg-paper border p-3">
+        <div className="text-xs font-semibold mb-2">7-day completion</div>
+        <div className="flex items-end gap-1 h-16">
+          {last7.map((d) => {
+            const done = habits.filter((h) => h.dates.includes(d)).length;
+            const pct = habits.length ? (done / habits.length) * 100 : 0;
+            return <div key={d} title={`${d} ${done}/${habits.length}`} className="flex-1 bg-primary rounded-t" style={{ height: `${Math.max(8, pct)}%` }} />;
+          })}
+        </div>
+        <div className="flex justify-between text-xs text-muted mt-1"><span>7d ago</span><span>today</span></div>
+      </div>
+
+      {/* calendar 28 days per habit */}
+      <div className="space-y-3">
+        {habits.map((h) => (
+          <div key={h.id} className="rounded-xl border bg-white p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold">{h.name}</span>
+              <button onClick={() => del(h.id)} className="text-xs text-accent hover:underline">Delete</button>
+            </div>
+            <div className="mt-2 grid grid-cols-7 gap-1">
+              {days.map((d) => (
+                <button
+                  key={d}
+                  onClick={() => toggle(h.id, d)}
+                  title={d}
+                  className={`h-9 rounded-lg border text-xs grid place-items-center ${h.dates.includes(d) ? "bg-primary text-white border-primary" : "bg-paper hover:bg-white"}`}
+                >
+                  {d.slice(8)}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+        {habits.length === 0 && <div className="text-sm text-muted">No habits — add one above.</div>}
+      </div>
+    </div>
+  );
+}

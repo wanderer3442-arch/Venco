@@ -11,19 +11,31 @@ export default function ChatV() {
   ]);
   const remaining = 5 - messages.filter((m) => m.role === "user").length;
 
-  function send() {
+  async function send() {
     if (!q.trim()) return;
     if (remaining <= 0) {
-      setMessages((m) => [...m, { role: "assistant", text: "Free limit reached. Unlock unlimited V with Pro ₹500/mo." }]);
+      setMessages((m) => [...m, { role: "assistant", text: "Free limit: 5/day. Upgrade to Pro ₹500/mo (₹3000/yr) for unlimited V + Health/Download." }]);
       return;
     }
     const userQ = q.trim();
     setQ("");
     setMessages((m) => [...m, { role: "user", text: userQ }]);
-    // placeholder — wired to /api/chat with OpenRouter later
-    setTimeout(() => {
-      setMessages((m) => [...m, { role: "assistant", text: `V (demo): For "${userQ}" — try: swap rice → millets, add 10 min walk post-meal. Add OPENROUTER_API_KEY to get live answers.` }]);
-    }, 600);
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userQ, history: messages.slice(-6).map((x) => ({ role: x.role, content: x.text })) }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const err = data?.error ?? "Error";
+        setMessages((m) => [...m, { role: "assistant", text: err }]);
+        return;
+      }
+      setMessages((m) => [...m, { role: "assistant", text: data.reply ?? "No reply" }]);
+    } catch {
+      setMessages((m) => [...m, { role: "assistant", text: `V (offline demo): For "${userQ}" — try swap rice → millets, add 10 min walk post-meal. Add OPENROUTER_API_KEY to get live answers.` }]);
+    }
   }
 
   return (

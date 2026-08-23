@@ -16,7 +16,7 @@ export default function Dashboard() {
         {/* Greeting */}
         <div className="flex flex-col gap-3">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-display font-bold text-primary-dark">
+            <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground">
               Good morning, {username} <span className="text-accent">— let’s move.</span>
             </h1>
             <p className="text-sm text-foreground/60">VencoFit OS • track, tweak, repeat.</p>

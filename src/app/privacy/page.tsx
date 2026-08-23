@@ -4,7 +4,7 @@ export default function PrivacyPage() {
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-3xl w-full px-6 py-10 prose prose-sm prose-headings:font-display prose-headings:text-primary-dark">
+      <main className="mx-auto max-w-3xl w-full px-6 py-10 prose prose-sm prose-headings:font-display prose-headings:text-foreground">
         <h1 className="text-3xl font-bold">Privacy Policy — VencoFit</h1>
         <p className="lead text-foreground/70">Effective 23 Aug 2026 • DPDP Act 2023 • GDPR-informed • Health data is sensitive — we treat it as such.</p>
 

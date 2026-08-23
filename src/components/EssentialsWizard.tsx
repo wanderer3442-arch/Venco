@@ -41,8 +41,8 @@ export default function EssentialsWizard() {
   }
 
   return (
-    <div className="rounded-2xl bg-white border p-6 space-y-4">
-      <h2 className="font-display font-bold text-primary-dark">Onboarding — Essentials</h2>
+    <div className="rounded-2xl bg-paper border p-6 space-y-4">
+      <h2 className="font-display font-bold text-foreground">Onboarding — Essentials</h2>
       <div className="grid sm:grid-cols-2 gap-3">
         <label className="block">
           <span className="text-xs font-semibold uppercase tracking-widest text-muted">Sex</span>
@@ -77,7 +77,7 @@ export default function EssentialsWizard() {
         <div className="grid sm:grid-cols-3 gap-3 text-sm">
           <div className="rounded-xl bg-paper border p-3"><div className="font-semibold">BMI {result.bmi.toFixed(1)}</div><div className="text-xs text-foreground/60">BMR {Math.round(result.bmr)} • TDEE {Math.round(result.tdee)}</div></div>
           <div className="rounded-xl bg-primary text-white p-3"><div className="font-semibold">Target {result.kcal} kcal</div><div className="text-xs opacity-80">P {result.macros.proteinG}g • F {result.macros.fatG}g • C {result.macros.carbsG}g</div></div>
-          <div className="rounded-xl bg-white border p-3"><div className="font-semibold">Hydration {result.hydration} ml</div><div className="text-xs text-foreground/60">~{Math.round(result.hydration/1000)} L</div></div>
+          <div className="rounded-xl bg-paper border p-3"><div className="font-semibold">Hydration {result.hydration} ml</div><div className="text-xs text-foreground/60">~{Math.round(result.hydration/1000)} L</div></div>
         </div>
       )}
       {msg && <p className="text-xs text-accent">{msg}</p>}

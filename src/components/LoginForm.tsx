@@ -24,7 +24,7 @@ export default function LoginForm() {
     <div className="mt-6 space-y-4">
       <button
         onClick={() => signIn("google", { callbackUrl: "/" })}
-        className="w-full rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-semibold hover:bg-paper flex items-center justify-center gap-2"
+        className="w-full rounded-full border border-white/10 bg-paper px-5 py-3 text-sm font-semibold hover:bg-paper flex items-center justify-center gap-2"
       >
         <span className="h-2 w-2 rounded-full bg-accent" /> Continue with Google (Gmail)
       </button>

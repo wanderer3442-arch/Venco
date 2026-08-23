@@ -46,9 +46,9 @@ export default function HabitTracker() {
   const completion = habits.length ? Math.round((habits.flatMap((h) => last7.filter((d) => h.dates.includes(d))).length / (habits.length * 7)) * 100) : 0;
 
   return (
-    <div className="rounded-2xl bg-white border p-5 space-y-4">
+    <div className="rounded-2xl bg-paper border p-5 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-primary-dark">Habit tracker — tick from To Do or here</h3>
+        <h3 className="font-semibold text-foreground">Habit tracker — tick from To Do or here</h3>
         <span className="text-xs bg-paper border px-2.5 py-1 rounded-full">{completion}% last 7d</span>
       </div>
 
@@ -77,25 +77,41 @@ export default function HabitTracker() {
         </div>
       </div>
 
-      {/* calendar 28 days per habit */}
+      {/* calendar — new timeline strip style */}
       <div className="space-y-3">
         {habits.map((h) => (
-          <div key={h.id} className="rounded-xl border bg-white p-3">
+          <div key={h.id} className="rounded-xl border border-white/10 bg-paper p-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold">{h.name}</span>
+              <span className="text-sm font-bold tracking-tight text-foreground">{h.name}</span>
               <button onClick={() => del(h.id)} className="text-xs text-accent hover:underline">Delete</button>
             </div>
-            <div className="mt-2 grid grid-cols-7 gap-1">
-              {days.map((d) => (
-                <button
-                  key={d}
-                  onClick={() => toggle(h.id, d)}
-                  title={d}
-                  className={`h-9 rounded-lg border text-xs grid place-items-center ${h.dates.includes(d) ? "bg-primary text-white border-primary" : "bg-paper hover:bg-white"}`}
-                >
-                  {d.slice(8)}
-                </button>
-              ))}
+            <div className="mt-3">
+              <div className="flex justify-between text-[10px] tracking-widest uppercase text-muted mb-1">
+                <span>4 weeks ago</span><span>Today</span>
+              </div>
+              <div className="relative">
+                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white/10 -translate-y-1/2" />
+                <div className="relative flex justify-between gap-1 overflow-x-auto py-2">
+                  {days.map((d) => {
+                    const done = h.dates.includes(d);
+                    const isToday = d === todayStr();
+                    return (
+                      <button
+                        key={d}
+                        onClick={() => toggle(h.id, d)}
+                        title={`${d} — ${done ? "done" : "missed"}`}
+                        className={`relative flex flex-col items-center gap-1 shrink-0 ${isToday ? "scale-110" : ""}`}
+                      >
+                        <span className={`grid place-items-center h-8 w-8 rounded-full border text-xs font-bold transition ${done ? "bg-primary text-white border-primary shadow" : "bg-background border-white/10 text-foreground/60 hover:border-white/20"}`}>
+                          {done ? "✓" : d.slice(8)}
+                        </span>
+                        <span className="text-[9px] text-muted">{new Date(d).toLocaleDateString("en-US", { weekday: "narrow" })}</span>
+                        {isToday && <span className="absolute -bottom-1 h-1 w-1 rounded-full bg-accent" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         ))}

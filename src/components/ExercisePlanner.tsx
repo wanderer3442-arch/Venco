@@ -77,8 +77,8 @@ export default function ExercisePlanner() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl bg-white border p-5 flex flex-wrap gap-3 items-center">
-        <span className="text-sm font-semibold text-primary-dark">Goal:</span>
+      <div className="rounded-2xl bg-paper border p-5 flex flex-wrap gap-3 items-center">
+        <span className="text-sm font-semibold text-foreground">Goal:</span>
         <select value={goal} onChange={(e) => { const g = e.target.value as Goal; setGoal(g); setPlan(generateAutoPlan(g)); }} className="rounded-full border px-4 py-2 text-sm bg-paper">
           <option value="fat_loss">Fat loss</option>
           <option value="lean_bulk">Lean bulk</option>
@@ -93,12 +93,12 @@ export default function ExercisePlanner() {
         <span className="text-xs text-muted">Auto uses TDEE & goal • BMI {bmi ? bmi.toFixed(1) : "—"} • {mode === "home" ? "Home: bodyweight/band/dumbbell only" : "Gym: all equipment"}</span>
       </div>
 
-      <div className="rounded-2xl bg-white border p-5">
-        <h3 className="font-semibold text-primary-dark">Templates</h3>
+      <div className="rounded-2xl bg-paper border p-5">
+        <h3 className="font-semibold text-foreground">Templates</h3>
         <p className="text-xs text-foreground/60">Don’t like auto? Pick one — still calibrated.</p>
         <div className="mt-3 grid sm:grid-cols-2 gap-2">
           {TEMPLATES.map((t) => (
-            <button key={t.name} onClick={() => applyTemplate(t.name)} className={`text-left rounded-xl border p-3 hover:border-primary ${plan.name === t.name ? "border-primary bg-paper" : "bg-white"}`}>
+            <button key={t.name} onClick={() => applyTemplate(t.name)} className={`text-left rounded-xl border p-3 hover:border-primary ${plan.name === t.name ? "border-primary bg-paper" : "bg-paper"}`}>
               <div className="text-sm font-semibold">{t.name}</div>
               <div className="text-xs text-foreground/60">{t.days.length} days • {t.days[0]?.exercises.length ?? 0} ex/day</div>
             </button>
@@ -109,9 +109,9 @@ export default function ExercisePlanner() {
       {health && <div className="rounded-xl bg-secondary/20 border border-secondary/30 p-3 text-xs"><b>Health tweak ({health.title}):</b> {health.exerciseGuidance}</div>}
       {msg && <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-sm text-amber-900">{msg}</div>}
 
-      <div className="rounded-2xl bg-white border p-5">
+      <div className="rounded-2xl bg-paper border p-5">
         <div className="flex items-center justify-between">
-          <h3 className="font-display font-bold text-primary-dark">{plan.name}</h3>
+          <h3 className="font-display font-bold text-foreground">{plan.name}</h3>
           <span className="text-xs bg-paper border px-2.5 py-1 rounded-full">{plan.days.length} days</span>
         </div>
         {plan.note && <p className="text-xs text-foreground/60 mt-1">{plan.note}</p>}
@@ -124,7 +124,7 @@ export default function ExercisePlanner() {
                   <select
                     defaultValue=""
                     onChange={(e) => { if (e.target.value) { addExercise(di, e.target.value); e.target.value = ""; } }}
-                    className="rounded-full border bg-white px-3 py-1.5 text-xs"
+                    className="rounded-full border bg-paper px-3 py-1.5 text-xs"
                   >
                     <option value="">+ Add exercise…</option>
                     {(mode === "home" ? EXERCISES.filter((ex) => ["bodyweight", "dumbbell", "band"].includes(ex.equipment)) : EXERCISES).map((ex) => (
@@ -134,7 +134,7 @@ export default function ExercisePlanner() {
                 </div>
                 <div className="mt-2 space-y-1.5">
                   {d.exercises.map((ex, ei) => (
-                    <div key={ei} className="flex items-center justify-between rounded-lg bg-white border px-3 py-2 text-xs">
+                    <div key={ei} className="flex items-center justify-between rounded-lg bg-paper border px-3 py-2 text-xs">
                       <span><b>{ex.name}</b> — {ex.sets}×{ex.reps} • {ex.muscle} • {ex.equipment} {ex.contraindication && <span className="text-accent">⚠</span>}</span>
                       <button onClick={() => removeExercise(di, ei)} className="text-accent hover:underline">Delete</button>
                     </div>

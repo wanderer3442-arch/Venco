@@ -22,7 +22,7 @@ export default function HealthTipRotator() {
   }, []);
 
   return (
-    <div className="rounded-xl bg-white border border-black/5 px-4 py-3 flex items-center gap-3">
+    <div className="rounded-xl bg-paper border border-white/10 px-4 py-3 flex items-center gap-3">
       <span className="text-xs font-bold tracking-widest text-accent uppercase">Health Tip</span>
       <span
         key={idx}

@@ -50,7 +50,7 @@ export default function MealAutocomplete({
         />
       </label>
       {open && results.length > 0 && (
-        <div className="absolute z-10 mt-1 w-full rounded-2xl border bg-white shadow-xl overflow-hidden max-h-64 overflow-y-auto">
+        <div className="absolute z-10 mt-1 w-full rounded-2xl border bg-paper shadow-xl overflow-hidden max-h-64 overflow-y-auto">
           {results.map((f) => (
             <button
               key={f.id}
@@ -69,7 +69,7 @@ export default function MealAutocomplete({
               }}
               className="w-full text-left px-4 py-2.5 hover:bg-paper flex items-center justify-between gap-2 text-sm"
             >
-              <span className="font-medium text-primary-dark">{f.name}</span>
+              <span className="font-medium text-foreground">{f.name}</span>
               <span className="text-xs text-foreground/60 whitespace-nowrap">
                 {f.kcal} kcal • {f.protein}p • {f.region}
               </span>

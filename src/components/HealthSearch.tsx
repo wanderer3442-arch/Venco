@@ -60,10 +60,10 @@ export default function HealthSearch() {
             value={q}
             onChange={(e) => { setQ(e.target.value); setSelected(null); }}
             placeholder="e.g., diabetes, low muscle mass, hypertension"
-            className="w-full rounded-full border border-white/20 bg-white text-primary-dark px-5 py-4 text-sm placeholder:text-foreground/40 focus:border-accent outline-none"
+            className="w-full rounded-full border border-white/20 bg-paper text-foreground px-5 py-4 text-sm placeholder:text-foreground/40 focus:border-accent outline-none"
           />
           {filtered.length > 0 && !selected && (
-            <div className="absolute z-10 mt-1 w-full rounded-2xl border bg-white shadow-xl overflow-hidden">
+            <div className="absolute z-10 mt-1 w-full rounded-2xl border bg-paper shadow-xl overflow-hidden">
               {filtered.map((h) => (
                 <button key={h.slug} onClick={() => persist(h)} className="w-full text-left px-4 py-2.5 hover:bg-paper text-sm">
                   <div className="font-medium">{h.title}</div>
@@ -77,12 +77,12 @@ export default function HealthSearch() {
       </div>
 
       {selected && (
-        <div className="rounded-2xl bg-white border p-6 space-y-3">
-          <h3 className="font-display font-bold text-primary-dark">{selected.title} {tier !== "free" && <span className="text-xs bg-primary text-white px-2 py-0.5 rounded-full">Pro ✓</span>}</h3>
+        <div className="rounded-2xl bg-paper border p-6 space-y-3">
+          <h3 className="font-display font-bold text-foreground">{selected.title} {tier !== "free" && <span className="text-xs bg-primary text-white px-2 py-0.5 rounded-full">Pro ✓</span>}</h3>
           <a href={selected.sourceUrl.split(" + ")[0]} target="_blank" className="text-xs text-primary underline break-all">{selected.sourceUrl}</a>
           <div className="grid md:grid-cols-2 gap-3 text-sm">
             <div className="rounded-xl bg-paper border p-3">
-              <div className="font-semibold text-primary-dark">Meal guidance</div>
+              <div className="font-semibold text-foreground">Meal guidance</div>
               <div className="text-foreground/70 mt-1">{selected.mealGuidance}</div>
             </div>
             <div className="rounded-xl bg-primary text-white p-3">
@@ -96,8 +96,8 @@ export default function HealthSearch() {
       )}
 
       {!selected && (
-        <div className="rounded-2xl bg-white border p-6">
-          <h3 className="font-semibold text-primary-dark">Browse all (12)</h3>
+        <div className="rounded-2xl bg-paper border p-6">
+          <h3 className="font-semibold text-foreground">Browse all (12)</h3>
           <div className="mt-2 grid sm:grid-cols-2 gap-2 text-xs">
             {(healthDb as Entry[]).map((h) => (
               <button key={h.slug} onClick={() => persist(h)} className="text-left rounded-lg border bg-paper px-3 py-2 hover:border-primary">

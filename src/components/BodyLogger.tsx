@@ -36,8 +36,8 @@ export default function BodyLogger() {
   const suggestion = Math.abs(avgDelta) < 0.15 ? "On track" : avgDelta > 0 ? "Gaining ~" + avgDelta.toFixed(2) + " kg/wk → cut 100-150 kcal" : "Losing ~" + Math.abs(avgDelta).toFixed(2) + " kg/wk → add 100-150 kcal if needed";
 
   return (
-    <div className="rounded-2xl bg-white border p-5 space-y-3">
-      <h3 className="font-semibold text-primary-dark">Weight & Height (weekly)</h3>
+    <div className="rounded-2xl bg-paper border p-5 space-y-3">
+      <h3 className="font-semibold text-foreground">Weight & Height (weekly)</h3>
       <div className="flex gap-2">
         <input value={w} onChange={(e) => setW(e.target.value)} placeholder="Weight kg" type="number" className="flex-1 rounded-full border px-4 py-2 text-sm" />
         <input value={h} onChange={(e) => setH(e.target.value)} placeholder="Height cm" type="number" className="flex-1 rounded-full border px-4 py-2 text-sm" />

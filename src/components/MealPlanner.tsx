@@ -67,8 +67,8 @@ export default function MealPlanner({ otherInitial }: { otherInitial?: string })
   return (
     <div className="space-y-6">
       {/* Inputs */}
-      <div className="rounded-2xl bg-white border p-6">
-        <p className="text-sm font-semibold text-primary-dark mb-3">What do you eat daily? (separate with commas — type “bre” to see suggestions)</p>
+      <div className="rounded-2xl bg-paper border p-6">
+        <p className="text-sm font-semibold text-foreground mb-3">What do you eat daily? (separate with commas — type “bre” to see suggestions)</p>
         <div className="grid gap-3 sm:grid-cols-3">
           <MealAutocomplete label="Breakfast" placeholder="poha, idli, bread..." value={breakfast} onChange={setBreakfast} />
           <MealAutocomplete label="Lunch" placeholder="dal, roti, rice, rajma..." value={lunch} onChange={setLunch} />
@@ -81,7 +81,7 @@ export default function MealPlanner({ otherInitial }: { otherInitial?: string })
             <span className="text-xs text-foreground/50">Allergic foods will be removed → swap shown in “Avoid”.</span>
           </div>
           <div className="rounded-xl bg-paper border p-3 text-xs flex flex-col justify-center">
-            <div className="font-semibold text-primary-dark">Tip</div>
+            <div className="font-semibold text-foreground">Tip</div>
             <div className="text-foreground/60">Enter 1–3 items per meal (e.g., “Poha, Idli”). System builds 1-week plan with qty, kCal, carbs etc.</div>
             {calc && <div className="mt-2 text-xs">Target: <b>{calc.targetKcal} kcal</b> • P {calc.proteinG}g F {calc.fatG}g C {calc.carbsG}g (from Essentials)</div>}
             {!calc && <div className="mt-2 text-xs text-muted">No Essentials yet — <a href="/essentials" className="underline text-primary">calculate first</a> for personalized targets.</div>}
@@ -100,17 +100,17 @@ export default function MealPlanner({ otherInitial }: { otherInitial?: string })
 
       {/* Plan */}
       {plan && (
-        <div className="rounded-2xl bg-white border p-6 space-y-4">
+        <div className="rounded-2xl bg-paper border p-6 space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <h2 className="font-display font-bold text-primary-dark">Your meal plan {health ? `• for ${health.title}` : ""}</h2>
+            <h2 className="font-display font-bold text-foreground">Your meal plan {health ? `• for ${health.title}` : ""}</h2>
             <span className="text-xs bg-paper border px-3 py-1.5 rounded-full">Daily total: <b>{plan.total.kcal} kcal</b> • P {plan.total.protein}g • C {plan.total.carbs}g • F {plan.total.fat}g</span>
           </div>
           <div className="grid md:grid-cols-3 gap-3">
             {plan.meals.map((m) => (
               <div key={m.label} className="rounded-xl border bg-paper/60 p-3">
-                <div className="text-sm font-bold text-primary-dark">{m.label}</div>
+                <div className="text-sm font-bold text-foreground">{m.label}</div>
                 {m.items.length === 0 ? <div className="text-xs text-muted mt-1">No items (allergic or not found) — try different food.</div> : m.items.map((it) => (
-                  <div key={it.food.id} className="mt-2 rounded-lg bg-white border p-2.5 text-xs">
+                  <div key={it.food.id} className="mt-2 rounded-lg bg-paper border p-2.5 text-xs">
                     <div className="font-semibold">{it.food.name} <span className="text-muted font-normal">— {it.qtyG}g</span></div>
                     <div className="text-foreground/60">{it.kcal} kcal • P {it.protein}g • C {it.carbs}g • F {it.fat}g</div>
                     <div className="text-xs text-muted">{it.food.region} • allergens: {it.food.allergens.join(", ") || "none"}</div>
@@ -125,10 +125,10 @@ export default function MealPlanner({ otherInitial }: { otherInitial?: string })
             <Card title="Eat more" items={plan.eatMore} color="primary" />
           </div>
           <div>
-            <div className="text-sm font-semibold text-primary-dark">Try new foods (not in your list, allergy-safe)</div>
+            <div className="text-sm font-semibold text-foreground">Try new foods (not in your list, allergy-safe)</div>
             <div className="mt-2 grid sm:grid-cols-2 gap-2">
               {plan.tryNew.map((f) => (
-                <div key={f.id} className="rounded-lg border bg-white p-2.5 text-xs flex justify-between">
+                <div key={f.id} className="rounded-lg border bg-paper p-2.5 text-xs flex justify-between">
                   <span className="font-medium">{f.name}</span> <span className="text-foreground/60">{f.kcal} kcal • {f.region}</span>
                 </div>
               ))}
@@ -138,8 +138,8 @@ export default function MealPlanner({ otherInitial }: { otherInitial?: string })
       )}
 
       {/* Other food */}
-      <div className="rounded-2xl bg-white border p-6">
-        <h2 className="font-semibold text-primary-dark">Other food (snacks / outside)</h2>
+      <div className="rounded-2xl bg-paper border p-6">
+        <h2 className="font-semibold text-foreground">Other food (snacks / outside)</h2>
         <p className="text-xs text-foreground/60">Logs here, adjusts daily quota, health score shown — no plan mutation.</p>
         <div className="mt-3 flex gap-2">
           <input value={other} onChange={(e) => setOther(e.target.value)} placeholder="ice cream, samosa, fried rice..." className="flex-1 rounded-full border px-4 py-2.5 text-sm bg-paper/60 focus:border-primary outline-none" />
@@ -164,7 +164,7 @@ export default function MealPlanner({ otherInitial }: { otherInitial?: string })
 
 function Card({ title, items, color }: { title: string; items: string[]; color: "accent" | "primary" | "muted" }) {
   return (
-    <div className="rounded-xl border bg-white p-3">
+    <div className="rounded-xl border bg-paper p-3">
       <div className={`text-xs font-bold tracking-widest uppercase ${color === "accent" ? "text-accent" : color === "primary" ? "text-primary" : "text-muted"}`}>{title}</div>
       {items.length === 0 ? <div className="text-xs text-muted mt-1">—</div> : <ul className="mt-1 space-y-1 list-disc list-inside">{items.map((x, i) => <li key={i}>{x}</li>)}</ul>}
     </div>

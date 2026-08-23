@@ -31,7 +31,7 @@ export default function DropdownNav({
             href={it.href}
             onClick={onClose}
             className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm ${
-              pathname === it.href ? "bg-white text-primary" : "bg-white/10 text-white hover:bg-white/20"
+              pathname === it.href ? "bg-paper text-primary" : "bg-paper/10 text-white hover:bg-paper/20"
             }`}
           >
             <span className="font-medium">{it.label}</span>
@@ -47,21 +47,21 @@ export default function DropdownNav({
   return (
     <div className="relative hidden lg:block">
       <details className="group">
-        <summary className="list-none cursor-pointer flex items-center gap-2 rounded-lg bg-white/15 px-4 py-2 text-sm font-medium hover:bg-white/20">
+        <summary className="list-none cursor-pointer flex items-center gap-2 rounded-lg bg-paper/15 px-4 py-2 text-sm font-medium hover:bg-paper/20">
           <span>Menu</span>
           <span className="text-xs group-open:rotate-180 transition">▼</span>
         </summary>
-        <div className="absolute right-0 mt-2 w-[340px] rounded-xl border border-black/10 bg-white p-2 shadow-xl">
+        <div className="absolute right-0 mt-2 w-[340px] rounded-xl border border-white/10 bg-paper p-2 shadow-xl">
           <div className="grid grid-cols-2 gap-2">
             {items.map((it) => (
               <Link
                 key={it.href}
                 href={it.href}
                 className={`rounded-lg border p-3 hover:border-primary/30 hover:bg-paper transition ${
-                  pathname === it.href ? "border-primary bg-paper" : "border-black/5 bg-white"
+                  pathname === it.href ? "border-primary bg-paper" : "border-white/10 bg-paper"
                 }`}
               >
-                <div className="flex items-center gap-1.5 font-semibold text-sm text-primary-dark">
+                <div className="flex items-center gap-1.5 font-semibold text-sm text-foreground">
                   {it.label} {it.locked && <span className="text-[10px] leading-none rounded-full bg-accent text-white px-1.5 py-0.5">PRO</span>}
                 </div>
                 <div className="text-xs text-foreground/60">{it.desc}</div>

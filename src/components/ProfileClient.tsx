@@ -46,10 +46,10 @@ export default function ProfileClient() {
     <div className="mt-6 grid gap-6 lg:grid-cols-12">
       <div className="lg:col-span-5 space-y-4">
         <div className="rounded-2xl bg-paper border border-white/10 p-5">
-          <h2 className="font-bold text-primary-dark">Edit Username</h2>
+          <h2 className="font-bold text-foreground">Edit Username</h2>
           <p className="text-xs text-foreground/60">Username can be anything, no restriction. You type it — no auto.</p>
           <div className="mt-3 flex gap-2">
-            <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" className="flex-1 rounded-full border bg-white/5 border-white/10 px-4 py-2.5 text-sm text-foreground placeholder:text-foreground/40" />
+            <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" className="flex-1 rounded-full border bg-paper/5 border-white/10 px-4 py-2.5 text-sm text-foreground placeholder:text-foreground/40" />
             <button onClick={save} className="rounded-full bg-accent text-white px-6 py-2.5 text-sm font-bold">Save</button>
           </div>
           {msg && <p className="text-xs mt-2 text-accent">{msg}</p>}
@@ -59,8 +59,8 @@ export default function ProfileClient() {
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white border border-black/5 p-5">
-          <h3 className="font-bold text-primary-dark">Current Monthly</h3>
+        <div className="rounded-2xl bg-paper border border-white/10 p-5">
+          <h3 className="font-bold text-foreground">Current Monthly</h3>
           <div className="mt-3 grid gap-3 text-xs">
             <div className="rounded-xl bg-background border border-white/10 p-3">
               <div className="font-semibold">Active Meal</div>
@@ -76,8 +76,8 @@ export default function ProfileClient() {
         </div>
       </div>
 
-      <div className="lg:col-span-7 rounded-2xl bg-white border border-black/5 p-5">
-        <h3 className="font-bold text-primary-dark">Progress — weight & BMI</h3>
+      <div className="lg:col-span-7 rounded-2xl bg-paper border border-white/10 p-5">
+        <h3 className="font-bold text-foreground">Progress — weight & BMI</h3>
         <p className="text-xs text-foreground/60">From Essentials snapshots + Body logger. Replaces bar comparison with graph.</p>
         <div className="mt-4 h-64">
           <ResponsiveContainer width="100%" height="100%">

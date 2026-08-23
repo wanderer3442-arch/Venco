@@ -5,9 +5,9 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 // Suggested idea: Overall stats — 4-Ring + Streak Strip — now with graph
 export default function StatRings() {
   return (
-    <div className="rounded-2xl bg-white border border-black/5 p-4 sm:p-6">
+    <div className="rounded-2xl bg-paper border border-white/10 p-4 sm:p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-display font-bold text-primary-dark">Overall stats</h3>
+        <h3 className="font-display font-bold text-foreground">Overall stats</h3>
         <span className="text-xs bg-accent text-white px-2 py-1 rounded-full">Active plans: 2</span>
       </div>
 
@@ -22,9 +22,9 @@ export default function StatRings() {
             </div>
           </div>
           {/* satellites */}
-          <div className="absolute -top-2 -right-2 h-14 w-14 rounded-full border-4 border-secondary bg-white grid place-items-center text-xs font-bold">P 88%</div>
+          <div className="absolute -top-2 -right-2 h-14 w-14 rounded-full border-4 border-secondary bg-paper grid place-items-center text-xs font-bold">P 88%</div>
           <div className="absolute -bottom-2 -right-1 h-14 w-14 rounded-full border-4 border-white bg-accent text-white grid place-items-center text-xs font-bold">C 74%</div>
-          <div className="absolute -bottom-2 -left-1 h-14 w-14 rounded-full border-4 border-primary/20 bg-white grid place-items-center text-xs font-bold">F 91%</div>
+          <div className="absolute -bottom-2 -left-1 h-14 w-14 rounded-full border-4 border-primary/20 bg-paper grid place-items-center text-xs font-bold">F 91%</div>
         </div>
 
         <div className="w-full">
@@ -35,7 +35,7 @@ export default function StatRings() {
             <Kpi label="Habits done" value="18/21" sub="7 days" trend="up" />
           </div>
           <div className="rounded-xl bg-paper p-3">
-            <div className="text-xs font-semibold text-primary-dark mb-2">7-day weight & volume — graph</div>
+            <div className="text-xs font-semibold text-foreground mb-2">7-day weight & volume — graph</div>
             <div className="h-28">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={[{ d: "Mon", w: 72.8, v: 42 }, { d: "Tue", w: 72.6, v: 55 }, { d: "Wed", w: 72.4, v: 48 }, { d: "Thu", w: 72.2, v: 70 }, { d: "Fri", w: 72, v: 62 }, { d: "Sat", w: 71.8, v: 58 }, { d: "Sun", w: 71.6, v: 72 }]}>
@@ -62,9 +62,9 @@ export default function StatRings() {
 
 function Kpi({ label, value, sub, trend }: { label: string; value: string; sub: string; trend: "up" | "down" | "neutral" }) {
   return (
-    <div className="rounded-xl border border-black/5 bg-white p-3">
+    <div className="rounded-xl border border-white/10 bg-paper p-3">
       <div className="text-[11px] tracking-widest uppercase text-muted font-semibold">{label}</div>
-      <div className="text-lg font-bold text-primary-dark flex items-center gap-1">
+      <div className="text-lg font-bold text-foreground flex items-center gap-1">
         {value} <span className={trend === "up" ? "text-primary" : trend === "down" ? "text-accent" : "text-muted"}>{trend === "up" ? "↗" : trend === "down" ? "↘" : "→"}</span>
       </div>
       <div className="text-xs text-foreground/60">{sub}</div>

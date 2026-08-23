@@ -15,9 +15,9 @@ export default function TodoList() {
   const done = todos.filter((t) => t.done).length;
 
   return (
-    <div className="rounded-2xl bg-white border border-black/5 p-4">
+    <div className="rounded-2xl bg-paper border border-white/10 p-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-display font-bold text-primary-dark">To Do</h3>
+        <h3 className="font-display font-bold text-foreground">To Do</h3>
         <span className="text-xs bg-paper px-2.5 py-1 rounded-full font-medium">
           {done}/{todos.length} done
         </span>
@@ -27,7 +27,7 @@ export default function TodoList() {
           <label
             key={t.id}
             className={`flex items-center gap-3 rounded-xl border p-3 cursor-pointer transition ${
-              t.done ? "bg-primary/5 border-primary/20" : "bg-white border-black/5 hover:border-primary/20 hover:bg-paper"
+              t.done ? "bg-primary/5 border-primary/20" : "bg-paper border-white/10 hover:border-primary/20 hover:bg-paper"
             }`}
           >
             <input
@@ -37,7 +37,7 @@ export default function TodoList() {
               className="h-5 w-5 rounded accent-primary"
             />
             <div>
-              <div className={`text-sm font-semibold ${t.done ? "line-through text-foreground/50" : "text-primary-dark"}`}>{t.label}</div>
+              <div className={`text-sm font-semibold ${t.done ? "line-through text-foreground/50" : "text-foreground"}`}>{t.label}</div>
               <div className="text-xs text-foreground/60">{t.sub}</div>
             </div>
             <span className={`ml-auto text-xs ${t.done ? "text-primary" : "text-muted"}`}>{t.done ? "✓" : "○"}</span>

@@ -13,8 +13,8 @@ export default function MealRing() {
   const target = { kcal: 2200, protein: 120, carbs: 250, fat: 70, vit: 100 };
 
   return (
-    <div className="rounded-2xl bg-white border p-5 space-y-4">
-      <h3 className="font-semibold text-primary-dark">Meal tracker — ring</h3>
+    <div className="rounded-2xl bg-paper border p-5 space-y-4">
+      <h3 className="font-semibold text-foreground">Meal tracker — ring</h3>
       <div className="flex flex-col sm:flex-row gap-6 items-center">
         {/* SVG ring */}
         <div className="relative">

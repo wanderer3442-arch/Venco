@@ -1,0 +1,204 @@
+import { Profile, WorkoutPlan, WorkoutExercise, Exercise, Equipment, Goal } from './types';
+import { exercises, getExercisesByMuscleGroup, getExercisesByEquipment, getExercisesByCategory } from './exercise-database';
+import { calculateBMI, calculateBMR, calculateTDEE } from './calculations';
+
+export interface ExercisePlanInput {
+  profile: Profile;
+  equipment: Equipment;
+  daysPerWeek: number;
+}
+
+export function generateWorkoutPlan(input: ExercisePlanInput): WorkoutPlan {
+  const { profile, equipment, daysPerWeek } = input;
+
+  if (!profile.weight || !profile.height || !profile.activityLevel || !profile.goal) {
+    return {
+      id: `plan-${Date.now()}`,
+      name: 'Incomplete Profile',
+      goal: 'maintain',
+      equipment,
+      daysPerWeek,
+      exercises: [],
+      isGenerated: true,
+    };
+  }
+
+  const bmi = calculateBMI(profile.weight, profile.height);
+  const bmr = calculateBMR(profile);
+  const tdee = calculateTDEE(bmr, profile.activityLevel);
+
+  const difficulty = getDifficultyLevel(profile, bmi);
+  const split = getWorkoutSplit(daysPerWeek);
+  const exercisesForPlan = getExercisesForPlan(equipment, difficulty);
+
+  const workoutExercises: WorkoutExercise[] = [];
+
+  split.forEach((muscleGroups, dayIndex) => {
+    const dayName = getDayName(dayIndex);
+    muscleGroups.forEach(muscleGroup => {
+      const muscleExercises = exercisesForPlan.filter(e => e.muscleGroup === muscleGroup);
+      const selected = selectExercises(muscleExercises, getExercisesPerMuscle(daysPerWeek));
+
+      selected.forEach(exercise => {
+        const { sets, reps, duration } = getSetsReps(exercise, profile.goal!, difficulty);
+        workoutExercises.push({
+          exerciseId: exercise.id,
+          exerciseName: exercise.name,
+          sets,
+          reps,
+          duration,
+          day: dayName,
+        });
+      });
+    });
+  });
+
+  return {
+    id: `plan-${Date.now()}`,
+    name: getPlanName(profile.goal, daysPerWeek),
+    goal: profile.goal,
+    equipment,
+    daysPerWeek,
+    exercises: workoutExercises,
+    isGenerated: true,
+  };
+}
+
+function getDifficultyLevel(profile: Profile, bmi: { value: number; category: string }): 'beginner' | 'intermediate' | 'advanced' {
+  if (profile.activityLevel === 'sedentary' || bmi.value > 30) return 'beginner';
+  if (profile.activityLevel === 'very_active' || profile.activityLevel === 'extra_active') return 'advanced';
+  return 'intermediate';
+}
+
+function getWorkoutSplit(daysPerWeek: number): string[][] {
+  const splits: Record<number, string[][]> = {
+    2: [
+      ['chest', 'back', 'core'],
+      ['legs', 'shoulders', 'core'],
+    ],
+    3: [
+      ['chest', 'triceps'],
+      ['back', 'biceps'],
+      ['legs', 'shoulders', 'core'],
+    ],
+    4: [
+      ['chest', 'back'],
+      ['legs', 'core'],
+      ['shoulders', 'biceps', 'triceps'],
+      ['legs', 'core'],
+    ],
+    5: [
+      ['chest', 'triceps'],
+      ['back', 'biceps'],
+      ['legs'],
+      ['shoulders', 'core'],
+      ['full_body'],
+    ],
+    6: [
+      ['chest'],
+      ['back'],
+      ['legs'],
+      ['shoulders'],
+      ['biceps', 'triceps'],
+      ['core', 'full_body'],
+    ],
+  };
+  return splits[Math.min(daysPerWeek, 6)] || splits[3];
+}
+
+function getDayName(dayIndex: number): string {
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  return days[dayIndex] || `Day ${dayIndex + 1}`;
+}
+
+function getExercisesPerMuscle(daysPerWeek: number): number {
+  if (daysPerWeek <= 3) return 4;
+  if (daysPerWeek <= 5) return 3;
+  return 2;
+}
+
+function getExercisesForPlan(equipment: Equipment, difficulty: string): Exercise[] {
+  let filtered = getExercisesByEquipment(equipment);
+
+  if (equipment === 'home') {
+    filtered = [...filtered, ...getExercisesByEquipment('none')];
+  }
+
+  filtered = filtered.filter(e => {
+    if (difficulty === 'beginner') return e.difficulty === 'beginner' || e.difficulty === 'intermediate';
+    if (difficulty === 'intermediate') return true;
+    return true;
+  });
+
+  return filtered;
+}
+
+function selectExercises(exercises: Exercise[], count: number): Exercise[] {
+  const shuffled = [...exercises].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, Math.min(count, shuffled.length));
+}
+
+function getSetsReps(exercise: Exercise, goal: Goal, difficulty: string): { sets: number; reps: number; duration?: number } {
+  if (exercise.category === 'cardio' || exercise.category === 'hiit') {
+    const duration = goal === 'lose' ? 30 : goal === 'gain' ? 20 : 25;
+    return { sets: 1, reps: 1, duration };
+  }
+
+  if (exercise.category === 'flexibility') {
+    return { sets: 1, reps: 1, duration: 10 };
+  }
+
+  switch (goal) {
+    case 'lose':
+      return { sets: 3, reps: 12 };
+    case 'gain':
+      return { sets: 4, reps: 8 };
+    default:
+      return { sets: 3, reps: 10 };
+  }
+}
+
+function getPlanName(goal: Goal, daysPerWeek: number): string {
+  const goalNames: Record<Goal, string> = {
+    lose: 'Fat Loss',
+    maintain: 'General Fitness',
+    gain: 'Muscle Building',
+  };
+  return `${goalNames[goal]} - ${daysPerWeek} Day Split`;
+}
+
+export function calculateWorkoutCalories(plan: WorkoutPlan, weight: number): number {
+  let totalCalories = 0;
+
+  plan.exercises.forEach(exercise => {
+    const dbExercise = exercises.find(e => e.id === exercise.exerciseId);
+    if (dbExercise) {
+      const minutes = exercise.duration || (exercise.sets * exercise.reps * 0.1);
+      totalCalories += dbExercise.caloriesPerMinute * minutes;
+    }
+  });
+
+  return Math.round(totalCalories * (weight / 70));
+}
+
+export function getWeeklyWorkoutSummary(plan: WorkoutPlan): { day: string; exercises: number; estimatedCalories: number }[] {
+  const days = [...new Set(plan.exercises.map(e => e.day))];
+
+  return days.map(day => {
+    const dayExercises = plan.exercises.filter(e => e.day === day);
+    const estimatedCalories = dayExercises.reduce((total, ex) => {
+      const dbExercise = exercises.find(e => e.id === ex.exerciseId);
+      if (dbExercise) {
+        const minutes = ex.duration || (ex.sets * ex.reps * 0.1);
+        return total + (dbExercise.caloriesPerMinute * minutes);
+      }
+      return total;
+    }, 0);
+
+    return {
+      day,
+      exercises: dayExercises.length,
+      estimatedCalories: Math.round(estimatedCalories),
+    };
+  });
+}

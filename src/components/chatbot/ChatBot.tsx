@@ -24,7 +24,7 @@ const FREE_DAILY_LIMIT = 30;
 
 function getChatCountKey(): string {
   const today = new Date().toISOString().split('T')[0];
-  return `vencofit_chat_count_${today}`;
+  return `gymathome_chat_count_${today}`;
 }
 
 function getDailyCount(): number {

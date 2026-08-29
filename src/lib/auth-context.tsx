@@ -27,24 +27,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    const saved = localStorage.getItem('vencofit_auth');
+    const saved = localStorage.getItem('gymathome_auth');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         setAuthState({ user: parsed.user, isAuthenticated: true });
       } catch {
-        localStorage.removeItem('vencofit_auth');
+        localStorage.removeItem('gymathome_auth');
       }
     }
   }, []);
 
   const getUsers = (): StoredUser[] => {
-    const data = localStorage.getItem('vencofit_users');
+    const data = localStorage.getItem('gymathome_users');
     return data ? JSON.parse(data) : [];
   };
 
   const saveUsers = (users: StoredUser[]) => {
-    localStorage.setItem('vencofit_users', JSON.stringify(users));
+    localStorage.setItem('gymathome_users', JSON.stringify(users));
   };
 
   const signup = (email: string, username: string, password: string): { success: boolean; error?: string } => {
@@ -101,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const user: User = userWithoutPassword;
 
     setAuthState({ user, isAuthenticated: true });
-    localStorage.setItem('vencofit_auth', JSON.stringify({ user }));
+    localStorage.setItem('gymathome_auth', JSON.stringify({ user }));
 
     return { success: true };
   };
@@ -127,14 +127,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const user: User = userWithoutPassword;
 
     setAuthState({ user, isAuthenticated: true });
-    localStorage.setItem('vencofit_auth', JSON.stringify({ user }));
+    localStorage.setItem('gymathome_auth', JSON.stringify({ user }));
 
     return { success: true };
   };
 
   const logout = () => {
     setAuthState({ user: null, isAuthenticated: false });
-    localStorage.removeItem('vencofit_auth');
+    localStorage.removeItem('gymathome_auth');
   };
 
   const updateUsername = (username: string) => {
@@ -153,7 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const updatedUser = { ...authState.user, username };
     setAuthState({ user: updatedUser, isAuthenticated: true });
-    localStorage.setItem('vencofit_auth', JSON.stringify({ user: updatedUser }));
+    localStorage.setItem('gymathome_auth', JSON.stringify({ user: updatedUser }));
   };
 
   return (

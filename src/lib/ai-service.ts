@@ -95,7 +95,7 @@ async function callOpenRouter(
       'Authorization': `Bearer ${key}`,
       'Content-Type': 'application/json',
       'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : '',
-      'X-Title': 'Vencofit',
+      'X-Title': 'Gym at Home',
     },
     body: JSON.stringify({
       model: useModel,
@@ -118,15 +118,15 @@ async function callOpenRouter(
 // ─── Dev Console Helper ──────────────────────────────────────────────────────
 
 if (typeof window !== 'undefined') {
-  (window as any).__setVencofitApiKey = (key: string) => {
+  (window as any).__setGymAtHomeApiKey = (key: string) => {
     localStorage.setItem('openrouter_api_key', key);
-    console.log('✅ Vencofit API key saved');
+    console.log('✅ Gym at Home API key saved');
   };
-  (window as any).__clearVencofitApiKey = () => {
+  (window as any).__clearGymAtHomeApiKey = () => {
     localStorage.removeItem('openrouter_api_key');
-    console.log('✅ Vencofit API key removed');
+    console.log('✅ Gym at Home API key removed');
   };
-  (window as any).__getVencofitApiKey = () => {
+  (window as any).__getGymAtHomeApiKey = () => {
     const key = localStorage.getItem('openrouter_api_key');
     console.log(key ? `API key: ${key.substring(0, 10)}...` : 'No API key set');
     return key;
@@ -265,7 +265,7 @@ export async function getChatResponse(
   },
   isPaidUser?: boolean
 ): Promise<string> {
-  const systemPrompt = `You are V, a friendly AI fitness and nutrition assistant for the Vencofit "Gym at Home" app.
+  const systemPrompt = `You are V, a friendly AI fitness and nutrition assistant for the Gym at Home "Gym at Home" app.
 You help users with:
 - Meal planning and nutrition advice
 - Exercise recommendations

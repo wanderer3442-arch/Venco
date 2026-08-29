@@ -1,6 +1,0 @@
-[
-  { "id": "poha", "name": "Poha", "region": "Indian", "kcal": 180, "protein": 3, "carbs": 30, "fat": 6, "allergens": ["peanut"] },
-  { "id": "idli", "name": "Idli", "region": "Indian", "kcal": 120, "protein": 3, "carbs": 25, "fat": 1, "allergens": [] },
-  { "id": "dal_rice", "name": "Dal + Rice", "region": "Indian", "kcal": 350, "protein": 10, "carbs": 55, "fat": 6, "allergens": [] },
-  { "id": "chicken_curry", "name": "Chicken Curry + Roti", "region": "Indian", "kcal": 420, "protein": 28, "carbs": 35, "fat": 14, "allergens": ["gluten"] }
-]

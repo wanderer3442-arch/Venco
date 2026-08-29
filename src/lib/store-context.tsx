@@ -130,7 +130,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
 
     // Load user-specific data
-    const storageKey = `vencofit_store_${user.id}`;
+    const storageKey = `gymathome_store_${user.id}`;
     const saved = localStorage.getItem(storageKey);
     if (saved) {
       try {
@@ -178,7 +178,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   // Save data to user-specific localStorage
   useEffect(() => {
     if (!user?.id) return;
-    const storageKey = `vencofit_store_${user.id}`;
+    const storageKey = `gymathome_store_${user.id}`;
     localStorage.setItem(
       storageKey,
       JSON.stringify({

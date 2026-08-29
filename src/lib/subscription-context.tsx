@@ -40,14 +40,14 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    const saved = localStorage.getItem('vencofit_subscription');
+    const saved = localStorage.getItem('gymathome_subscription');
     if (saved) {
       setSubscription(JSON.parse(saved));
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('vencofit_subscription', JSON.stringify(subscription));
+    localStorage.setItem('gymathome_subscription', JSON.stringify(subscription));
   }, [subscription]);
 
   const setPlan = (plan: SubscriptionPlan) => {

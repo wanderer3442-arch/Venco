@@ -12,6 +12,12 @@ import {
   Dumbbell,
   Utensils,
   Lock,
+  Heart,
+  Droplets,
+  Flame,
+  Calendar,
+  User,
+  FileText,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useStore } from '@/lib/store-context';
@@ -514,150 +520,304 @@ export default function ExportReportsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8 xl:col-span-9 order-2 lg:order-1">
             <div className="bg-surface-container-low rounded-xl p-6 flex items-center justify-center min-h-[800px] overflow-hidden relative">
-              <div className="absolute inset-0 opacity-30 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#6c7a71 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+              <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#6c7a71 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
 
-              <div className="bg-surface-container-lowest w-full max-w-3xl aspect-[1/1.414] rounded-sm relative z-10 p-8 md:p-12 flex flex-col scale-95 md:scale-100 transform origin-top transition-transform hover:scale-[1.02] duration-300" style={{ boxShadow: '0 20px 40px -10px rgba(11, 28, 48, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.8)' }}>
-                <div className="flex justify-between items-start border-b-2 border-primary/20 pb-6 mb-8">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-2xl">V</div>
-                    <div>
-                      <h3 className="text-headline-md font-bold text-on-surface">Gym at Home Protocol</h3>
-                      <p className="text-label-md text-on-surface-variant uppercase tracking-widest text-xs">Clinical Grade Plan</p>
+              <div className="bg-white w-full max-w-3xl aspect-[1/1.414] rounded-sm relative z-10 flex flex-col scale-95 md:scale-100 transform origin-top transition-transform hover:scale-[1.01] duration-300 overflow-hidden" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)' }}>
+
+                {/* Report Header */}
+                <div className="bg-gradient-to-r from-[#006C49] to-[#004D33] text-white px-10 py-8">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
+                        <span className="text-2xl font-black">V</span>
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold tracking-tight">Gym at Home</h3>
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-white/70 mt-0.5">Health & Fitness Protocol</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-label-md font-bold text-on-surface">Client: {user?.username || 'N/A'}</p>
-                    <p className="text-label-md text-on-surface-variant">{timePeriod}</p>
-                    {profile?.goal && (
-                      <p className="text-secondary mt-1 bg-secondary-fixed/50 inline-block px-2 py-0.5 rounded text-xs">
-                        Goal: {profile.goal === 'lose' ? 'Fat Loss' : profile.goal === 'gain' ? 'Muscle Growth' : 'General Fitness'}
-                      </p>
-                    )}
+                    <div className="text-right text-white/80 text-[11px] space-y-1">
+                      <p className="text-white font-semibold">{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                      <p>Report ID: GAH-{Date.now().toString(36).toUpperCase().slice(-6)}</p>
+                    </div>
                   </div>
                 </div>
 
-                {checkedSections.exercise && (
-                  <div className="mb-10">
-                    <h4 className="text-body-lg font-bold text-on-surface border-l-4 border-primary pl-3 mb-4 flex items-center gap-2">
-                      <Dumbbell className="w-5 h-5 text-primary" />
-                      Exercise Plan
-                    </h4>
-                    {planDays.length > 0 ? (
-                      <div className="border border-outline-variant/40 rounded-lg overflow-hidden mb-4">
-                        <table className="w-full text-sm text-left text-on-surface">
-                          <thead className="text-xs text-on-surface-variant bg-surface-container uppercase">
-                            <tr>
-                              <th className="px-4 py-3 font-semibold">Day</th>
-                              <th className="px-4 py-3 font-semibold">Focus</th>
-                              <th className="px-4 py-3 font-semibold">Exercises</th>
-                              <th className="px-4 py-3 font-semibold">Volume</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-outline-variant/30">
-                            {planDays.map((dp) => (
-                              <tr key={dp.day} className="bg-surface-container-lowest">
-                                <td className="px-4 py-3 font-medium">{dp.day}</td>
-                                <td className="px-4 py-3">
-                                  <span className="bg-tertiary-fixed text-on-tertiary-fixed px-2 py-1 rounded text-xs">{dp.label}</span>
-                                </td>
-                                <td className="px-4 py-3">{dp.exercises.slice(0, 2).map((e: any) => e.exerciseName).join(', ')}</td>
-                                <td className="px-4 py-3">{dp.exercises[0]?.sets || 3} Sets x {dp.exercises[0]?.reps || 10} Reps</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-on-surface-variant italic">No workout plan generated yet. Visit Exercises to create one.</p>
-                    )}
-                  </div>
-                )}
-
-                {checkedSections.nutrition && (
-                  <div>
-                    <h4 className="text-body-lg font-bold text-on-surface border-l-4 border-secondary pl-3 mb-4 flex items-center gap-2">
-                      <Utensils className="w-5 h-5 text-secondary" />
-                      Meal Plan & Macros
-                    </h4>
-                    <div className="grid grid-cols-3 gap-4 mb-6">
-                      <div className="bg-surface-container p-3 rounded-lg text-center border border-outline-variant/20">
-                        <p className="text-xs text-on-surface-variant mb-1">Target Calories</p>
-                        <p className="text-stat-value text-primary font-bold">{(calculations?.targetCalories || 0).toLocaleString()}</p>
-                      </div>
-                      <div className="bg-surface-container p-3 rounded-lg text-center border border-outline-variant/20">
-                        <p className="text-xs text-on-surface-variant mb-1">Protein Goal</p>
-                        <p className="text-stat-value text-secondary font-bold">{calculations?.protein || 0}g</p>
-                      </div>
-                      <div className="bg-surface-container p-3 rounded-lg text-center border border-outline-variant/20">
-                        <p className="text-xs text-on-surface-variant mb-1">Hydration</p>
-                        <p className="text-stat-value text-tertiary font-bold">{calculations?.hydration || 3}L</p>
+                {/* Client Info Bar */}
+                <div className="bg-gray-50 border-b border-gray-200 px-10 py-4">
+                  <div className="grid grid-cols-4 gap-4 text-[11px]">
+                    <div className="flex items-center gap-2">
+                      <User className="w-3.5 h-3.5 text-[#006C49]" />
+                      <div>
+                        <p className="text-gray-400 uppercase tracking-wider text-[9px]">Client</p>
+                        <p className="font-semibold text-gray-800">{user?.username || 'N/A'}</p>
                       </div>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5 text-[#006C49]" />
+                      <div>
+                        <p className="text-gray-400 uppercase tracking-wider text-[9px]">Period</p>
+                        <p className="font-semibold text-gray-800">{timePeriod}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-3.5 h-3.5 text-[#006C49]" />
+                      <div>
+                        <p className="text-gray-400 uppercase tracking-wider text-[9px]">Goal</p>
+                        <p className="font-semibold text-gray-800">{profile?.goal === 'lose' ? 'Fat Loss' : profile?.goal === 'gain' ? 'Muscle Gain' : profile?.goal === 'maintain' ? 'Maintain Weight' : 'General Fitness'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Activity className="w-3.5 h-3.5 text-[#006C49]" />
+                      <div>
+                        <p className="text-gray-400 uppercase tracking-wider text-[9px]">BMI</p>
+                        <p className="font-semibold text-gray-800">{profile?.weight && profile?.height ? (profile.weight / ((profile.height / 100) ** 2)).toFixed(1) : '--'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-                    {includeMacros && (
-                      <div className="flex gap-4 items-center mb-6">
-                        <div className="w-16 h-16 rounded-full border-4 border-primary border-r-secondary border-b-tertiary flex items-center justify-center transform -rotate-45">
-                          <span className="transform rotate-45 text-xs font-bold text-on-surface-variant">Macros</span>
+                {/* Report Body */}
+                <div className="flex-1 px-10 py-8 space-y-8 overflow-y-auto">
+
+                  {/* Executive Summary */}
+                  {checkedSections.nutrition && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="w-1 h-5 bg-[#006C49] rounded-full" />
+                        <h4 className="text-[13px] font-bold text-gray-900 uppercase tracking-wider">Nutritional Targets</h4>
+                      </div>
+                      <div className="grid grid-cols-4 gap-3">
+                        <div className="bg-gradient-to-br from-[#006C49]/5 to-[#006C49]/10 rounded-lg p-3 border border-[#006C49]/10">
+                          <div className="flex items-center gap-1.5 mb-2">
+                            <Flame className="w-3.5 h-3.5 text-[#006C49]" />
+                            <span className="text-[9px] uppercase tracking-wider text-gray-500 font-medium">Calories</span>
+                          </div>
+                          <p className="text-lg font-bold text-[#006C49]">{(calculations?.targetCalories || 0).toLocaleString()}</p>
+                          <p className="text-[9px] text-gray-400">kcal / day</p>
                         </div>
-                        <div className="flex-grow space-y-2 text-sm text-on-surface-variant">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-primary" />
-                            <span>40% Carbs ({calculations?.carbs || 0}g)</span>
+                        <div className="bg-gradient-to-br from-[#0058BE]/5 to-[#0058BE]/10 rounded-lg p-3 border border-[#0058BE]/10">
+                          <div className="flex items-center gap-1.5 mb-2">
+                            <Dumbbell className="w-3.5 h-3.5 text-[#0058BE]" />
+                            <span className="text-[9px] uppercase tracking-wider text-gray-500 font-medium">Protein</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-secondary" />
-                            <span>30% Protein ({calculations?.protein || 0}g)</span>
+                          <p className="text-lg font-bold text-[#0058BE]">{calculations?.protein || 0}g</p>
+                          <p className="text-[9px] text-gray-400">{calculations?.protein || 0}g / day</p>
+                        </div>
+                        <div className="bg-gradient-to-br from-[#855300]/5 to-[#855300]/10 rounded-lg p-3 border border-[#855300]/10">
+                          <div className="flex items-center gap-1.5 mb-2">
+                            <Droplets className="w-3.5 h-3.5 text-[#855300]" />
+                            <span className="text-[9px] uppercase tracking-wider text-gray-500 font-medium">Hydration</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-tertiary" />
-                            <span>30% Fats ({calculations?.fat || 0}g)</span>
+                          <p className="text-lg font-bold text-[#855300]">{calculations?.hydration || 3}L</p>
+                          <p className="text-[9px] text-gray-400">liters / day</p>
+                        </div>
+                        <div className="bg-gradient-to-br from-[#BA1A1A]/5 to-[#BA1A1A]/10 rounded-lg p-3 border border-[#BA1A1A]/10">
+                          <div className="flex items-center gap-1.5 mb-2">
+                            <Heart className="w-3.5 h-3.5 text-[#BA1A1A]" />
+                            <span className="text-[9px] uppercase tracking-wider text-gray-500 font-medium">Fat</span>
                           </div>
+                          <p className="text-lg font-bold text-[#BA1A1A]">{calculations?.fat || 0}g</p>
+                          <p className="text-[9px] text-gray-400">{calculations?.fat || 0}g / day</p>
                         </div>
                       </div>
-                    )}
 
-                    <div className="mt-8">
-                      <h4 className="text-body-lg font-bold text-on-surface border-l-4 border-tertiary pl-3 mb-4">
-                        Weekly Nutrition Overview
-                      </h4>
-                      <div className="grid grid-cols-7 gap-2 overflow-hidden mb-4">
+                      {includeMacros && (
+                        <div className="mt-4 bg-gray-50 rounded-lg p-4 border border-gray-100">
+                          <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-3 font-medium">Macro Distribution</p>
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between text-[10px] mb-1">
+                                <span className="text-gray-600">Carbs</span>
+                                <span className="font-semibold text-gray-800">40% — {calculations?.carbs || 0}g</span>
+                              </div>
+                              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div className="h-full bg-[#006C49] rounded-full" style={{ width: '40%' }} />
+                              </div>
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between text-[10px] mb-1">
+                                <span className="text-gray-600">Protein</span>
+                                <span className="font-semibold text-gray-800">30% — {calculations?.protein || 0}g</span>
+                              </div>
+                              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div className="h-full bg-[#0058BE] rounded-full" style={{ width: '30%' }} />
+                              </div>
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between text-[10px] mb-1">
+                                <span className="text-gray-600">Fats</span>
+                                <span className="font-semibold text-gray-800">30% — {calculations?.fat || 0}g</span>
+                              </div>
+                              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div className="h-full bg-[#855300] rounded-full" style={{ width: '30%' }} />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Exercise Plan */}
+                  {checkedSections.exercise && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="w-1 h-5 bg-[#0058BE] rounded-full" />
+                        <h4 className="text-[13px] font-bold text-gray-900 uppercase tracking-wider">Exercise Protocol</h4>
+                      </div>
+                      {planDays.length > 0 ? (
+                        <div className="border border-gray-200 rounded-lg overflow-hidden">
+                          <table className="w-full text-[11px]">
+                            <thead>
+                              <tr className="bg-gray-50 border-b border-gray-200">
+                                <th className="px-4 py-2.5 text-left font-semibold text-gray-600 uppercase tracking-wider text-[9px]">Day</th>
+                                <th className="px-4 py-2.5 text-left font-semibold text-gray-600 uppercase tracking-wider text-[9px]">Focus</th>
+                                <th className="px-4 py-2.5 text-left font-semibold text-gray-600 uppercase tracking-wider text-[9px]">Exercises</th>
+                                <th className="px-4 py-2.5 text-left font-semibold text-gray-600 uppercase tracking-wider text-[9px]">Volume</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                              {planDays.map((dp, i) => (
+                                <tr key={dp.day} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
+                                  <td className="px-4 py-2.5 font-medium text-gray-800">{dp.day}</td>
+                                  <td className="px-4 py-2.5">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-semibold bg-[#0058BE]/10 text-[#0058BE]">{dp.label}</span>
+                                  </td>
+                                  <td className="px-4 py-2.5 text-gray-600">{dp.exercises.slice(0, 2).map((e: any) => e.exerciseName).join(', ')}{dp.exercises.length > 2 ? ` +${dp.exercises.length - 2} more` : ''}</td>
+                                  <td className="px-4 py-2.5 text-gray-500 font-mono text-[10px]">{dp.exercises[0]?.sets || 3}x{dp.exercises[0]?.reps || 10}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="bg-gray-50 rounded-lg p-6 text-center border border-dashed border-gray-200">
+                          <Dumbbell className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                          <p className="text-[11px] text-gray-400 italic">No workout plan generated yet</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Weekly Meal Overview */}
+                  {checkedSections.nutrition && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="w-1 h-5 bg-[#855300] rounded-full" />
+                        <h4 className="text-[13px] font-bold text-gray-900 uppercase tracking-wider">Weekly Meal Schedule</h4>
+                      </div>
+                      <div className="grid grid-cols-7 gap-1.5 mb-4">
                         {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
-                          <div key={day} className="flex flex-col gap-2">
-                            <p className="text-[10px] font-bold text-on-surface-variant uppercase text-center">{day}</p>
-                            <div className="bg-surface-container-low p-2 rounded border border-outline-variant/20 space-y-1">
-                              <div className="h-1 w-full bg-primary/30 rounded-full" />
-                              <div className="h-1 w-2/3 bg-secondary/30 rounded-full" />
-                              <div className="h-1 w-1/2 bg-tertiary/30 rounded-full" />
+                          <div key={day} className="text-center">
+                            <p className="text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-1">{day}</p>
+                            <div className="bg-gray-50 rounded p-1.5 space-y-1 border border-gray-100">
+                              <div className="h-1 w-full bg-[#006C49]/30 rounded-full" />
+                              <div className="h-1 w-4/5 bg-[#0058BE]/30 rounded-full mx-auto" />
+                              <div className="h-1 w-3/5 bg-[#855300]/30 rounded-full mx-auto" />
                             </div>
                           </div>
                         ))}
                       </div>
-                      <div className="grid grid-cols-1 gap-2">
-                        <div className="flex items-center justify-between text-[11px] border-b border-outline-variant/10 pb-1">
-                          <span className="font-bold text-on-surface">Breakfast</span>
-                          <span className="text-on-surface-variant">Oatmeal with Berries & Whey</span>
-                        </div>
-                        <div className="flex items-center justify-between text-[11px] border-b border-outline-variant/10 pb-1">
-                          <span className="font-bold text-on-surface">Lunch</span>
-                          <span className="text-on-surface-variant">Grilled Chicken & Quinoa Salad</span>
-                        </div>
-                        <div className="flex items-center justify-between text-[11px] border-b border-outline-variant/10 pb-1">
-                          <span className="font-bold text-on-surface">Dinner</span>
-                          <span className="text-on-surface-variant">Baked Salmon with Asparagus</span>
-                        </div>
-                        <div className="flex items-center justify-between text-[11px]">
-                          <span className="font-bold text-on-surface">Snacks</span>
-                          <span className="text-on-surface-variant">Greek Yogurt, Almonds</span>
-                        </div>
+                      <div className="space-y-1.5">
+                        {[
+                          { meal: 'Breakfast', desc: 'Oatmeal with Berries & Whey Protein', cal: '420 kcal', color: '#006C49' },
+                          { meal: 'Lunch', desc: 'Grilled Chicken & Quinoa Salad', cal: '550 kcal', color: '#0058BE' },
+                          { meal: 'Dinner', desc: 'Baked Salmon with Asparagus', cal: '480 kcal', color: '#855300' },
+                          { meal: 'Snacks', desc: 'Greek Yogurt, Mixed Nuts', cal: '280 kcal', color: '#BA1A1A' },
+                        ].map((item) => (
+                          <div key={item.meal} className="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
+                            <div className="flex items-center gap-2">
+                              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: item.color }} />
+                              <span className="text-[11px] font-semibold text-gray-800">{item.meal}</span>
+                              <span className="text-[10px] text-gray-400">—</span>
+                              <span className="text-[10px] text-gray-500">{item.desc}</span>
+                            </div>
+                            <span className="text-[10px] font-mono text-gray-400">{item.cal}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                <div className="mt-auto border-t border-outline-variant/20 pt-4 flex justify-between items-center text-xs text-on-surface-variant">
-                  <p>Generated by Gym at Home Analytics Engine</p>
-                  <p>Page 1 of 1</p>
+                  {/* Body Metrics */}
+                  {checkedSections.body && bodyMetrics.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="w-1 h-5 bg-[#BA1A1A] rounded-full" />
+                        <h4 className="text-[13px] font-bold text-gray-900 uppercase tracking-wider">Body Metrics Log</h4>
+                      </div>
+                      <div className="border border-gray-200 rounded-lg overflow-hidden">
+                        <table className="w-full text-[11px]">
+                          <thead>
+                            <tr className="bg-gray-50 border-b border-gray-200">
+                              <th className="px-4 py-2.5 text-left font-semibold text-gray-600 uppercase tracking-wider text-[9px]">Date</th>
+                              <th className="px-4 py-2.5 text-left font-semibold text-gray-600 uppercase tracking-wider text-[9px]">Weight</th>
+                              <th className="px-4 py-2.5 text-left font-semibold text-gray-600 uppercase tracking-wider text-[9px]">Height</th>
+                              <th className="px-4 py-2.5 text-left font-semibold text-gray-600 uppercase tracking-wider text-[9px]">BMI</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100">
+                            {bodyMetrics.slice(-5).map((b: any, i: number) => {
+                              const bmi = b.weight && profile?.height ? (b.weight / ((profile.height / 100) ** 2)).toFixed(1) : '--';
+                              return (
+                                <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
+                                  <td className="px-4 py-2.5 font-medium text-gray-800">{b.date || 'N/A'}</td>
+                                  <td className="px-4 py-2.5 text-gray-600">{b.weight || '--'} kg</td>
+                                  <td className="px-4 py-2.5 text-gray-600">{b.height || '--'} cm</td>
+                                  <td className="px-4 py-2.5">
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] font-semibold ${
+                                      bmi !== '--' && parseFloat(bmi) < 25 ? 'bg-[#006C49]/10 text-[#006C49]' :
+                                      bmi !== '--' && parseFloat(bmi) < 30 ? 'bg-[#855300]/10 text-[#855300]' :
+                                      'bg-[#BA1A1A]/10 text-[#BA1A1A]'
+                                    }`}>{bmi}</span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Health Statistics */}
+                  {checkedSections.health && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="w-1 h-5 bg-[#BA1A1A] rounded-full" />
+                        <h4 className="text-[13px] font-bold text-gray-900 uppercase tracking-wider">Health Overview</h4>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3">
+                        {[
+                          { label: 'Resting HR', value: '62 bpm', sub: 'Normal range', color: '#006C49' },
+                          { label: 'Avg Sleep', value: '7.2 hrs', sub: 'Target: 7-9 hrs', color: '#0058BE' },
+                          { label: 'Blood Pressure', value: '118/76', sub: 'Optimal', color: '#855300' },
+                        ].map((stat) => (
+                          <div key={stat.label} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                            <p className="text-[9px] uppercase tracking-wider text-gray-400 mb-1">{stat.label}</p>
+                            <p className="text-base font-bold" style={{ color: stat.color }}>{stat.value}</p>
+                            <p className="text-[9px] text-gray-400 mt-0.5">{stat.sub}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                 </div>
+
+                {/* Report Footer */}
+                <div className="border-t border-gray-200 px-10 py-4 bg-gray-50">
+                  <div className="flex justify-between items-center text-[9px] text-gray-400">
+                    <div className="flex items-center gap-4">
+                      <span>Generated by Gym at Home Analytics Engine</span>
+                      <span className="text-gray-300">|</span>
+                      <span>Confidential — For personal use only</span>
+                    </div>
+                    <span>Page 1 of 1</span>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>

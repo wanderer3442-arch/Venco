@@ -2,9 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, Lock, Eye, EyeOff, User, ArrowRight } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Mail, Lock, Eye, EyeOff, User, ArrowRight, Loader2, ShieldAlert, Clock } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { getLockoutRemainingSeconds } from '@/lib/rate-limiter';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,6 +14,9 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [lockoutSeconds, setLockoutSeconds] = useState(0);
+  const lockoutRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Sign In state
   const [signInEmail, setSignInEmail] = useState('');
@@ -34,23 +38,51 @@ export default function LoginPage() {
     }
   }, [mounted, isAuthenticated, router]);
 
+  // Countdown timer for lockout
+  const startLockoutCountdown = (seconds: number, identifier: string) => {
+    setLockoutSeconds(seconds);
+    if (lockoutRef.current) clearInterval(lockoutRef.current);
+    lockoutRef.current = setInterval(() => {
+      const remaining = getLockoutRemainingSeconds(identifier);
+      setLockoutSeconds(remaining);
+      if (remaining <= 0) {
+        if (lockoutRef.current) clearInterval(lockoutRef.current);
+        setError('');
+      }
+    }, 1000);
+  };
+
+  useEffect(() => {
+    return () => { if (lockoutRef.current) clearInterval(lockoutRef.current); };
+  }, []);
+
   if (!mounted || isAuthenticated) {
     return null;
   }
 
-  const handleSignIn = (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading || lockoutSeconds > 0) return;
     setError('');
-    const result = login(signInEmail, signInPassword);
-    if (result.success) {
-      router.push('/dashboard');
-    } else {
-      setError(result.error || 'Login failed');
+    setLoading(true);
+    try {
+      const result = await login(signInEmail, signInPassword);
+      if (result.success) {
+        router.push('/dashboard');
+      } else {
+        setError(result.error || 'Login failed');
+        if (result.lockoutSeconds) {
+          startLockoutCountdown(result.lockoutSeconds, signInEmail);
+        }
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSignUp = (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setError('');
 
     if (signUpPassword !== signUpConfirm) {
@@ -58,11 +90,16 @@ export default function LoginPage() {
       return;
     }
 
-    const result = signup(signUpEmail, signUpUsername, signUpPassword);
-    if (result.success) {
-      router.push('/dashboard');
-    } else {
-      setError(result.error || 'Signup failed');
+    setLoading(true);
+    try {
+      const result = await signup(signUpEmail, signUpUsername, signUpPassword);
+      if (result.success) {
+        router.push('/dashboard');
+      } else {
+        setError(result.error || 'Signup failed');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -179,9 +216,24 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-error/10 border border-error/20 rounded-xl text-sm text-error flex items-center gap-2">
-              <span className="text-base">⚠️</span>
-              {error}
+            <div className={`mb-6 p-4 rounded-xl text-sm flex items-start gap-3 ${
+              lockoutSeconds > 0
+                ? 'bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400'
+                : 'bg-error/10 border border-error/20 text-error'
+            }`}>
+              {lockoutSeconds > 0
+                ? <ShieldAlert className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                : <span className="text-base flex-shrink-0">⚠️</span>
+              }
+              <div className="flex-1">
+                <p>{error}</p>
+                {lockoutSeconds > 0 && (
+                  <p className="text-xs mt-1 flex items-center gap-1 opacity-80">
+                    <Clock className="w-3 h-3" />
+                    Unlocks in {Math.floor(lockoutSeconds / 60)}:{String(lockoutSeconds % 60).padStart(2, '0')}
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
@@ -229,10 +281,14 @@ export default function LoginPage() {
 
               <button
                 type="submit"
-                className="w-full h-13 bg-primary text-on-primary font-bold rounded-xl text-body-md flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl active:scale-[0.98]"
+                disabled={loading || lockoutSeconds > 0}
+                className="w-full h-13 bg-primary text-on-primary font-bold rounded-xl text-body-md flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100"
               >
-                Sign In
-                <ArrowRight className="w-5 h-5" />
+                {loading
+                  ? <><Loader2 className="w-5 h-5 animate-spin" /> Signing In...</>
+                  : lockoutSeconds > 0
+                  ? <><ShieldAlert className="w-5 h-5" /> Account Locked</>
+                  : <>Sign In <ArrowRight className="w-5 h-5" /></>}
               </button>
             </form>
           )}
@@ -282,7 +338,7 @@ export default function LoginPage() {
                     type={showPassword ? 'text' : 'password'}
                     value={signUpPassword}
                     onChange={(e) => setSignUpPassword(e.target.value)}
-                    placeholder="Min 8 chars, 1 special, 1 number"
+                    placeholder="Min 10 chars, uppercase, number, special"
                     className="w-full h-13 pl-12 pr-12 rounded-xl border-2 border-outline-variant bg-surface-container-lowest text-body-md text-on-surface placeholder:text-outline-variant focus:border-primary focus:ring-0 transition-all"
                   />
                   <button
@@ -313,10 +369,12 @@ export default function LoginPage() {
 
               <button
                 type="submit"
-                className="w-full h-13 bg-primary text-on-primary font-bold rounded-xl text-body-md flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl active:scale-[0.98]"
+                disabled={loading}
+                className="w-full h-13 bg-primary text-on-primary font-bold rounded-xl text-body-md flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100"
               >
-                Create Account
-                <ArrowRight className="w-5 h-5" />
+                {loading
+                  ? <><Loader2 className="w-5 h-5 animate-spin" /> Creating Account...</>
+                  : <>Create Account <ArrowRight className="w-5 h-5" /></>}
               </button>
             </form>
           )}

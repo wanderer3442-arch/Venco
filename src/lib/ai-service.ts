@@ -87,7 +87,9 @@ async function callOpenRouter(
   if (!key) throw new Error('API key not configured.');
 
   const useModel = model || getModel();
-  console.log(`Using model: ${useModel}`);
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`Using model: ${useModel}`);
+  }
 
   const response = await fetch(OPENROUTER_API_URL, {
     method: 'POST',
@@ -117,7 +119,7 @@ async function callOpenRouter(
 
 // ─── Dev Console Helper ──────────────────────────────────────────────────────
 
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   (window as any).__setGymAtHomeApiKey = (key: string) => {
     localStorage.setItem('openrouter_api_key', key);
     console.log('✅ Gym at Home API key saved');

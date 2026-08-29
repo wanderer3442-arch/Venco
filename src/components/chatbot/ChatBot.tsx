@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Send, X, MessageCircle, Bot, User, Sparkles, Minimize2 } from 'lucide-react';
 import { getChatResponse } from '@/lib/ai-service';
 import { hasApiKey } from '@/lib/food-recognition';
 import { findResponse, getFollowUps } from '@/lib/chatbot-responses';
 import { useSubscription } from '@/lib/subscription-context';
+import { useStore } from '@/lib/store-context';
+import { useAuth } from '@/lib/auth-context';
 
 interface Message {
   id: number;
@@ -62,6 +64,36 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { isPro, isPremium } = useSubscription();
   const isPaid = isPro || isPremium;
+  const { user } = useAuth();
+  const { profile, meals, waterLogs, calculations, bodyMetrics, workoutPlan } = useStore();
+
+  // Build personalized context for AI
+  const chatContext = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const todayMeals = meals.filter((m: any) => m.loggedAt?.startsWith(today));
+    const todayCalories = todayMeals.reduce((sum: number, m: any) => sum + (m.calories || 0), 0);
+    const todayProtein = todayMeals.reduce((sum: number, m: any) => sum + (m.protein || 0), 0);
+    const todayWater = waterLogs
+      .filter((w: any) => w.date?.startsWith(today))
+      .reduce((sum: number, w: any) => sum + (w.amount || 0), 0) / 1000;
+    const recentMealNames = todayMeals.slice(-3).map((m: any) => m.foodName).join(', ');
+
+    return {
+      profile: profile ? {
+        bmi: calculations?.bmi || null,
+        weight: profile.weight,
+        height: profile.height,
+        age: profile.age,
+        activityLevel: profile.activityLevel || 'moderate',
+        targetCalories: calculations?.targetCalories,
+      } : null,
+      recentMeals: recentMealNames || undefined,
+      healthGoal: profile?.goal || undefined,
+      dailyCalories: todayCalories || undefined,
+      dailyProtein: todayProtein || undefined,
+      dailyWater: todayWater || undefined,
+    };
+  }, [profile, meals, waterLogs, calculations]);
 
   useEffect(() => {
     setDailyCount(getDailyCount());
@@ -111,7 +143,7 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
       let followUps: string[] = [];
 
       if (hasApiKey() || (isPaid && getGeminiKeyForPaid())) {
-        response = await getChatResponse(sendText, undefined, isPaid);
+        response = await getChatResponse(sendText, chatContext, isPaid);
         followUps = getFollowUps(sendText);
         incrementDailyCount();
       } else {
@@ -237,7 +269,14 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
         {/* Quick Actions */}
         <div className="px-4 pb-2">
           <div className="flex gap-2 overflow-x-auto pb-2">
-            {['Analyze my progress', 'Suggest a meal', 'Exercise tips', 'Sleep advice'].map((action) => (
+            {[
+              'How much protein should I eat?',
+              'Suggest a meal',
+              'Full body workout',
+              'Sleep tips',
+              'How much water should I drink?',
+              'Create a meal plan',
+            ].map((action) => (
               <button
                 key={action}
                 onClick={() => handleSend(action)}
@@ -382,7 +421,12 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
           {/* Quick Actions */}
           <div className="px-4 pb-2">
             <div className="flex gap-2 overflow-x-auto pb-2">
-              {['Analyze my progress', 'Suggest a meal', 'Exercise tips', 'Sleep advice'].map((action) => (
+              {[
+                'How much protein should I eat?',
+                'Suggest a meal',
+                'Full body workout',
+                'Sleep tips',
+              ].map((action) => (
                 <button
                   key={action}
                   onClick={() => handleSend(action)}

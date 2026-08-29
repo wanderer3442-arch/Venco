@@ -1,0 +1,202 @@
+// VencoFit — Prisma schema (SQLite dev, Postgres on Vercel via DATABASE_URL override)
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// --- NextAuth core ---
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  username      String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?   // bcrypt for Credentials; null for OAuth users
+  subscriptionTier String @default("free") // free | pro | annual
+  subscriptionExpiresAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  profile       Profile?
+  calculations  CalculationSnapshot[]
+  habits        Habit[]
+  mealLogs      MealLog[]
+  otherFoodLogs OtherFoodLog[]
+  bodyLogs      BodyLog[]
+  exercisePlans ExercisePlan[]
+  chatUsage     ChatUsage[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// --- Domain ---
+model Profile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  sex            String   // male | female
+  age            Int
+  weightKg       Float
+  heightCm       Float
+  activityFactor Float    // 1.2 - 1.9
+  goal           String   // fat_loss | lean_bulk | maintenance
+  allergies      String   @default("[]") // JSON array string
+  healthSlug     String?  // selected HealthCondition slug (pro only)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CalculationSnapshot {
+  id        String   @id @default(cuid())
+  userId    String
+  bmi       Float
+  bmr       Float
+  tdee      Float
+  targetKcal Int
+  proteinG  Int
+  fatG      Int
+  carbsG    Int
+  hydrationMl Int
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model FoodItem {
+  id        String @id @default(cuid())
+  name      String @unique
+  region    String // Indian | Global | etc
+  kcal      Int
+  protein   Float
+  carbs     Float
+  fat       Float
+  allergens String @default("[]") // JSON
+  createdAt DateTime @default(now())
+
+  mealLogs      MealLog[]
+  otherFoodLogs OtherFoodLog[]
+}
+
+model MealLog {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @default(now())
+  mealType  String   // breakfast | lunch | dinner
+  foodId    String
+  qtyG      Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  food      FoodItem @relation(fields: [foodId], references: [id])
+}
+
+model OtherFoodLog {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @default(now())
+  foodId    String?
+  rawName   String   // e.g. "ice cream"
+  qtyG      Int      @default(100)
+  healthScore String? // green | amber | red
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  food      FoodItem? @relation(fields: [foodId], references: [id])
+}
+
+model Habit {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  createdAt DateTime @default(now())
+  entries   HabitEntry[]
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, name])
+}
+
+model HabitEntry {
+  id      String   @id @default(cuid())
+  habitId String
+  date    DateTime // YYYY-MM-DD normalized
+  done    Boolean  @default(true)
+  habit   Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, date])
+}
+
+model BodyLog {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @default(now())
+  weightKg  Float?
+  heightCm  Float?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ExercisePlan {
+  id        String   @id @default(cuid())
+  userId    String
+  source    String   @default("auto") // auto | template | custom
+  name      String   @default("My Plan")
+  days      String   // JSON: [{day, exercises:[{name, sets, reps}]}]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model HealthCondition {
+  id               String @id @default(cuid())
+  slug             String @unique
+  title            String
+  sourceUrl        String
+  mealGuidance     String // JSON / markdown
+  exerciseGuidance String
+}
+
+model ChatUsage {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime // normalized to day
+  count     Int      @default(0)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}

@@ -473,7 +473,7 @@ export default function LoggerPage() {
         </div>
 
         {/* Habit Consistency - LeetCode Calendar */}
-        <div className="bg-surface rounded-xl border border-outline-variant p-5 md:p-6">
+        <div className="lg:col-span-3 bg-surface rounded-xl border border-outline-variant p-5 md:p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-headline-md font-semibold text-on-surface">Habit Consistency</h2>
             <div className="flex items-center gap-1.5 text-[10px] text-on-surface-variant">
@@ -492,11 +492,11 @@ export default function LoggerPage() {
             <div>
               {/* Calendar Grid */}
               <div className="overflow-x-auto pb-2">
-                <div className="flex gap-[5px] min-w-max">
+                <div className="flex gap-[6px] min-w-max">
                   {/* Day labels */}
                   <div className="flex flex-col gap-[5px] mr-1.5 pt-6">
                     {['', 'Mon', '', 'Wed', '', 'Fri', ''].map((day, i) => (
-                      <div key={i} className="h-3.5 text-[10px] text-on-surface-variant flex items-center font-medium">{day}</div>
+                      <div key={i} className="h-4 text-[10px] text-on-surface-variant flex items-center font-medium">{day}</div>
                     ))}
                   </div>
 
@@ -564,11 +564,11 @@ export default function LoggerPage() {
                         </div>
                         <div className="flex gap-[5px]">
                           {weeks.map((week, wi) => (
-                            <div key={wi} className="flex flex-col gap-[5px]">
+                            <div key={wi} className="flex flex-col gap-[6px]">
                               {week.map((day, di) => (
                                 <div
                                   key={di}
-                                  className={`w-3.5 h-3.5 rounded-[3px] ${getBg(day.count)} transition-colors cursor-default`}
+                                  className={`w-4 h-4 rounded-[3px] ${getBg(day.count)} transition-colors cursor-default`}
                                   title={`${day.dateStr}: ${day.count}/${habits.length} habits`}
                                 />
                               ))}

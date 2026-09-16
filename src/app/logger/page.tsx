@@ -472,68 +472,142 @@ export default function LoggerPage() {
           </div>
         </div>
 
-        {/* Habit Consistency */}
+        {/* Habit Consistency - LeetCode Calendar */}
         <div className="lg:col-span-2 bg-surface rounded-xl border border-outline-variant p-4 md:p-6">
           <h2 className="text-headline-md font-semibold text-on-surface mb-4">Habit Consistency</h2>
           {habits.length === 0 ? (
             <p className="text-sm text-on-surface-variant text-center py-6 italic">Add habits above to track consistency</p>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {habits.map((h) => {
-                let streak = 0;
-                const today = new Date();
-                for (let d = 0; d < 365; d++) {
-                  const dateStr = new Date(today);
-                  dateStr.setDate(today.getDate() - d);
-                  const ds = dateStr.toISOString().split('T')[0];
-                  if (h.completedDates.includes(ds)) streak++;
-                  else break;
-                }
-                const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-                const completedThisMonth = h.completedDates.filter(d => {
-                  const dt = new Date(d);
-                  return dt.getMonth() === today.getMonth() && dt.getFullYear() === today.getFullYear();
-                }).length;
-                const progress = Math.min((completedThisMonth / daysInMonth) * 100, 100);
-                const level = streak >= 30 ? '🔥' : streak >= 7 ? '⭐' : streak >= 3 ? '✅' : '○';
+            <div>
+              {/* Legend */}
+              <div className="flex items-center gap-2 mb-3 text-[10px] text-on-surface-variant">
+                <span>Less</span>
+                <div className="w-2.5 h-2.5 rounded-sm bg-surface-container-high" />
+                <div className="w-2.5 h-2.5 rounded-sm bg-primary/20" />
+                <div className="w-2.5 h-2.5 rounded-sm bg-primary/50" />
+                <div className="w-2.5 h-2.5 rounded-sm bg-primary/80" />
+                <div className="w-2.5 h-2.5 rounded-sm bg-primary" />
+                <span>More</span>
+              </div>
 
-                // Last 7 days mini heatmap
-                const last7 = [];
-                for (let d = 6; d >= 0; d--) {
-                  const dateStr = new Date(today);
-                  dateStr.setDate(today.getDate() - d);
-                  const ds = dateStr.toISOString().split('T')[0];
-                  last7.push({ day: dateStr.toLocaleDateString('en', { weekday: 'narrow' }), done: h.completedDates.includes(ds) });
-                }
-
-                return (
-                  <div key={h.id} className="bg-surface-container rounded-lg p-3 border border-outline-variant/50">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-semibold text-on-surface truncate">{h.name}</span>
-                      <span className="text-sm">{level}</span>
-                    </div>
-                    <div className="w-full bg-surface rounded-full h-1.5 mb-2">
-                      <div className="bg-primary h-1.5 rounded-full transition-all" style={{ width: `${progress}%` }} />
-                    </div>
-                    <div className="flex justify-between text-[10px] text-on-surface-variant mb-2">
-                      <span>{completedThisMonth}/{daysInMonth} days</span>
-                      <span className={`font-semibold ${streak >= 7 ? 'text-primary' : 'text-on-surface-variant'}`}>{streak} streak</span>
-                    </div>
-                    <div className="flex gap-0.5 justify-center">
-                      {last7.map((d, i) => (
-                        <div
-                          key={i}
-                          className="w-5 h-5 rounded flex flex-col items-center justify-center text-[8px]"
-                          title={`${d.day}: ${d.done ? 'Done' : 'Missed'}`}
-                        >
-                          <span className="text-on-surface-variant mb-0.5">{d.day}</span>
-                          <div className={`w-2.5 h-2.5 rounded-sm ${d.done ? 'bg-primary' : 'bg-surface-container-high'}`} />
-                        </div>
-                      ))}
-                    </div>
+              {/* Calendar Grid */}
+              <div className="overflow-x-auto">
+                <div className="flex gap-0.5 min-w-max">
+                  {/* Day labels */}
+                  <div className="flex flex-col gap-0.5 mr-1 pt-5">
+                    {['', 'Mon', '', 'Wed', '', 'Fri', ''].map((day, i) => (
+                      <div key={i} className="h-[11px] text-[9px] text-on-surface-variant flex items-center">{day}</div>
+                    ))}
                   </div>
-                );
-              })}
+
+                  {/* Weeks */}
+                  {(() => {
+                    const today = new Date();
+                    const startDay = today.getDay();
+                    const totalWeeks = 20;
+                    const weeks: { date: Date; dateStr: string; count: number }[][] = [];
+                    let currentWeek: { date: Date; dateStr: string; count: number }[] = [];
+
+                    // Build date→count map for all habits
+                    const dateCountMap: Record<string, number> = {};
+                    habits.forEach(h => {
+                      h.completedDates.forEach(d => {
+                        dateCountMap[d] = (dateCountMap[d] || 0) + 1;
+                      });
+                    });
+
+                    // Go back totalWeeks * 7 + startDay days
+                    const totalDays = totalWeeks * 7 + startDay;
+                    for (let i = totalDays; i >= 0; i--) {
+                      const d = new Date(today);
+                      d.setDate(today.getDate() - i);
+                      const ds = d.toISOString().split('T')[0];
+                      const count = dateCountMap[ds] || 0;
+                      currentWeek.push({ date: d, dateStr: ds, count });
+                      if (currentWeek.length === 7) {
+                        weeks.push(currentWeek);
+                        currentWeek = [];
+                      }
+                    }
+                    if (currentWeek.length > 0) weeks.push(currentWeek);
+
+                    // Month labels
+                    const monthLabels: { week: number; label: string }[] = [];
+                    let lastMonth = -1;
+                    weeks.forEach((week, wi) => {
+                      const m = week[0]?.date.getMonth();
+                      if (m !== undefined && m !== lastMonth) {
+                        monthLabels.push({ week: wi, label: week[0].date.toLocaleDateString('en', { month: 'short' }) });
+                        lastMonth = m;
+                      }
+                    });
+
+                    const getBg = (count: number) => {
+                      if (count === 0) return 'bg-surface-container-high';
+                      const total = habits.length;
+                      const ratio = count / total;
+                      if (ratio <= 0.25) return 'bg-primary/20';
+                      if (ratio <= 0.5) return 'bg-primary/50';
+                      if (ratio <= 0.75) return 'bg-primary/80';
+                      return 'bg-primary';
+                    };
+
+                    return (
+                      <>
+                        {/* Month labels row */}
+                        <div className="flex">
+                          {monthLabels.map((ml, i) => (
+                            <div
+                              key={i}
+                              className="text-[9px] text-on-surface-variant"
+                              style={{ position: 'relative', left: `${ml.week * 13}px`, width: 0 }}
+                            >
+                              {ml.label}
+                            </div>
+                          ))}
+                        </div>
+                        {/* Grid */}
+                        <div className="flex gap-0.5 mt-1">
+                          {weeks.map((week, wi) => (
+                            <div key={wi} className="flex flex-col gap-0.5">
+                              {week.map((day, di) => (
+                                <div
+                                  key={di}
+                                  className={`w-[11px] h-[11px] rounded-sm ${getBg(day.count)} transition-colors`}
+                                  title={`${day.dateStr}: ${day.count}/${habits.length} habits`}
+                                />
+                              ))}
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Stats Row */}
+              <div className="flex flex-wrap gap-4 mt-4 pt-3 border-t border-outline-variant/30">
+                {habits.map(h => {
+                  let streak = 0;
+                  const today = new Date();
+                  for (let d = 0; d < 365; d++) {
+                    const dateStr = new Date(today);
+                    dateStr.setDate(today.getDate() - d);
+                    const ds = dateStr.toISOString().split('T')[0];
+                    if (h.completedDates.includes(ds)) streak++;
+                    else break;
+                  }
+                  const level = streak >= 30 ? '🔥' : streak >= 7 ? '⭐' : streak >= 3 ? '✅' : '○';
+                  return (
+                    <div key={h.id} className="flex items-center gap-1.5 text-xs text-on-surface-variant">
+                      <span>{level}</span>
+                      <span className="font-medium text-on-surface">{h.name}</span>
+                      <span className={`font-bold ${streak >= 7 ? 'text-primary' : ''}`}>{streak}d</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>

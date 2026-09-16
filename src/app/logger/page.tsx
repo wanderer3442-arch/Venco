@@ -551,18 +551,18 @@ export default function LoggerPage() {
 
                     return (
                       <>
-                        <div className="flex ml-[42px] mb-1">
+                        <div className="relative ml-[42px] mb-1 h-4">
                           {monthLabels.map((ml, i) => (
                             <div
                               key={i}
-                              className="text-[10px] text-on-surface-variant font-medium"
-                              style={{ position: 'relative', left: `${ml.week * 18}px`, width: 0 }}
+                              className="absolute text-[10px] text-on-surface-variant font-medium"
+                              style={{ left: `${ml.week * 22}px` }}
                             >
                               {ml.label}
                             </div>
                           ))}
                         </div>
-                        <div className="flex gap-[5px]">
+                        <div className="flex gap-[6px]">
                           {weeks.map((week, wi) => (
                             <div key={wi} className="flex flex-col gap-[6px]">
                               {week.map((day, di) => (

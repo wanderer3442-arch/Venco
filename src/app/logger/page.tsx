@@ -473,30 +473,30 @@ export default function LoggerPage() {
         </div>
 
         {/* Habit Consistency - LeetCode Calendar */}
-        <div className="lg:col-span-2 bg-surface rounded-xl border border-outline-variant p-4 md:p-6">
-          <h2 className="text-headline-md font-semibold text-on-surface mb-4">Habit Consistency</h2>
+        <div className="bg-surface rounded-xl border border-outline-variant p-5 md:p-6">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-headline-md font-semibold text-on-surface">Habit Consistency</h2>
+            <div className="flex items-center gap-1.5 text-[10px] text-on-surface-variant">
+              <span>Less</span>
+              <div className="w-3 h-3 rounded bg-surface-container-high" />
+              <div className="w-3 h-3 rounded bg-primary/20" />
+              <div className="w-3 h-3 rounded bg-primary/50" />
+              <div className="w-3 h-3 rounded bg-primary/80" />
+              <div className="w-3 h-3 rounded bg-primary" />
+              <span>More</span>
+            </div>
+          </div>
           {habits.length === 0 ? (
-            <p className="text-sm text-on-surface-variant text-center py-6 italic">Add habits above to track consistency</p>
+            <p className="text-sm text-on-surface-variant text-center py-10 italic">Add habits above to track consistency</p>
           ) : (
             <div>
-              {/* Legend */}
-              <div className="flex items-center gap-2 mb-3 text-[10px] text-on-surface-variant">
-                <span>Less</span>
-                <div className="w-2.5 h-2.5 rounded-sm bg-surface-container-high" />
-                <div className="w-2.5 h-2.5 rounded-sm bg-primary/20" />
-                <div className="w-2.5 h-2.5 rounded-sm bg-primary/50" />
-                <div className="w-2.5 h-2.5 rounded-sm bg-primary/80" />
-                <div className="w-2.5 h-2.5 rounded-sm bg-primary" />
-                <span>More</span>
-              </div>
-
               {/* Calendar Grid */}
-              <div className="overflow-x-auto">
-                <div className="flex gap-0.5 min-w-max">
+              <div className="overflow-x-auto pb-2">
+                <div className="flex gap-[5px] min-w-max">
                   {/* Day labels */}
-                  <div className="flex flex-col gap-0.5 mr-1 pt-5">
+                  <div className="flex flex-col gap-[5px] mr-1.5 pt-6">
                     {['', 'Mon', '', 'Wed', '', 'Fri', ''].map((day, i) => (
-                      <div key={i} className="h-[11px] text-[9px] text-on-surface-variant flex items-center">{day}</div>
+                      <div key={i} className="h-3.5 text-[10px] text-on-surface-variant flex items-center font-medium">{day}</div>
                     ))}
                   </div>
 
@@ -504,11 +504,10 @@ export default function LoggerPage() {
                   {(() => {
                     const today = new Date();
                     const startDay = today.getDay();
-                    const totalWeeks = 20;
+                    const totalWeeks = 22;
                     const weeks: { date: Date; dateStr: string; count: number }[][] = [];
                     let currentWeek: { date: Date; dateStr: string; count: number }[] = [];
 
-                    // Build date→count map for all habits
                     const dateCountMap: Record<string, number> = {};
                     habits.forEach(h => {
                       h.completedDates.forEach(d => {
@@ -516,7 +515,6 @@ export default function LoggerPage() {
                       });
                     });
 
-                    // Go back totalWeeks * 7 + startDay days
                     const totalDays = totalWeeks * 7 + startDay;
                     for (let i = totalDays; i >= 0; i--) {
                       const d = new Date(today);
@@ -531,7 +529,6 @@ export default function LoggerPage() {
                     }
                     if (currentWeek.length > 0) weeks.push(currentWeek);
 
-                    // Month labels
                     const monthLabels: { week: number; label: string }[] = [];
                     let lastMonth = -1;
                     weeks.forEach((week, wi) => {
@@ -554,26 +551,24 @@ export default function LoggerPage() {
 
                     return (
                       <>
-                        {/* Month labels row */}
-                        <div className="flex">
+                        <div className="flex ml-[42px] mb-1">
                           {monthLabels.map((ml, i) => (
                             <div
                               key={i}
-                              className="text-[9px] text-on-surface-variant"
-                              style={{ position: 'relative', left: `${ml.week * 13}px`, width: 0 }}
+                              className="text-[10px] text-on-surface-variant font-medium"
+                              style={{ position: 'relative', left: `${ml.week * 18}px`, width: 0 }}
                             >
                               {ml.label}
                             </div>
                           ))}
                         </div>
-                        {/* Grid */}
-                        <div className="flex gap-0.5 mt-1">
+                        <div className="flex gap-[5px]">
                           {weeks.map((week, wi) => (
-                            <div key={wi} className="flex flex-col gap-0.5">
+                            <div key={wi} className="flex flex-col gap-[5px]">
                               {week.map((day, di) => (
                                 <div
                                   key={di}
-                                  className={`w-[11px] h-[11px] rounded-sm ${getBg(day.count)} transition-colors`}
+                                  className={`w-3.5 h-3.5 rounded-[3px] ${getBg(day.count)} transition-colors cursor-default`}
                                   title={`${day.dateStr}: ${day.count}/${habits.length} habits`}
                                 />
                               ))}
@@ -586,8 +581,8 @@ export default function LoggerPage() {
                 </div>
               </div>
 
-              {/* Stats Row */}
-              <div className="flex flex-wrap gap-4 mt-4 pt-3 border-t border-outline-variant/30">
+              {/* Habit Stats */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-5 pt-4 border-t border-outline-variant/30">
                 {habits.map(h => {
                   let streak = 0;
                   const today = new Date();
@@ -598,12 +593,26 @@ export default function LoggerPage() {
                     if (h.completedDates.includes(ds)) streak++;
                     else break;
                   }
+                  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+                  const completedThisMonth = h.completedDates.filter(d => {
+                    const dt = new Date(d);
+                    return dt.getMonth() === today.getMonth() && dt.getFullYear() === today.getFullYear();
+                  }).length;
                   const level = streak >= 30 ? '🔥' : streak >= 7 ? '⭐' : streak >= 3 ? '✅' : '○';
+
                   return (
-                    <div key={h.id} className="flex items-center gap-1.5 text-xs text-on-surface-variant">
-                      <span>{level}</span>
-                      <span className="font-medium text-on-surface">{h.name}</span>
-                      <span className={`font-bold ${streak >= 7 ? 'text-primary' : ''}`}>{streak}d</span>
+                    <div key={h.id} className="bg-surface-container rounded-lg p-3 border border-outline-variant/30">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm">{level}</span>
+                          <span className="text-xs font-semibold text-on-surface truncate">{h.name}</span>
+                        </div>
+                        <span className={`text-xs font-bold ${streak >= 7 ? 'text-primary' : 'text-on-surface-variant'}`}>{streak}d</span>
+                      </div>
+                      <div className="w-full bg-surface rounded-full h-1.5">
+                        <div className="bg-primary h-1.5 rounded-full transition-all" style={{ width: `${Math.min((completedThisMonth / daysInMonth) * 100, 100)}%` }} />
+                      </div>
+                      <p className="text-[10px] text-on-surface-variant mt-1.5">{completedThisMonth}/{daysInMonth} days this month</p>
                     </div>
                   );
                 })}
@@ -612,48 +621,6 @@ export default function LoggerPage() {
           )}
         </div>
 
-        {/* Body Metrics */}
-        <div className="bg-surface rounded-xl border border-outline-variant p-6">
-          <h2 className="text-headline-md font-semibold text-on-surface mb-4">Body Metrics</h2>
-          <div className="space-y-3">
-            {bodyMetrics.length === 0 ? (
-              <p className="text-label-md text-on-surface-variant py-4 text-center italic">
-                No body metrics logged yet. Use Quick Log to track weight.
-              </p>
-            ) : (
-              bodyMetrics
-                .sort((a, b) => b.date.localeCompare(a.date))
-                .slice(0, 5)
-                .map((metric, index) => (
-                  <div
-                    key={metric.date}
-                    className={`p-3 rounded-lg ${index === 0 ? 'bg-primary/5 border border-primary/20' : 'bg-surface-container'}`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-on-surface-variant">
-                        {metric.date === today ? 'Today' : new Date(metric.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      </span>
-                      {index === 0 && (
-                        <span className="flex items-center gap-1 text-xs text-success">
-                          <TrendingUp className="w-3 h-3" /> Latest
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex gap-4">
-                      <div>
-                        <p className="text-sm font-medium text-on-surface">{metric.weight} kg</p>
-                        <p className="text-xs text-on-surface-variant">Weight</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-on-surface">{metric.height} cm</p>
-                        <p className="text-xs text-on-surface-variant">Height</p>
-                      </div>
-                    </div>
-                  </div>
-                ))
-            )}
-          </div>
-        </div>
       </div>
     </DashboardLayout>
   );

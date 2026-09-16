@@ -44,13 +44,15 @@
   /* Typography Scale */
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 
-  --text-display-lg: 48px;
-  --text-headline-lg: 32px;
-  --text-headline-md: 24px;
+  --text-display-lg: clamp(32px, 6vw, 48px);
+  --text-headline-lg: clamp(22px, 4vw, 32px);
+  --text-headline-md: clamp(18px, 3vw, 24px);
+  --text-headline-sm: clamp(15px, 2.5vw, 20px);
   --text-body-lg: 18px;
   --text-body-md: 16px;
   --text-label-md: 14px;
-  --text-stat-value: 28px;
+  --text-label-sm: 12px;
+  --text-stat-value: clamp(20px, 3.5vw, 28px);
 
   /* Spacing */
   --spacing-gutter: 24px;
@@ -188,4 +190,28 @@ body {
   --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.3);
   --shadow-card-hover: 0 4px 12px 0 rgb(0 0 0 / 0.4);
   --shadow-elevated: 0 8px 24px 0 rgb(0 0 0 / 0.5);
+}
+
+/* Mobile Polish */
+@supports (padding: env(safe-area-inset-bottom)) {
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  button, a, [role="button"] {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

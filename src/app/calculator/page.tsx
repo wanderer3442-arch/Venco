@@ -228,7 +228,7 @@ export default function CalculatorPage() {
             </div>
 
             {/* BMI + BMR Grid */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-surface-container-lowest rounded-xl p-4 border border-surface-container-highest shadow-[0_10px_15px_-3px_rgba(11,28,48,0.05),0_4px_6px_-2px_rgba(11,28,48,0.025)] flex flex-col justify-between">
                 <div className="flex items-center gap-2 text-on-surface-variant mb-2">
                   <Scale className="w-5 h-5" />
@@ -300,6 +300,7 @@ export default function CalculatorPage() {
                     height: parseFloat(height) as any,
                     weight: parseFloat(weight) as any,
                     activityLevel: levelToActivity[activity] as any,
+                    goal: profile.goal || 'maintain',
                   });
                   setIsProfileSet(true);
                   setSaved(true);

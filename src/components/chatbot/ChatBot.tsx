@@ -318,25 +318,25 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
       {/* Chat Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 ${
+        className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 ${
           isOpen
             ? 'bg-on-surface text-surface-container rotate-0'
             : 'bg-gradient-to-br from-primary to-primary-light text-on-primary hover:scale-110'
         }`}
       >
         {isOpen ? (
-          <Minimize2 className="w-6 h-6" />
+          <Minimize2 className="w-5 h-5 sm:w-6 sm:h-6" />
         ) : (
           <div className="relative">
-            <MessageCircle className="w-6 h-6" />
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-tertiary rounded-full animate-pulse" />
+            <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6" />
+            <div className="absolute -top-1 -right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-tertiary rounded-full animate-pulse" />
           </div>
         )}
       </button>
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-50 w-[380px] h-[520px] bg-surface rounded-2xl shadow-elevated border border-outline-variant/20 flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 fade-in duration-200">
+        <div className="fixed bottom-18 right-2 left-2 sm:bottom-24 sm:left-auto sm:right-6 z-50 w-auto sm:w-[380px] h-[460px] sm:h-[520px] max-h-[calc(100vh-5.5rem)] bg-surface rounded-2xl shadow-elevated border border-outline-variant/20 flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 fade-in duration-200">
           {/* Header */}
           <div className="bg-gradient-to-r from-primary to-primary-light p-4">
             <div className="flex items-center justify-between">

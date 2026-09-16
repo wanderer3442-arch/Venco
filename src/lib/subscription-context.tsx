@@ -35,14 +35,16 @@ const planHierarchy: Record<SubscriptionPlan, number> = {
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [subscription, setSubscription] = useState<Subscription>({
-    plan: 'free',
+    plan: 'premium',
     expiresAt: null,
   });
 
   useEffect(() => {
     const saved = localStorage.getItem('gymathome_subscription');
     if (saved) {
-      setSubscription(JSON.parse(saved));
+      const parsed = JSON.parse(saved);
+      parsed.plan = 'premium';
+      setSubscription(parsed);
     }
   }, []);
 

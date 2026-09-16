@@ -12,6 +12,7 @@ import {
   Subscription,
   WeeklyFoodPreference,
   WaterLog,
+  SleepLog,
   Badge,
 } from './types';
 import { calculateAll } from './calculations';
@@ -55,6 +56,10 @@ interface StoreContextType {
   addWater: (amount: number) => void;
   getWaterForDate: (date: string) => number;
 
+  sleepLogs: SleepLog[];
+  addSleep: (hours: number) => void;
+  getSleepForDate: (date: string) => number;
+
   badges: Badge[];
   checkBadges: () => void;
 
@@ -86,7 +91,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan | null>(null);
   const [bodyMetrics, setBodyMetrics] = useState<BodyMetric[]>([]);
-  const [subscription, setSubscription] = useState<Subscription>({ plan: 'free', expiresAt: null });
+  const [subscription, setSubscription] = useState<Subscription>({ plan: 'premium', expiresAt: null });
   const [foodPreferences, setFoodPreferences] = useState<WeeklyFoodPreference>({
     monday: { breakfast: [], lunch: [], dinner: [] },
     tuesday: { breakfast: [], lunch: [], dinner: [] },
@@ -98,6 +103,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     allergies: [],
   });
   const [waterLogs, setWaterLogs] = useState<WaterLog[]>([]);
+  const [sleepLogs, setSleepLogs] = useState<SleepLog[]>([]);
   const [badges, setBadges] = useState<Badge[]>([]);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [isProfileSet, setIsProfileSet] = useState(false);
@@ -124,6 +130,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         allergies: [],
       });
       setWaterLogs([]);
+      setSleepLogs([]);
       setBadges([]);
       setIsProfileSet(false);
       return;
@@ -144,6 +151,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (parsed.subscription) setSubscription(parsed.subscription);
         if (parsed.foodPreferences) setFoodPreferences(parsed.foodPreferences);
         if (parsed.waterLogs) setWaterLogs(parsed.waterLogs);
+        if (parsed.sleepLogs) setSleepLogs(parsed.sleepLogs);
         if (parsed.badges) setBadges(parsed.badges);
         if (parsed.theme) setTheme(parsed.theme);
         if (parsed.isProfileSet) setIsProfileSet(parsed.isProfileSet);
@@ -170,6 +178,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         allergies: [],
       });
       setWaterLogs([]);
+      setSleepLogs([]);
       setBadges([]);
       setIsProfileSet(false);
     }
@@ -191,12 +200,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         subscription,
         foodPreferences,
         waterLogs,
+        sleepLogs,
         badges,
         theme,
         isProfileSet,
       })
     );
-  }, [user?.id, profile, meals, exercises, habits, workoutPlan, bodyMetrics, subscription, foodPreferences, waterLogs, badges, theme, isProfileSet]);
+  }, [user?.id, profile, meals, exercises, habits, workoutPlan, bodyMetrics, subscription, foodPreferences, waterLogs, sleepLogs, badges, theme, isProfileSet]);
 
   const recalculate = () => {
     const calc = calculateAll(profile);
@@ -205,7 +215,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (isProfileSet && profile.age && profile.height && profile.weight && profile.gender && profile.activityLevel && profile.goal) {
-      recalculate();
+      const calc = calculateAll(profile);
+      setCalculations(calc);
     } else {
       setCalculations(null);
     }
@@ -273,6 +284,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const getWaterForDate = (date: string) => {
     return waterLogs.filter(w => w.date === date).reduce((sum, w) => sum + w.amount, 0);
+  };
+
+  const addSleep = (hours: number) => {
+    const today = new Date().toISOString().split('T')[0];
+    setSleepLogs(prev => [...prev, { date: today, hours, loggedAt: new Date().toISOString() }]);
+  };
+
+  const getSleepForDate = (date: string) => {
+    return sleepLogs.filter(s => s.date === date).reduce((sum, s) => sum + s.hours, 0);
   };
 
   const toggleTheme = () => {
@@ -406,6 +426,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         waterLogs,
         addWater,
         getWaterForDate,
+        sleepLogs,
+        addSleep,
+        getSleepForDate,
         badges,
         checkBadges,
         theme,

@@ -18,6 +18,7 @@ import {
   Calendar,
   User,
   FileText,
+  CheckCircle,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useStore } from '@/lib/store-context';
@@ -34,6 +35,7 @@ const sections = [
   { id: 'nutrition', label: 'Meal Plan & Macros', icon: Utensils, defaultChecked: true },
   { id: 'health', label: 'Health Statistics', icon: Activity, defaultChecked: true },
   { id: 'body', label: 'Body Metrics', icon: TrendingUp, defaultChecked: true },
+  { id: 'habits', label: 'Habits & Consistency', icon: CheckCircle, defaultChecked: true },
 ];
 
 const dayLabels: Record<string, string> = {
@@ -48,7 +50,7 @@ const dayLabels: Record<string, string> = {
 
 export default function ExportReportsPage() {
   const { user } = useAuth();
-  const { profile, meals, exercises: exerciseLogs, bodyMetrics, calculations, workoutPlan } = useStore();
+  const { profile, meals, exercises: exerciseLogs, bodyMetrics, calculations, workoutPlan, habits } = useStore();
   const { hasFeature } = useSubscription();
   const [timePeriod, setTimePeriod] = useState('Last 30 Days');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -57,12 +59,20 @@ export default function ExportReportsPage() {
     nutrition: true,
     health: true,
     body: true,
+    habits: true,
   });
   const [format, setFormat] = useState<'pdf' | 'csv'>('pdf');
   const [generating, setGenerating] = useState(false);
   const [includeMacros, setIncludeMacros] = useState(true);
   const [includeNotes, setIncludeNotes] = useState(true);
+  const [reportId, setReportId] = useState('');
+  const [reportDate, setReportDate] = useState('');
   const hasDownloadAccess = hasFeature('download_reports');
+
+  useEffect(() => {
+    setReportId(Date.now().toString(36).toUpperCase().slice(-6));
+    setReportDate(new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }));
+  }, []);
 
   const toggleSection = (id: string) => {
     setCheckedSections((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -328,9 +338,7 @@ export default function ExportReportsPage() {
       y += 14;
 
       const stats = [
-        { label: 'Resting Heart Rate', value: '62 bpm', color: [133, 83, 0] },
         { label: 'Average Sleep', value: '7.2 hrs', color: [0, 88, 190] },
-        { label: 'Blood Pressure', value: '118/76', color: [186, 26, 26] },
       ];
 
       const statWidth = (pageWidth - 50) / 3;
@@ -348,6 +356,57 @@ export default function ExportReportsPage() {
         doc.text(stat.value, x + 5, y + 17);
       });
       y += 30;
+    }
+
+    // === HABITS ===
+    if (checkedSections.habits) {
+      doc.setFillColor(0, 108, 73);
+      doc.rect(15, y - 5, 4, 12, 'F');
+      doc.setTextColor(0, 108, 73);
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Habits & Consistency', 24, y + 4);
+      y += 14;
+
+      // Table header
+      doc.setFillColor(245, 247, 250);
+      doc.rect(15, y, pageWidth - 30, 8, 'F');
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(60, 60, 60);
+      doc.text('HABIT', 18, y + 5.5);
+      doc.text('COMPLETED', 100, y + 5.5);
+      doc.text('STREAK', 145, y + 5.5);
+      y += 9;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0);
+      habits.forEach((habit, i) => {
+        if (i % 2 === 0) {
+          doc.setFillColor(250, 250, 255);
+          doc.rect(15, y - 2, pageWidth - 30, 8, 'F');
+        }
+        doc.setFontSize(9);
+        doc.text(habit.name.substring(0, 30), 18, y + 4);
+        doc.text(`${habit.completedDates.length} days`, 100, y + 4);
+
+        // Calculate current streak
+        let streak = 0;
+        const today = new Date();
+        for (let d = 0; d < 365; d++) {
+          const dateStr = new Date(today);
+          dateStr.setDate(today.getDate() - d);
+          const ds = dateStr.toISOString().split('T')[0];
+          if (habit.completedDates.includes(ds)) {
+            streak++;
+          } else {
+            break;
+          }
+        }
+        doc.text(`${streak} days`, 145, y + 4);
+        y += 8;
+      });
+      y += 5;
     }
 
     // === BODY METRICS ===
@@ -441,6 +500,27 @@ export default function ExportReportsPage() {
       rows.push(toRow(['', '', '', '', '']));
     }
 
+    if (checkedSections.habits) {
+      rows.push(toRow(['HABITS & CONSISTENCY', '', '', '', '']));
+      rows.push(toRow(['Habit', 'Completed Days', 'Current Streak', '', '']));
+      const today = new Date();
+      habits.forEach((h) => {
+        let streak = 0;
+        for (let d = 0; d < 365; d++) {
+          const dateStr = new Date(today);
+          dateStr.setDate(today.getDate() - d);
+          const ds = dateStr.toISOString().split('T')[0];
+          if (h.completedDates.includes(ds)) {
+            streak++;
+          } else {
+            break;
+          }
+        }
+        rows.push(toRow([h.name, `${h.completedDates.length} days`, `${streak} days`, '', '']));
+      });
+      rows.push(toRow(['', '', '', '', '']));
+    }
+
     if (checkedSections.body && bodyMetrics.length > 0) {
       rows.push(toRow(['BODY METRICS', '', '', '', '']));
       rows.push(toRow(['Date', 'Weight (kg)', 'Height (cm)', '', '']));
@@ -519,33 +599,33 @@ export default function ExportReportsPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8 xl:col-span-9 order-2 lg:order-1">
-            <div className="bg-surface-container-low rounded-xl p-6 flex items-center justify-center min-h-[800px] overflow-hidden relative">
+            <div className="bg-surface-container-low rounded-xl p-2 sm:p-4 md:p-6 flex items-center justify-center min-h-[400px] md:min-h-[800px] overflow-x-auto relative">
               <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#6c7a71 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
 
-              <div className="bg-white w-full max-w-3xl aspect-[1/1.414] rounded-sm relative z-10 flex flex-col scale-95 md:scale-100 transform origin-top transition-transform hover:scale-[1.01] duration-300 overflow-hidden" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)' }}>
+              <div className="bg-white w-full max-w-3xl aspect-[1/1.414] rounded-sm relative z-10 flex flex-col scale-95 md:scale-100 transform origin-top transition-transform hover:scale-[1.01] duration-300 overflow-hidden min-w-[320px]" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)' }}>
 
                 {/* Report Header */}
-                <div className="bg-gradient-to-r from-[#006C49] to-[#004D33] text-white px-10 py-8">
+                <div className="bg-gradient-to-r from-[#006C49] to-[#004D33] text-white px-6 sm:px-10 py-6 sm:py-8">
                   <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
-                        <span className="text-2xl font-black">V</span>
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center shrink-0">
+                        <span className="text-xl sm:text-2xl font-black">V</span>
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold tracking-tight">Gym at Home</h3>
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-white/70 mt-0.5">Health & Fitness Protocol</p>
+                        <h3 className="text-lg sm:text-xl font-bold tracking-tight">Gym at Home</h3>
+                        <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-white/70 mt-0.5">Health & Fitness Protocol</p>
                       </div>
                     </div>
-                    <div className="text-right text-white/80 text-[11px] space-y-1">
-                      <p className="text-white font-semibold">{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
-                      <p>Report ID: GAH-{Date.now().toString(36).toUpperCase().slice(-6)}</p>
+                    <div className="text-right text-white/80 text-[10px] sm:text-[11px] space-y-1">
+                      <p className="text-white font-semibold">{reportDate}</p>
+                      <p>Report ID: GAH-{reportId}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Client Info Bar */}
-                <div className="bg-gray-50 border-b border-gray-200 px-10 py-4">
-                  <div className="grid grid-cols-4 gap-4 text-[11px]">
+                <div className="bg-gray-50 border-b border-gray-200 px-6 sm:px-10 py-3 sm:py-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px]">
                     <div className="flex items-center gap-2">
                       <User className="w-3.5 h-3.5 text-[#006C49]" />
                       <div>
@@ -801,6 +881,56 @@ export default function ExportReportsPage() {
                           </div>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                  {/* Habits */}
+                  {checkedSections.habits && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="w-1 h-5 bg-[#006C49] rounded-full" />
+                        <h4 className="text-[13px] font-bold text-gray-900 uppercase tracking-wider">Habits & Consistency</h4>
+                      </div>
+                      {habits.length === 0 ? (
+                        <p className="text-[10px] text-gray-400 italic">No habits tracked yet</p>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-2">
+                          {habits.map((h) => {
+                            let streak = 0;
+                            const today = new Date();
+                            for (let d = 0; d < 365; d++) {
+                              const dateStr = new Date(today);
+                              dateStr.setDate(today.getDate() - d);
+                              const ds = dateStr.toISOString().split('T')[0];
+                              if (h.completedDates.includes(ds)) streak++;
+                              else break;
+                            }
+                            const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+                            const completedThisMonth = h.completedDates.filter(d => {
+                              const dt = new Date(d);
+                              return dt.getMonth() === today.getMonth() && dt.getFullYear() === today.getFullYear();
+                            }).length;
+                            const progress = Math.min((completedThisMonth / daysInMonth) * 100, 100);
+                            const level = streak >= 30 ? '🔥' : streak >= 7 ? '⭐' : streak >= 3 ? '✅' : '○';
+
+                            return (
+                              <div key={h.id} className="bg-gray-50 rounded-lg p-2.5 border border-gray-100">
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <span className="text-[10px] font-semibold text-gray-800 truncate">{h.name}</span>
+                                  <span className="text-[9px]">{level}</span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-1 mb-1.5">
+                                  <div className="bg-[#006C49] h-1 rounded-full transition-all" style={{ width: `${progress}%` }} />
+                                </div>
+                                <div className="flex justify-between text-[8px] text-gray-500">
+                                  <span>{completedThisMonth}/{daysInMonth} days</span>
+                                  <span className={`font-semibold ${streak >= 7 ? 'text-[#006C49]' : 'text-gray-500'}`}>{streak} streak</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   )}
 

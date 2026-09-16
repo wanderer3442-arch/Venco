@@ -16,6 +16,12 @@ export const metadata: Metadata = {
   description: "Your at-home gym companion. Track meals, exercises, and body metrics with AI-powered insights.",
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export default function RootLayout({
   children,
 }: {

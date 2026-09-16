@@ -1,10 +1,11 @@
 'use client';
 
-import { Search, ChevronDown, User, Settings, LogOut, Sun, Moon } from 'lucide-react';
+import { ChevronDown, User, Settings, LogOut, Sun, Moon, Menu } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { useStore } from '@/lib/store-context';
+import { useSidebar } from '@/lib/sidebar-context';
 
 interface HeaderProps {
   title: string;
@@ -16,6 +17,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
   const router = useRouter();
   const { logout, user } = useAuth();
   const { theme, toggleTheme } = useStore();
+  const { setMobileOpen } = useSidebar();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -34,27 +36,27 @@ export default function Header({ title, subtitle }: HeaderProps) {
   };
 
   return (
-    <header className="h-16 bg-surface-container-lowest border-b border-outline-variant/30 flex items-center justify-between px-6">
-      <div>
-        <h1 className="text-headline-md font-semibold text-on-surface">{title}</h1>
-        {subtitle && <p className="text-sm text-on-surface-variant">{subtitle}</p>}
+    <header className="h-16 bg-surface-container-lowest border-b border-outline-variant/30 flex items-center justify-between px-4 md:px-6">
+      <div className="flex items-center gap-3 min-w-0">
+        {/* Mobile hamburger */}
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="p-2 -ml-2 rounded-lg hover:bg-surface-container transition-colors lg:hidden"
+          aria-label="Open menu"
+        >
+          <Menu className="w-5 h-5 text-on-surface-variant" />
+        </button>
+        <div className="min-w-0">
+          <h1 className="text-lg md:text-headline-md font-semibold text-on-surface truncate">{title}</h1>
+          {subtitle && <p className="text-xs md:text-sm text-on-surface-variant truncate">{subtitle}</p>}
+        </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        {/* Search */}
-        <div className="relative hidden md:block">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" />
-          <input
-            type="text"
-            placeholder="Search..."
-            className="w-64 h-10 pl-10 pr-4 rounded-lg bg-surface-container border border-outline-variant/30 text-sm text-on-surface placeholder:text-outline focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
-          />
-        </div>
-
+      <div className="flex items-center gap-2 md:gap-4">
         {/* Theme Toggle */}
         <button
           onClick={toggleTheme}
-          className="p-2 rounded-lg hover:bg-surface-container transition-colors"
+          className="p-2.5 rounded-lg hover:bg-surface-container transition-colors"
           title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
         >
           {theme === 'light' ? (

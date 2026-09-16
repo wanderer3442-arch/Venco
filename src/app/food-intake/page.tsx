@@ -92,12 +92,12 @@ function AutocompleteInput({
       </div>
       {showSuggestions && suggestions.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-surface border border-outline-variant/40 rounded-xl shadow-xl z-50 max-h-80 overflow-y-auto">
-          {suggestions.map((food) => {
+              {suggestions.map((food, idx) => {
             const serving = food.servingSizes?.[0];
             const servingLabel = serving ? `${serving.amount} ${serving.unit}` : '1 serving';
             return (
               <button
-                key={food.id}
+                key={`${food.id}-${idx}`}
                 onClick={() => handleSelect(food)}
                 className="w-full text-left px-4 py-3 hover:bg-surface-container-low transition-colors border-b border-outline-variant/20 last:border-0"
               >
@@ -124,14 +124,42 @@ function AutocompleteInput({
   );
 }
 
-function FoodChip({ selection, onRemove }: { selection: FoodSelection; onRemove: () => void }) {
+function FoodChip({ selection, onRemove, onQuantityChange }: { selection: FoodSelection; onRemove: () => void; onQuantityChange: (qty: number) => void }) {
+  const qty = selection.quantity || 1;
+  const scaledCals = Math.round(selection.calories * qty);
+  const scaledP = Math.round(selection.protein * qty);
+  const scaledC = Math.round(selection.carbs * qty);
+  const scaledF = Math.round(selection.fat * qty);
+
   return (
     <div className="inline-flex items-center gap-2 bg-surface-container-low border border-outline-variant/30 rounded-lg px-3 py-2">
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-on-surface truncate">{selection.foodName}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="text-sm font-semibold text-on-surface truncate">{selection.foodName}</p>
+          {qty > 1 && (
+            <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded">
+              ×{qty}
+            </span>
+          )}
+        </div>
         <p className="text-xs text-on-surface-variant">
-          {selection.calories} kcal | P: {selection.protein}g | C: {selection.carbs}g | F: {selection.fat}g
+          {scaledCals} kcal | P: {scaledP}g | C: {scaledC}g | F: {scaledF}g
         </p>
+      </div>
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <button
+          onClick={() => onQuantityChange(Math.max(1, qty - 1))}
+          className="w-6 h-6 flex items-center justify-center rounded bg-surface-container-highest text-on-surface text-xs font-bold hover:bg-surface-container-high transition-colors"
+        >
+          −
+        </button>
+        <span className="text-xs font-semibold text-on-surface w-4 text-center">{qty}</span>
+        <button
+          onClick={() => onQuantityChange(qty + 1)}
+          className="w-6 h-6 flex items-center justify-center rounded bg-surface-container-highest text-on-surface text-xs font-bold hover:bg-surface-container-high transition-colors"
+        >
+          +
+        </button>
       </div>
       <button onClick={onRemove} className="p-1 hover:bg-error-container rounded transition-colors flex-shrink-0">
         <X className="w-3.5 h-3.5 text-error" />
@@ -147,6 +175,7 @@ export default function FoodIntakePage() {
   const [allergyInput, setAllergyInput] = useState('');
   const [showAllergySuggestions, setShowAllergySuggestions] = useState(false);
   const [selectedMeal, setSelectedMeal] = useState<'breakfast' | 'lunch' | 'dinner'>('breakfast');
+  const [addQuantity, setAddQuantity] = useState(1);
 
   const dayKey = dayKeys[currentDay];
   const dayData: DayFoodIntake = foodPreferences[dayKey] || { breakfast: [], lunch: [], dinner: [] };
@@ -159,13 +188,13 @@ export default function FoodIntakePage() {
   };
 
   const dayCals = ['breakfast', 'lunch', 'dinner'].reduce((sum, meal) => {
-    return sum + getMealEntries(dayData, meal).reduce((s, f) => s + f.calories, 0);
+    return sum + getMealEntries(dayData, meal).reduce((s, f) => s + f.calories * (f.quantity || 1), 0);
   }, 0);
 
   const weekTotalCals = dayKeys.reduce((sum, key) => {
     const day = foodPreferences[key] || { breakfast: [], lunch: [], dinner: [] };
     return sum + ['breakfast', 'lunch', 'dinner'].reduce((mSum, meal) => {
-      return mSum + getMealEntries(day, meal).reduce((s, f) => s + f.calories, 0);
+      return mSum + getMealEntries(day, meal).reduce((s, f) => s + f.calories * (f.quantity || 1), 0);
     }, 0);
   }, 0);
 
@@ -181,6 +210,7 @@ export default function FoodIntakePage() {
       carbs: food.nutrition.carbohydrates,
       fat: food.nutrition.fat,
       servingSize: serving ? `${serving.amount} ${serving.unit}` : '1 serving',
+      quantity: addQuantity,
     };
 
     setFoodPreferences({
@@ -190,6 +220,7 @@ export default function FoodIntakePage() {
         [meal]: [...getMealEntries(dayData, meal), selection],
       },
     });
+    setAddQuantity(1);
   };
 
   const handleRemoveFood = (meal: 'breakfast' | 'lunch' | 'dinner', index: number) => {
@@ -199,6 +230,20 @@ export default function FoodIntakePage() {
       [dayKey]: {
         ...dayData,
         [meal]: current.filter((_: FoodSelection, i: number) => i !== index),
+      },
+    });
+  };
+
+  const handleQuantityChange = (meal: 'breakfast' | 'lunch' | 'dinner', index: number, qty: number) => {
+    const current = getMealEntries(dayData, meal);
+    const updated = current.map((item: FoodSelection, i: number) =>
+      i === index ? { ...item, quantity: qty } : item
+    );
+    setFoodPreferences({
+      ...foodPreferences,
+      [dayKey]: {
+        ...dayData,
+        [meal]: updated,
       },
     });
   };
@@ -245,16 +290,16 @@ export default function FoodIntakePage() {
       <div className="max-w-4xl mx-auto pb-8">
         {/* Progress Header */}
         <div className="bg-surface rounded-xl border border-outline-variant/30 p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-headline-md font-bold text-on-surface">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <h2 className="text-xl sm:text-headline-md font-bold text-on-surface">
               {dayLabels[currentDay]}
             </h2>
             <div className="flex items-center gap-4">
-              <div className="text-right">
+              <div className="text-left sm:text-right">
                 <p className="text-xs text-on-surface-variant">Today</p>
                 <p className="text-body-lg font-bold text-primary">{dayCals} kcal</p>
               </div>
-              <div className="text-right">
+              <div className="text-left sm:text-right">
                 <p className="text-xs text-on-surface-variant">Weekly Avg</p>
                 <p className="text-body-lg font-bold text-secondary">{avgDailyCals} kcal/day</p>
               </div>
@@ -344,6 +389,21 @@ export default function FoodIntakePage() {
                 allergies={allergies}
               />
             </div>
+            <div className="flex items-center gap-1 bg-surface-container-lowest border border-outline-variant/40 rounded-lg px-2">
+              <button
+                onClick={() => setAddQuantity(Math.max(1, addQuantity - 1))}
+                className="w-7 h-7 flex items-center justify-center rounded text-on-surface text-sm font-bold hover:bg-surface-container-high transition-colors"
+              >
+                −
+              </button>
+              <span className="text-sm font-semibold text-on-surface w-5 text-center">{addQuantity}</span>
+              <button
+                onClick={() => setAddQuantity(addQuantity + 1)}
+                className="w-7 h-7 flex items-center justify-center rounded text-on-surface text-sm font-bold hover:bg-surface-container-high transition-colors"
+              >
+                +
+              </button>
+            </div>
             <select
               value={selectedMeal}
               onChange={(e) => setSelectedMeal(e.target.value as 'breakfast' | 'lunch' | 'dinner')}
@@ -369,14 +429,19 @@ export default function FoodIntakePage() {
                     <h4 className="text-body-lg font-bold text-on-surface capitalize">{meal.id}</h4>
                   </div>
                   <span className="text-sm font-semibold text-on-surface-variant">
-                    {entries.reduce((sum, s) => sum + s.calories, 0)} kcal
+                    {entries.reduce((sum, s) => sum + s.calories * (s.quantity || 1), 0)} kcal
                   </span>
                 </div>
                 <div className="p-4">
                   {entries.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {entries.map((sel, i) => (
-                        <FoodChip key={i} selection={sel} onRemove={() => handleRemoveFood(meal.id as 'breakfast' | 'lunch' | 'dinner', i)} />
+                        <FoodChip
+                          key={i}
+                          selection={sel}
+                          onRemove={() => handleRemoveFood(meal.id as 'breakfast' | 'lunch' | 'dinner', i)}
+                          onQuantityChange={(qty) => handleQuantityChange(meal.id as 'breakfast' | 'lunch' | 'dinner', i, qty)}
+                        />
                       ))}
                     </div>
                   ) : (
@@ -391,10 +456,10 @@ export default function FoodIntakePage() {
         {/* Day Summary */}
         <div className="bg-surface rounded-xl border border-outline-variant/30 p-4 mb-6">
           <h4 className="text-body-lg font-bold text-on-surface mb-3">{dayLabels[currentDay]} Summary</h4>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
             {mealTypes.map((meal) => {
               const entries = getMealEntries(dayData, meal.id);
-              const cals = entries.reduce((sum, f) => sum + f.calories, 0);
+              const cals = entries.reduce((sum, f) => sum + f.calories * (f.quantity || 1), 0);
               const Icon = meal.icon;
               return (
                 <div key={meal.id} className={`${meal.bg} rounded-lg p-3 text-center`}>
@@ -409,22 +474,24 @@ export default function FoodIntakePage() {
         </div>
 
         {/* Navigation */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           <button
             onClick={() => currentDay > 0 && setCurrentDay(currentDay - 1)}
             disabled={currentDay === 0}
-            className="flex items-center gap-2 px-6 py-3 bg-surface-container-highest hover:bg-surface-container-high text-on-surface rounded-lg text-label-md font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 md:px-6 py-3 bg-surface-container-highest hover:bg-surface-container-high text-on-surface rounded-lg text-sm md:text-label-md font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <ChevronLeft className="w-4 h-4" />
-            Previous Day
+            <span className="hidden sm:inline">Previous Day</span>
+            <span className="sm:hidden">Prev</span>
           </button>
 
           <button
             onClick={() => currentDay < 6 && setCurrentDay(currentDay + 1)}
             disabled={currentDay === 6}
-            className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-on-primary rounded-lg text-label-md font-bold transition-all shadow-md hover:shadow-lg disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 md:px-6 py-3 bg-primary hover:bg-primary/90 text-on-primary rounded-lg text-sm md:text-label-md font-bold transition-all shadow-md hover:shadow-lg disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            {currentDay === 6 ? 'Complete' : 'Next Day'}
+            {currentDay === 6 ? 'Complete' : (currentDay < 6 ? <span className="sm:hidden">Next</span> : null)}
+            {currentDay === 6 ? 'Complete' : <span className="hidden sm:inline">Next Day</span>}
             {currentDay < 6 && <ChevronRight className="w-4 h-4" />}
           </button>
         </div>

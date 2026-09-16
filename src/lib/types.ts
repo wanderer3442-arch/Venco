@@ -177,6 +177,7 @@ export interface FoodSelection {
   carbs: number;
   fat: number;
   servingSize: string;
+  quantity: number;
 }
 
 export interface DayFoodIntake {
@@ -282,6 +283,14 @@ export interface BodyMetric {
 export interface WaterLog {
   date: string;
   amount: number; // ml
+  loggedAt: string;
+}
+
+// ─── Sleep Tracking ────────────────────────────────────────────────────────
+
+export interface SleepLog {
+  date: string;
+  hours: number;
   loggedAt: string;
 }
 

@@ -70,6 +70,9 @@ export default function LoggerPage() {
     waterLogs,
     addWater,
     getWaterForDate,
+    addSleep,
+    getSleepForDate,
+    sleepLogs,
   } = useStore();
 
   const [selectedHabit, setSelectedHabit] = useState('water');
@@ -110,7 +113,7 @@ export default function LoggerPage() {
       result.push({
         day: days[d.getDay()],
         water: dayWater || 0,
-        sleep: 0,
+        sleep: getSleepForDate(dateStr) || 0,
         weight: metric?.weight || 0,
         calories: calories || 0,
         steps: 0,
@@ -118,36 +121,7 @@ export default function LoggerPage() {
       });
     }
     return result;
-  }, [meals, bodyMetrics, profile.weight]);
-
-  const habitHeatmap = useMemo(() => {
-    const weeks = [];
-    const now = new Date();
-    for (let w = 3; w >= 0; w--) {
-      const weekStart = new Date(now);
-      weekStart.setDate(now.getDate() - (w * 7 + now.getDay()));
-      const counts = { meditation: 0, exercise: 0, water: 0, sleep: 0, nutrition: 0 };
-      for (let d = 0; d < 7; d++) {
-        const dd = new Date(weekStart);
-        dd.setDate(weekStart.getDate() + d);
-        if (dd > now) break;
-        const dateStr = dd.toISOString().split('T')[0];
-        const dayExercises = getExercisesForDate(dateStr);
-        const dayMeals = getMealsForDate(dateStr);
-        if (dayExercises.length > 0) counts.exercise++;
-        if (dayMeals.length > 0) counts.nutrition++;
-        habits.forEach((h) => {
-          if (h.completedDates.includes(dateStr)) {
-            if (h.name.toLowerCase().includes('meditation')) counts.meditation++;
-            if (h.name.toLowerCase().includes('water')) counts.water++;
-            if (h.name.toLowerCase().includes('sleep')) counts.sleep++;
-          }
-        });
-      }
-      weeks.push({ week: `Week ${4 - w}`, ...counts });
-    }
-    return weeks;
-  }, [habits, meals, exercises]);
+  }, [meals, bodyMetrics, profile.weight, waterLogs, sleepLogs]);
 
   const latestMetric = bodyMetrics.length > 0
     ? bodyMetrics.sort((a, b) => b.date.localeCompare(a.date))[0]
@@ -186,6 +160,8 @@ export default function LoggerPage() {
       });
     } else if (selectedHabit === 'water') {
       addWater(value);
+    } else if (selectedHabit === 'sleep') {
+      addSleep(value);
     }
 
     setLogValue('');
@@ -239,7 +215,7 @@ export default function LoggerPage() {
           </div>
 
           {/* Log Input */}
-          <div className="flex gap-3 items-end">
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
             <div className="flex-1">
               <label className="block text-label-md text-on-surface-variant mb-1.5">
                 Enter {habitCategories.find((c) => c.id === selectedHabit)?.name}
@@ -254,7 +230,7 @@ export default function LoggerPage() {
             </div>
             <button
               onClick={handleLog}
-              className="h-12 px-6 bg-primary text-on-primary rounded-lg text-label-md font-bold hover:bg-primary/90 transition-all shadow-sm flex items-center gap-2"
+              className="h-12 px-6 bg-primary text-on-primary rounded-lg text-label-md font-bold hover:bg-primary/90 transition-all shadow-sm flex items-center justify-center gap-2"
             >
               <Plus className="w-5 h-5" />
               Log
@@ -262,24 +238,25 @@ export default function LoggerPage() {
           </div>
 
           {/* Today's Progress */}
-          <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-3">
             {habitCategories.map((cat) => {
               const target = cat.target;
               const todayWater = getWaterForDate(today);
               const current = cat.id === 'water' ? todayWater
-                : cat.id === 'sleep' ? 0
+                : cat.id === 'sleep' ? getSleepForDate(today)
                 : cat.id === 'weight' ? (latestMetric?.weight || 0)
                 : 0;
               const percentage = target ? Math.min((current / target) * 100, 100) : 0;
 
               return (
-                <div key={cat.id} className="p-3 bg-surface-container rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <cat.icon className="w-4 h-4" style={{ color: cat.color }} />
-                    <span className="text-xs text-on-surface-variant">{cat.name}</span>
+                <div key={cat.id} className="p-3 bg-surface-container rounded-lg min-w-0 overflow-hidden">
+                  <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
+                    <cat.icon className="w-4 h-4 shrink-0" style={{ color: cat.color }} />
+                    <span className="text-xs text-on-surface-variant truncate">{cat.name}</span>
                   </div>
-                  <p className="text-lg font-bold text-on-surface">
-                    {typeof current === 'number' && current % 1 !== 0 ? current.toFixed(1) : current.toLocaleString()} {cat.unit}
+                  <p className="text-sm sm:text-base font-bold text-on-surface truncate">
+                    {typeof current === 'number' && current % 1 !== 0 ? current.toFixed(1) : current.toLocaleString()}
+                    <span className="text-xs font-normal ml-1 text-on-surface-variant">{cat.unit}</span>
                   </p>
                   {target && (
                     <div className="mt-2 h-1.5 bg-surface rounded-full overflow-hidden">
@@ -296,9 +273,9 @@ export default function LoggerPage() {
 
           {/* Today's Calories Summary */}
           <div className="mt-4 p-3 bg-primary/5 border border-primary/20 rounded-lg">
-            <div className="flex justify-between items-center">
-              <span className="text-label-md text-on-surface-variant">Today&apos;s Calories Logged</span>
-              <span className="text-headline-md font-bold text-primary">{todayTotalCalories.toLocaleString()} kcal</span>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1">
+              <span className="text-xs sm:text-label-md text-on-surface-variant">Today&apos;s Calories Logged</span>
+              <span className="text-lg sm:text-headline-md font-bold text-primary">{todayTotalCalories.toLocaleString()} kcal</span>
             </div>
           </div>
         </div>
@@ -324,26 +301,26 @@ export default function LoggerPage() {
               </p>
             ) : (
               todayHabits.map((habit) => (
-                <button
+                <div
                   key={habit.id}
                   onClick={() => toggleHabitDate(habit.id, today)}
-                  className={`w-full flex items-center gap-3 p-2.5 rounded-lg transition-colors text-left ${
+                  className={`w-full flex items-center gap-3 p-2.5 rounded-lg transition-colors text-left min-w-0 cursor-pointer ${
                     habit.completed ? 'bg-primary/5' : 'hover:bg-surface-container'
                   }`}
                 >
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ${
                     habit.completed
                       ? 'bg-primary border-primary text-white'
                       : 'border-outline-variant hover:border-primary'
                   }`}>
                     {habit.completed && <Check className="w-3 h-3" />}
                   </div>
-                  <div className="flex-1">
-                    <p className={`text-sm font-medium ${habit.completed ? 'text-on-surface-variant line-through' : 'text-on-surface'}`}>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium truncate ${habit.completed ? 'text-on-surface-variant line-through' : 'text-on-surface'}`}>
                       {habit.name}
                     </p>
                     <p className="text-xs text-on-surface-variant flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> {habit.frequency}
+                      <Clock className="w-3 h-3 shrink-0" /> {habit.frequency}
                     </p>
                   </div>
                   <button
@@ -351,11 +328,11 @@ export default function LoggerPage() {
                       e.stopPropagation();
                       removeHabit(habit.id);
                     }}
-                    className="text-outline hover:text-error opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="text-outline hover:text-error opacity-60 hover:opacity-100 transition-opacity shrink-0 p-1"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
-                </button>
+                </div>
               ))
             )}
           </div>
@@ -399,7 +376,7 @@ export default function LoggerPage() {
         </div>
 
         {/* Weight Tracking Line Chart */}
-        <div className="lg:col-span-2 bg-surface rounded-xl border border-outline-variant p-6">
+        <div className="lg:col-span-2 bg-surface rounded-xl border border-outline-variant p-4 md:p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-headline-md font-semibold text-on-surface">Weight Trend</h2>
             {bodyMetricHistory.length >= 2 && (
@@ -416,29 +393,23 @@ export default function LoggerPage() {
           </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              {bodyMetricHistory.length > 0 ? (
-                <LineChart data={bodyMetricHistory} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" vertical={false} />
-                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b6b6b' }} />
-                  <YAxis domain={['dataMin - 1', 'dataMax + 1']} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b6b6b' }} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Line type="monotone" dataKey="weight" stroke="#f57c00" strokeWidth={2.5} dot={{ fill: '#f57c00', strokeWidth: 2, r: 4 }} activeDot={{ r: 6 }} name="weight" />
-                </LineChart>
-              ) : (
-                <div className="h-full flex items-center justify-center text-on-surface-variant">
-                  <p className="text-sm">Log your weight to see trends</p>
-                </div>
-              )}
+              <LineChart data={bodyMetricHistory.length > 0 ? bodyMetricHistory : [{ date: '', weight: 0 }]} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" vertical={false} />
+                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b6b6b' }} />
+                <YAxis domain={['dataMin - 1', 'dataMax + 1']} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b6b6b' }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Line type="monotone" dataKey="weight" stroke="#f57c00" strokeWidth={2.5} dot={bodyMetricHistory.length > 0 ? { fill: '#f57c00', strokeWidth: 2, r: 4 } : false} activeDot={{ r: 6 }} name="weight" strokeDasharray={bodyMetricHistory.length === 0 ? '5 5' : undefined} />
+              </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Water Intake Bar Chart */}
-        <div className="bg-surface rounded-xl border border-outline-variant p-6">
+        <div className="bg-surface rounded-xl border border-outline-variant p-4 md:p-6">
           <h2 className="text-headline-md font-semibold text-on-surface mb-4">Water Intake</h2>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weeklyData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+              <BarChart data={weeklyData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b6b6b' }} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b6b6b' }} />
@@ -447,14 +418,14 @@ export default function LoggerPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex items-center justify-between mt-2 text-xs text-on-surface-variant">
+          <div className="flex flex-wrap items-center justify-between mt-2 text-xs text-on-surface-variant gap-1">
             <span>Goal: 2,500 ml</span>
             <span>Avg: {Math.round(weeklyData.reduce((sum, d) => sum + d.water, 0) / 7).toLocaleString()} ml</span>
           </div>
         </div>
 
         {/* Sleep Tracking Area Chart */}
-        <div className="lg:col-span-2 bg-surface rounded-xl border border-outline-variant p-6">
+        <div className="lg:col-span-2 bg-surface rounded-xl border border-outline-variant p-4 md:p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-headline-md font-semibold text-on-surface">Sleep Tracking</h2>
             <div className="flex items-center gap-1 text-sm text-primary">
@@ -482,11 +453,11 @@ export default function LoggerPage() {
         </div>
 
         {/* Calories & Steps Combo Chart */}
-        <div className="bg-surface rounded-xl border border-outline-variant p-6">
+        <div className="bg-surface rounded-xl border border-outline-variant p-4 md:p-6">
           <h2 className="text-headline-md font-semibold text-on-surface mb-4">Calories & Steps</h2>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weeklyData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+              <BarChart data={weeklyData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b6b6b' }} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b6b6b' }} />
@@ -495,53 +466,76 @@ export default function LoggerPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex items-center justify-between mt-2 text-xs text-on-surface-variant">
+          <div className="flex flex-wrap items-center justify-between mt-2 text-xs text-on-surface-variant gap-1">
             <span>Goal: {profile.weight && profile.height && profile.age ? Math.round(10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5) : 0} kcal</span>
             <span>Avg: {Math.round(weeklyData.reduce((sum, d) => sum + d.calories, 0) / weeklyData.length).toLocaleString()} kcal</span>
           </div>
         </div>
 
-        {/* Habit Heatmap */}
-        <div className="lg:col-span-2 bg-surface rounded-xl border border-outline-variant p-6">
+        {/* Habit Consistency */}
+        <div className="lg:col-span-2 bg-surface rounded-xl border border-outline-variant p-4 md:p-6">
           <h2 className="text-headline-md font-semibold text-on-surface mb-4">Habit Consistency</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-outline-variant/30">
-                  <th className="text-left text-xs font-medium text-on-surface-variant pb-2">Week</th>
-                  <th className="text-center text-xs font-medium text-on-surface-variant pb-2">Meditation</th>
-                  <th className="text-center text-xs font-medium text-on-surface-variant pb-2">Exercise</th>
-                  <th className="text-center text-xs font-medium text-on-surface-variant pb-2">Water</th>
-                  <th className="text-center text-xs font-medium text-on-surface-variant pb-2">Sleep</th>
-                  <th className="text-center text-xs font-medium text-on-surface-variant pb-2">Nutrition</th>
-                </tr>
-              </thead>
-              <tbody>
-                {habitHeatmap.map((week) => (
-                  <tr key={week.week} className="border-b border-outline-variant/20 last:border-0">
-                    <td className="py-2 text-xs font-medium text-on-surface">{week.week}</td>
-                    {['meditation', 'exercise', 'water', 'sleep', 'nutrition'].map((habit) => {
-                      const value = week[habit as keyof typeof week] as number;
-                      const intensity = value / 7;
-                      return (
-                        <td key={habit} className="py-2 text-center">
-                          <div
-                            className="w-8 h-8 mx-auto rounded-lg flex items-center justify-center text-xs font-medium"
-                            style={{
-                              backgroundColor: `rgba(0, 108, 73, ${intensity * 0.8})`,
-                              color: intensity > 0.5 ? 'white' : '#006c49',
-                            }}
-                          >
-                            {value}
-                          </div>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {habits.length === 0 ? (
+            <p className="text-sm text-on-surface-variant text-center py-6 italic">Add habits above to track consistency</p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {habits.map((h) => {
+                let streak = 0;
+                const today = new Date();
+                for (let d = 0; d < 365; d++) {
+                  const dateStr = new Date(today);
+                  dateStr.setDate(today.getDate() - d);
+                  const ds = dateStr.toISOString().split('T')[0];
+                  if (h.completedDates.includes(ds)) streak++;
+                  else break;
+                }
+                const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+                const completedThisMonth = h.completedDates.filter(d => {
+                  const dt = new Date(d);
+                  return dt.getMonth() === today.getMonth() && dt.getFullYear() === today.getFullYear();
+                }).length;
+                const progress = Math.min((completedThisMonth / daysInMonth) * 100, 100);
+                const level = streak >= 30 ? '🔥' : streak >= 7 ? '⭐' : streak >= 3 ? '✅' : '○';
+
+                // Last 7 days mini heatmap
+                const last7 = [];
+                for (let d = 6; d >= 0; d--) {
+                  const dateStr = new Date(today);
+                  dateStr.setDate(today.getDate() - d);
+                  const ds = dateStr.toISOString().split('T')[0];
+                  last7.push({ day: dateStr.toLocaleDateString('en', { weekday: 'narrow' }), done: h.completedDates.includes(ds) });
+                }
+
+                return (
+                  <div key={h.id} className="bg-surface-container rounded-lg p-3 border border-outline-variant/50">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold text-on-surface truncate">{h.name}</span>
+                      <span className="text-sm">{level}</span>
+                    </div>
+                    <div className="w-full bg-surface rounded-full h-1.5 mb-2">
+                      <div className="bg-primary h-1.5 rounded-full transition-all" style={{ width: `${progress}%` }} />
+                    </div>
+                    <div className="flex justify-between text-[10px] text-on-surface-variant mb-2">
+                      <span>{completedThisMonth}/{daysInMonth} days</span>
+                      <span className={`font-semibold ${streak >= 7 ? 'text-primary' : 'text-on-surface-variant'}`}>{streak} streak</span>
+                    </div>
+                    <div className="flex gap-0.5 justify-center">
+                      {last7.map((d, i) => (
+                        <div
+                          key={i}
+                          className="w-5 h-5 rounded flex flex-col items-center justify-center text-[8px]"
+                          title={`${d.day}: ${d.done ? 'Done' : 'Missed'}`}
+                        >
+                          <span className="text-on-surface-variant mb-0.5">{d.day}</span>
+                          <div className={`w-2.5 h-2.5 rounded-sm ${d.done ? 'bg-primary' : 'bg-surface-container-high'}`} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Body Metrics */}

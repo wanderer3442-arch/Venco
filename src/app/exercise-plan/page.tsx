@@ -168,16 +168,16 @@ export default function ExercisePlanPage() {
     <DashboardLayout title="Weekly Plan" subtitle={plan ? plan.name : 'Generate a plan to get started'}>
       <div className="max-w-7xl mx-auto space-y-6 pb-8">
         {/* Header */}
-        <div className="flex justify-between items-end">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
           <div>
-            <h1 className="text-display-lg font-bold text-on-surface mb-1">
+            <h1 className="text-2xl md:text-display-lg font-bold text-on-surface mb-1">
               Weekly Plan
             </h1>
-            <p className="text-body-lg text-on-surface-variant">
+            <p className="text-sm md:text-body-lg text-on-surface-variant">
               {plan ? plan.name : 'Generate a personalized plan based on your profile'}
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             <button
               onClick={generatePlan}
               className="px-4 py-2 rounded-lg bg-primary text-on-primary text-label-md font-medium hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-2"
@@ -291,17 +291,17 @@ export default function ExercisePlanPage() {
                         isExpanded ? 'pb-3 mb-4 border-b border-outline-variant/50' : 'p-4 hover:bg-surface-container-low'
                       }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-3 h-3 rounded-full ${isExpanded ? 'bg-primary' : 'bg-surface-container-high'}`} />
-                        <h3 className="text-headline-md text-on-surface">{dayPlan.day}</h3>
-                        <span className="bg-tertiary-container/20 text-tertiary-container px-2 py-1 rounded-full text-label-md text-xs">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 min-w-0">
+                        <div className={`w-3 h-3 rounded-full shrink-0 ${isExpanded ? 'bg-primary' : 'bg-surface-container-high'}`} />
+                        <h3 className="text-lg sm:text-headline-md font-semibold text-on-surface">{dayPlan.day}</h3>
+                        <span className="bg-tertiary-container/20 text-tertiary-container px-2 py-0.5 rounded-full text-label-md text-xs">
                           {dayPlan.label}
                         </span>
-                        <span className="text-label-md text-on-surface-variant">
+                        <span className="text-xs text-on-surface-variant">
                           {dayPlan.exercises.length} exercises
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 shrink-0 ml-2">
                         {isExpanded && (
                           <span
                             onClick={(e) => {
@@ -336,24 +336,24 @@ export default function ExercisePlanPage() {
                           return (
                             <div
                               key={exercise.exerciseId}
-                              className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container-lowest border border-transparent hover:border-outline-variant transition-all group/item"
+                              className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg hover:bg-surface-container-lowest border border-transparent hover:border-outline-variant transition-all gap-3 group/item"
                             >
-                              <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center text-primary">
-                                  <Dumbbell className="w-6 h-6" />
+                              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-surface-container flex items-center justify-center text-primary shrink-0">
+                                  <Dumbbell className="w-5 h-5 sm:w-6 sm:h-6" />
                                 </div>
-                                <div>
-                                  <h4 className="text-body-md font-semibold text-on-surface">
+                                <div className="min-w-0">
+                                  <h4 className="text-body-md font-semibold text-on-surface truncate">
                                     {exercise.exerciseName}
                                   </h4>
-                                  <p className="text-label-md text-on-surface-variant">
+                                  <p className="text-xs text-on-surface-variant truncate">
                                     {dbEx ? `${muscleLabels[dbEx.muscleGroup]} · ${dbEx.category}` : exercise.day}
                                   </p>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-6">
+                              <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 pt-2 sm:pt-0 border-t sm:border-t-0 border-outline-variant/30">
                                 <div className="text-center">
-                                  <div className="text-stat-value text-2xl text-on-surface">
+                                  <div className="text-stat-value text-xl sm:text-2xl text-on-surface font-bold">
                                     {exercise.sets}
                                   </div>
                                   <div className="text-label-md text-on-surface-variant text-xs">
@@ -361,14 +361,14 @@ export default function ExercisePlanPage() {
                                   </div>
                                 </div>
                                 <div className="text-center">
-                                  <div className="text-stat-value text-2xl text-on-surface">
+                                  <div className="text-stat-value text-xl sm:text-2xl text-on-surface font-bold">
                                     {exercise.reps}
                                   </div>
                                   <div className="text-label-md text-on-surface-variant text-xs">
                                     Reps
                                   </div>
                                 </div>
-                                <div className="flex gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                <div className="flex gap-1 opacity-80 sm:opacity-60 group-hover/item:opacity-100 transition-opacity">
                                   <button
                                     onClick={() => removeExerciseFromDay(dayPlan.day, exercise.exerciseId)}
                                     className="p-1 text-on-surface-variant hover:text-error"

@@ -154,7 +154,7 @@ export default function HealthAssistantPage() {
       <div className="max-w-5xl mx-auto space-y-6 pb-8">
         {/* Header */}
         <div>
-          <h1 className="text-display-lg font-bold text-on-surface mb-2">
+          <h1 className="text-2xl md:text-display-lg font-bold text-on-surface mb-2">
             Health Assistant
           </h1>
           <p className="text-body-lg text-on-surface-variant max-w-2xl">

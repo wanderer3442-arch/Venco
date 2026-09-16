@@ -35,82 +35,99 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
-  const { collapsed, toggle } = useSidebar();
+  const { collapsed, mobileOpen, toggle, setMobileOpen } = useSidebar();
 
   const handleLogout = () => {
     logout();
     router.push('/login');
   };
 
+  const handleNavClick = () => {
+    setMobileOpen(false);
+  };
+
   return (
-    <aside
-      className={`fixed left-0 top-0 h-screen bg-surface-container-lowest border-r border-outline-variant/30 transition-all duration-300 z-40 ${
-        collapsed ? 'w-[72px]' : 'w-[260px]'
-      }`}
-    >
-      {/* Logo */}
-      <div className="h-16 flex items-center px-4 border-b border-outline-variant/30">
-        <div className="flex items-center gap-2">
-          <img src="/logo.png" alt="Gym at Home" className="w-8 h-8 rounded-lg object-cover" />
-          {!collapsed && (
-            <span className="text-lg font-bold text-on-surface">Gym at Home</span>
-          )}
-        </div>
-      </div>
+    <>
+      {/* Backdrop for mobile */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
 
-      {/* Navigation */}
-      <nav className="p-3 space-y-1">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                isActive
-                  ? 'bg-primary/10 text-primary font-medium'
-                  : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
-              } ${collapsed ? 'justify-center' : ''}`}
-              title={collapsed ? item.label : undefined}
-            >
-              <item.icon className="w-5 h-5 flex-shrink-0" />
-              {!collapsed && <span className="text-sm">{item.label}</span>}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* User Section */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-outline-variant/30">
-        {!collapsed && user && (
-          <div className="flex items-center gap-2 mb-2 px-3 py-2">
-            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-              <span className="text-sm font-medium text-primary">
-                {user.username.charAt(0).toUpperCase()}
-              </span>
-            </div>
-            <span className="text-sm text-on-surface truncate">{user.username}</span>
-          </div>
-        )}
-        <button
-          onClick={handleLogout}
-          className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-error/10 hover:text-error transition-all ${
-            collapsed ? 'justify-center' : ''
-          }`}
-          title={collapsed ? 'Sign Out' : undefined}
-        >
-          <LogOut className="w-5 h-5 flex-shrink-0" />
-          {!collapsed && <span className="text-sm">Sign Out</span>}
-        </button>
-      </div>
-
-      {/* Collapse Toggle - Right Edge */}
-      <button
-        onClick={toggle}
-        className="absolute top-1/2 -translate-y-1/2 right-0 translate-x-1/2 w-6 h-12 bg-surface-container-lowest border border-outline-variant/30 rounded-l-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all z-50 shadow-sm"
+      <aside
+        className={`fixed left-0 top-0 h-screen bg-surface-container-lowest border-r border-outline-variant/30 transition-all duration-300 z-40 ${
+          collapsed ? 'w-[72px]' : 'w-[260px]'
+        } ${
+          mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        }`}
       >
-        {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-      </button>
-    </aside>
+        {/* Logo */}
+        <div className="h-16 flex items-center px-4 border-b border-outline-variant/30">
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="Gym at Home" className="w-8 h-8 rounded-lg object-cover" />
+            {!collapsed && (
+              <span className="text-lg font-bold text-on-surface">Gym at Home</span>
+            )}
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="p-3 space-y-1">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={handleNavClick}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                  isActive
+                    ? 'bg-primary/10 text-primary font-medium'
+                    : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
+                } ${collapsed ? 'justify-center' : ''}`}
+                title={collapsed ? item.label : undefined}
+              >
+                <item.icon className="w-5 h-5 flex-shrink-0" />
+                {!collapsed && <span className="text-sm">{item.label}</span>}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* User Section */}
+        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-outline-variant/30">
+          {!collapsed && user && (
+            <div className="flex items-center gap-2 mb-2 px-3 py-2">
+              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                <span className="text-sm font-medium text-primary">
+                  {user.username.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <span className="text-sm text-on-surface truncate">{user.username}</span>
+            </div>
+          )}
+          <button
+            onClick={handleLogout}
+            className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-error/10 hover:text-error transition-all ${
+              collapsed ? 'justify-center' : ''
+            }`}
+            title={collapsed ? 'Sign Out' : undefined}
+          >
+            <LogOut className="w-5 h-5 flex-shrink-0" />
+            {!collapsed && <span className="text-sm">Sign Out</span>}
+          </button>
+        </div>
+
+        {/* Collapse Toggle - Right Edge (desktop only) */}
+        <button
+          onClick={toggle}
+          className="hidden lg:flex absolute top-1/2 -translate-y-1/2 right-0 translate-x-1/2 w-6 h-12 bg-surface-container-lowest border border-outline-variant/30 rounded-l-lg items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all z-50 shadow-sm"
+        >
+          {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+        </button>
+      </aside>
+    </>
   );
 }

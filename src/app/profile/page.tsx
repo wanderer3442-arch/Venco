@@ -41,6 +41,8 @@ export default function ProfilePage() {
     subscription,
     badges,
     checkBadges,
+    isProfileSet,
+    setIsProfileSet,
   } = useStore();
 
   const [editing, setEditing] = useState(false);
@@ -109,6 +111,7 @@ export default function ProfilePage() {
       activityLevel: editActivity,
       goal: editGoal,
     });
+    setIsProfileSet(true);
     setEditing(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -198,7 +201,7 @@ export default function ProfilePage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="p-4 bg-surface-container rounded-lg text-center">
                 <p className="text-2xl font-bold text-on-surface">
-                  {editing ? editWeight : (latestMetric?.weight || profile.weight || '--')}
+                  {editing ? editWeight : (profile.weight || '--')}
                 </p>
                 <p className="text-sm text-on-surface-variant">Weight (kg)</p>
               </div>
@@ -247,7 +250,7 @@ export default function ProfilePage() {
           {/* Macro Targets */}
           <div className="lg:col-span-2 bg-surface rounded-xl border border-outline-variant p-6">
             <h2 className="text-headline-md font-semibold text-on-surface mb-4">Macro Targets</h2>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
               <div className="p-4 bg-surface-container rounded-lg text-center">
                 <p className="text-2xl font-bold text-secondary">{calculations?.protein || '—'}g</p>
                 <p className="text-sm text-on-surface-variant">Protein</p>

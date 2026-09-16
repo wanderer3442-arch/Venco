@@ -9,7 +9,7 @@ import { DayFoodIntake } from '@/lib/types';
 function CalorieRing({ consumed, target }: { consumed: number; target: number }) {
   const radius = 52;
   const circumference = 2 * Math.PI * radius;
-  const progress = Math.min(consumed / target, 1);
+  const progress = target > 0 ? Math.min(consumed / target, 1) : 0;
   const offset = circumference * (1 - progress);
 
   return (
@@ -30,10 +30,10 @@ function CalorieRing({ consumed, target }: { consumed: number; target: number })
 function MacroBar({ label, current, target, color }: { label: string; current: number; target: number; color: string }) {
   const pct = target > 0 ? Math.min((current / target) * 100, 100) : 0;
   return (
-    <div className="space-y-1">
-      <div className="flex justify-between text-label-md">
-        <span className="text-on-surface-variant">{label}</span>
-        <span className="text-on-surface font-semibold">{current}g / {target}g</span>
+    <div className="space-y-1 min-w-0">
+      <div className="flex justify-between gap-2 text-label-md min-w-0">
+        <span className="text-on-surface-variant shrink-0">{label}</span>
+        <span className="text-on-surface font-semibold truncate text-right">{current}g / {target}g</span>
       </div>
       <div className="h-2 bg-surface-variant rounded-full overflow-hidden">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
@@ -200,9 +200,9 @@ export default function MealPlanPage() {
 
         {/* Row 1: Overview — full width */}
         <section className="bg-surface rounded-xl p-6 shadow-elevated border border-outline-variant">
-          <div className="flex flex-col md:flex-row items-center gap-8">
+          <div className="flex flex-col lg:flex-row items-center gap-6">
             {/* Calorie Ring */}
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center shrink-0">
               <CalorieRing consumed={eatenTotals.calories} target={targetCals} />
               <p className="text-label-md text-on-surface-variant mt-2">
                 {totalEatenItems} / {totalPlannedItems} foods eaten
@@ -210,27 +210,27 @@ export default function MealPlanPage() {
             </div>
 
             {/* Macro Bars */}
-            <div className="flex-1 w-full space-y-3">
+            <div className="flex-1 w-full min-w-0 space-y-3">
               <MacroBar label="Protein" current={Math.round(eatenTotals.protein)} target={targetProtein} color="bg-tertiary" />
               <MacroBar label="Carbs" current={Math.round(eatenTotals.carbs)} target={targetCarbs} color="bg-secondary" />
               <MacroBar label="Fat" current={Math.round(eatenTotals.fat)} target={targetFat} color="bg-primary" />
             </div>
 
             {/* Planned vs Remaining */}
-            <div className="flex gap-8 text-label-md">
+            <div className="flex justify-around w-full lg:w-auto gap-6 text-label-md border-t lg:border-t-0 pt-4 lg:pt-0 shrink-0">
               <div className="space-y-1">
                 <p className="font-semibold text-on-surface">Planned</p>
-                <p className="text-on-surface-variant">{Math.round(plannedTotals.calories)} kcal</p>
-                <p className="text-on-surface-variant">{Math.round(plannedTotals.protein)}g P</p>
-                <p className="text-on-surface-variant">{Math.round(plannedTotals.carbs)}g C</p>
-                <p className="text-on-surface-variant">{Math.round(plannedTotals.fat)}g F</p>
+                <p className="text-on-surface-variant whitespace-nowrap">{Math.round(plannedTotals.calories)} kcal</p>
+                <p className="text-on-surface-variant whitespace-nowrap">{Math.round(plannedTotals.protein)}g P</p>
+                <p className="text-on-surface-variant whitespace-nowrap">{Math.round(plannedTotals.carbs)}g C</p>
+                <p className="text-on-surface-variant whitespace-nowrap">{Math.round(plannedTotals.fat)}g F</p>
               </div>
               <div className="space-y-1">
                 <p className="font-semibold text-primary">Remaining</p>
-                <p className="text-primary font-semibold">{Math.max(0, targetCals - Math.round(eatenTotals.calories))} kcal</p>
-                <p className="text-on-surface-variant">{Math.max(0, targetProtein - Math.round(eatenTotals.protein))}g P</p>
-                <p className="text-on-surface-variant">{Math.max(0, targetCarbs - Math.round(eatenTotals.carbs))}g C</p>
-                <p className="text-on-surface-variant">{Math.max(0, targetFat - Math.round(eatenTotals.fat))}g F</p>
+                <p className="text-primary font-semibold whitespace-nowrap">{Math.max(0, targetCals - Math.round(eatenTotals.calories))} kcal</p>
+                <p className="text-on-surface-variant whitespace-nowrap">{Math.max(0, targetProtein - Math.round(eatenTotals.protein))}g P</p>
+                <p className="text-on-surface-variant whitespace-nowrap">{Math.max(0, targetCarbs - Math.round(eatenTotals.carbs))}g C</p>
+                <p className="text-on-surface-variant whitespace-nowrap">{Math.max(0, targetFat - Math.round(eatenTotals.fat))}g F</p>
               </div>
             </div>
           </div>
@@ -240,18 +240,18 @@ export default function MealPlanPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {mealSections.map((section) => (
             <div key={section.id} className="bg-surface rounded-xl p-4 shadow-elevated border border-outline-variant">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <span className={section.iconColor}>{section.icon}</span>
-                  <h4 className="text-headline-sm font-semibold text-on-surface">{section.label}</h4>
+              <div className="flex items-center justify-between mb-4 gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className={`shrink-0 ${section.iconColor}`}>{section.icon}</span>
+                  <h4 className="text-base sm:text-headline-sm font-semibold text-on-surface truncate">{section.label}</h4>
                   {section.items.length > 0 && (
-                    <span className="text-label-sm text-on-surface-variant">
-                      {section.eatenCount}/{section.items.length}
+                    <span className="text-xs sm:text-label-sm text-on-surface-variant shrink-0">
+                      ({section.eatenCount}/{section.items.length})
                     </span>
                   )}
                 </div>
-                <span className="text-body-md font-semibold text-on-surface-variant">
-                  {section.eatenCalories}/{section.totalCalories}
+                <span className="text-xs sm:text-body-md font-semibold text-on-surface-variant shrink-0 whitespace-nowrap">
+                  {section.eatenCalories}/{section.totalCalories} kcal
                 </span>
               </div>
               <div className="space-y-1">
@@ -265,27 +265,27 @@ export default function MealPlanPage() {
                       <button
                         key={idx}
                         onClick={() => handleTick(section.id as any, item)}
-                        className={`w-full flex items-center justify-between py-3 px-3 rounded-lg transition-all ${
+                        className={`w-full flex items-center justify-between py-2.5 px-3 rounded-lg transition-all gap-2 ${
                           isEaten ? 'bg-primary/10 border border-primary/30' : 'hover:bg-surface-container-low border border-transparent'
                         }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${
                             isEaten ? 'bg-primary border-primary' : 'border-outline-variant'
                           }`}>
-                            {isEaten && <Check className="w-4 h-4 text-on-primary" />}
+                            {isEaten && <Check className="w-3.5 h-3.5 text-on-primary" />}
                           </div>
-                          <div className="text-left min-w-0">
-                            <p className={`text-body-md font-medium truncate ${isEaten ? 'text-on-surface' : 'text-on-surface-variant'}`}>
+                          <div className="text-left min-w-0 flex-1">
+                            <p className={`text-xs sm:text-body-md font-medium truncate ${isEaten ? 'text-on-surface font-semibold' : 'text-on-surface-variant'}`}>
                               {item.foodName || item.name}
                             </p>
-                            <p className="text-label-md text-on-surface-variant truncate">
+                            <p className="text-[11px] sm:text-label-md text-on-surface-variant/80 truncate">
                               {typeof item.servingSize === 'string' ? item.servingSize : item.servingSize?.label || '1 serving'}
                             </p>
                           </div>
                         </div>
-                        <span className={`text-body-md font-bold shrink-0 ml-2 ${isEaten ? 'text-primary' : 'text-on-surface-variant'}`}>
-                          {item.calories}
+                        <span className={`text-xs sm:text-body-md font-bold shrink-0 ml-1 ${isEaten ? 'text-primary' : 'text-on-surface-variant'}`}>
+                          {item.calories} kcal
                         </span>
                       </button>
                     );
@@ -312,7 +312,8 @@ export default function MealPlanPage() {
               </button>
             </div>
           </div>
-          <div className="grid grid-cols-7 gap-2">
+          <div className="overflow-x-auto -mx-2 px-2">
+            <div className="grid grid-cols-7 gap-2 min-w-[560px]">
             {weekDays.map((day) => (
               <div
                 key={day.dayIdx}
@@ -332,6 +333,7 @@ export default function MealPlanPage() {
                 </div>
               </div>
             ))}
+            </div>
           </div>
         </section>
       </div>

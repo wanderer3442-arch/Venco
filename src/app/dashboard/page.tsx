@@ -8,7 +8,6 @@ import {
   Plus,
   ArrowRight,
   Flame,
-  Droplets,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
@@ -29,7 +28,7 @@ const heatmapColors = ['stroke-primary', 'stroke-primary/60', 'stroke-primary/20
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { calculations, meals, exercises, getMealsForDate, getExercisesForDate, waterLogs, getWaterForDate, addWater } = useStore();
+  const { calculations, meals, exercises, getMealsForDate, getExercisesForDate } = useStore();
   const [tipIndex, setTipIndex] = useState(0);
   const [mounted, setMounted] = useState(false);
   const [foodSearch, setFoodSearch] = useState('');
@@ -52,19 +51,14 @@ export default function DashboardPage() {
   const today = new Date().toISOString().split('T')[0];
   const todayMeals = useMemo(() => getMealsForDate(today), [meals, today]);
 
-  // Update hydration goal with real water data
-  const todayWater = useMemo(() => getWaterForDate(today), [waterLogs, today]);
-  const waterTarget = calculations?.hydration ? Math.round(calculations.hydration * 1000) : 0;
-  const waterPct = Math.min(Math.round((todayWater / waterTarget) * 100), 100);
-
   useEffect(() => {
     setGoals(prev => prev.map(g => {
       if (g.id === 1) return { ...g, completed: todayMeals.length > 0, pct: todayMeals.length > 0 ? 100 : 0 };
-      if (g.id === 2) return { ...g, completed: waterPct >= 100, pct: waterPct };
+      if (g.id === 2) return { ...g, completed: false, pct: 0 };
       if (g.id === 3) return { ...g, completed: getExercisesForDate(today).length > 0, pct: getExercisesForDate(today).length > 0 ? 100 : 0 };
       return g;
     }));
-  }, [todayMeals, waterPct, exercises, today]);
+  }, [todayMeals, exercises, today]);
 
   const streak = useMemo(() => {
     let count = 0;
@@ -147,7 +141,7 @@ export default function DashboardPage() {
           <div className="col-span-4 md:col-span-12 grid grid-cols-4 md:grid-cols-12 gap-4 md:gap-6">
             {/* Hero Section */}
             <section className="col-span-4 md:col-span-8 flex flex-col justify-center gap-3 rounded-xl">
-              <h1 className="text-display-lg font-bold text-on-background">
+              <h1 className="text-2xl md:text-display-lg font-bold text-on-background">
                 Good morning, <span className="text-primary">{user?.username || 'User'}</span>.
               </h1>
               <p className="text-body-lg text-on-surface-variant max-w-2xl">
@@ -344,36 +338,6 @@ export default function DashboardPage() {
                   <Plus className="w-5 h-5" />
                   Log Food
                 </Link>
-              </div>
-            </section>
-
-            {/* Quick Water Log */}
-            <section className="col-span-4 md:col-span-6 bg-surface rounded-xl border border-outline-variant shadow-[0_4px_15px_4px_rgba(15,23,42,0.04)] p-5 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Droplets className="w-5 h-5 text-secondary" />
-                  <h2 className="text-headline-md font-semibold text-on-background">Water Intake</h2>
-                </div>
-                <p className="text-label-md text-on-surface-variant mb-4">
-                  {todayWater.toLocaleString()} / {waterTarget.toLocaleString()} ml
-                </p>
-                <div className="h-3 bg-surface-container-high rounded-full overflow-hidden mb-4">
-                  <div
-                    className="h-full bg-secondary rounded-full transition-all duration-500"
-                    style={{ width: `${waterPct}%` }}
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                {[250, 500, 750].map((amount) => (
-                  <button
-                    key={amount}
-                    onClick={() => addWater(amount)}
-                    className="flex-1 h-10 bg-secondary/10 hover:bg-secondary/20 text-secondary rounded-lg text-label-md font-bold transition-all"
-                  >
-                    +{amount}ml
-                  </button>
-                ))}
               </div>
             </section>
 

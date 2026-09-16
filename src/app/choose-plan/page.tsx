@@ -101,11 +101,11 @@ export default function ChoosePlanPage() {
         )}
 
         {/* Billing Toggle */}
-        <div className="flex justify-center">
-          <div className="bg-surface-container p-1 rounded-xl inline-flex">
+        <div className="flex justify-center px-4">
+          <div className="bg-surface-container p-1 rounded-xl flex flex-col sm:flex-row w-full sm:w-auto text-center">
             <button
               onClick={() => setBillingCycle('monthly')}
-              className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              className={`px-4 sm:px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 billingCycle === 'monthly'
                   ? 'bg-primary text-on-primary shadow-sm'
                   : 'text-on-surface-variant hover:text-on-surface'
@@ -115,7 +115,7 @@ export default function ChoosePlanPage() {
             </button>
             <button
               onClick={() => setBillingCycle('annual')}
-              className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              className={`px-4 sm:px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 billingCycle === 'annual'
                   ? 'bg-primary text-on-primary shadow-sm'
                   : 'text-on-surface-variant hover:text-on-surface'

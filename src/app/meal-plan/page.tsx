@@ -239,7 +239,7 @@ export default function MealPlanPage() {
         {/* Row 2: Meal sections — full width, 3 columns on desktop */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {mealSections.map((section) => (
-            <div key={section.id} className="bg-surface rounded-xl p-4 shadow-elevated border border-outline-variant">
+            <div key={section.id} className="bg-surface rounded-xl p-4 shadow-elevated border border-outline-variant overflow-hidden">
               <div className="flex items-center justify-between mb-4 gap-2">
                 <div className="flex items-center gap-2 min-w-0">
                   <span className={`shrink-0 ${section.iconColor}`}>{section.icon}</span>
@@ -254,7 +254,7 @@ export default function MealPlanPage() {
                   {section.eatenCalories}/{section.totalCalories} kcal
                 </span>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 max-h-[300px] overflow-y-auto">
                 {section.items.length === 0 ? (
                   <p className="text-label-md text-on-surface-variant py-3 italic">No foods planned</p>
                 ) : (

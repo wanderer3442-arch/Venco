@@ -492,78 +492,74 @@ export default function LoggerPage() {
             <div>
               {/* Calendar Grid */}
               <div className="overflow-x-auto pb-2">
-                <div className="flex gap-[6px] min-w-max">
-                  {/* Day labels */}
-                  <div className="flex flex-col gap-[5px] mr-1.5 pt-6">
-                    {['', 'Mon', '', 'Wed', '', 'Fri', ''].map((day, i) => (
-                      <div key={i} className="h-4 text-[10px] text-on-surface-variant flex items-center font-medium">{day}</div>
-                    ))}
-                  </div>
+                {(() => {
+                  const today = new Date();
+                  const startDay = today.getDay();
+                  const totalWeeks = 22;
+                  const weeks: { date: Date; dateStr: string; count: number }[][] = [];
+                  let currentWeek: { date: Date; dateStr: string; count: number }[] = [];
 
-                  {/* Weeks */}
-                  {(() => {
-                    const today = new Date();
-                    const startDay = today.getDay();
-                    const totalWeeks = 22;
-                    const weeks: { date: Date; dateStr: string; count: number }[][] = [];
-                    let currentWeek: { date: Date; dateStr: string; count: number }[] = [];
-
-                    const dateCountMap: Record<string, number> = {};
-                    habits.forEach(h => {
-                      h.completedDates.forEach(d => {
-                        dateCountMap[d] = (dateCountMap[d] || 0) + 1;
-                      });
+                  const dateCountMap: Record<string, number> = {};
+                  habits.forEach(h => {
+                    h.completedDates.forEach(d => {
+                      dateCountMap[d] = (dateCountMap[d] || 0) + 1;
                     });
+                  });
 
-                    const totalDays = totalWeeks * 7 + startDay;
-                    for (let i = totalDays; i >= 0; i--) {
-                      const d = new Date(today);
-                      d.setDate(today.getDate() - i);
-                      const ds = d.toISOString().split('T')[0];
-                      const count = dateCountMap[ds] || 0;
-                      currentWeek.push({ date: d, dateStr: ds, count });
-                      if (currentWeek.length === 7) {
-                        weeks.push(currentWeek);
-                        currentWeek = [];
-                      }
+                  const totalDays = totalWeeks * 7 + startDay;
+                  for (let i = totalDays; i >= 0; i--) {
+                    const d = new Date(today);
+                    d.setDate(today.getDate() - i);
+                    const ds = d.toISOString().split('T')[0];
+                    const count = dateCountMap[ds] || 0;
+                    currentWeek.push({ date: d, dateStr: ds, count });
+                    if (currentWeek.length === 7) {
+                      weeks.push(currentWeek);
+                      currentWeek = [];
                     }
-                    if (currentWeek.length > 0) weeks.push(currentWeek);
+                  }
+                  if (currentWeek.length > 0) weeks.push(currentWeek);
 
-                    const monthLabels: { week: number; label: string }[] = [];
-                    let lastMonth = -1;
-                    weeks.forEach((week, wi) => {
-                      const m = week[0]?.date.getMonth();
-                      if (m !== undefined && m !== lastMonth) {
-                        monthLabels.push({ week: wi, label: week[0].date.toLocaleDateString('en', { month: 'short' }) });
-                        lastMonth = m;
-                      }
-                    });
+                  const monthLabels: { week: number; label: string }[] = [];
+                  let lastMonth = -1;
+                  weeks.forEach((week, wi) => {
+                    const m = week[0]?.date.getMonth();
+                    if (m !== undefined && m !== lastMonth) {
+                      monthLabels.push({ week: wi, label: week[0].date.toLocaleDateString('en', { month: 'short' }) });
+                      lastMonth = m;
+                    }
+                  });
 
-                    const getBg = (count: number) => {
-                      if (count === 0) return 'bg-surface-container-high';
-                      const total = habits.length;
-                      const ratio = count / total;
-                      if (ratio <= 0.25) return 'bg-primary/20';
-                      if (ratio <= 0.5) return 'bg-primary/50';
-                      if (ratio <= 0.75) return 'bg-primary/80';
-                      return 'bg-primary';
-                    };
+                  const getBg = (count: number) => {
+                    if (count === 0) return 'bg-surface-container-high';
+                    const total = habits.length;
+                    const ratio = count / total;
+                    if (ratio <= 0.25) return 'bg-primary/20';
+                    if (ratio <= 0.5) return 'bg-primary/50';
+                    if (ratio <= 0.75) return 'bg-primary/80';
+                    return 'bg-primary';
+                  };
 
-                    return (
-                      <>
-                        <div className="flex">
-                          <div className="w-[42px] shrink-0" />
-                          <div className="relative flex-1">
-                            {monthLabels.map((ml, i) => (
-                              <div
-                                key={i}
-                                className="absolute text-[10px] text-on-surface-variant font-medium"
-                                style={{ left: `${ml.week * 22}px` }}
-                              >
-                                {ml.label}
-                              </div>
-                            ))}
+                  return (
+                    <div className="min-w-max">
+                      {/* Month labels row */}
+                      <div className="flex ml-[42px] mb-1">
+                        {monthLabels.map((ml, i) => (
+                          <div
+                            key={i}
+                            className="text-[10px] text-on-surface-variant font-medium"
+                            style={{ width: `${ml.week * 22}px`, flexShrink: 0 }}
+                          >
+                            {ml.label}
                           </div>
+                        ))}
+                      </div>
+                      {/* Grid row: day labels + cells */}
+                      <div className="flex gap-[6px]">
+                        <div className="flex flex-col gap-[5px] mr-1.5">
+                          {['Mon', '', 'Wed', '', 'Fri', '', ''].map((day, i) => (
+                            <div key={i} className="h-4 text-[10px] text-on-surface-variant flex items-center font-medium">{day}</div>
+                          ))}
                         </div>
                         <div className="flex gap-[6px]">
                           {weeks.map((week, wi) => (
@@ -578,10 +574,10 @@ export default function LoggerPage() {
                             </div>
                           ))}
                         </div>
-                      </>
-                    );
-                  })()}
-                </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Habit Stats */}

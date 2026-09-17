@@ -59,16 +59,11 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  productionBrowserSourceMaps: false,
-  async headers() {
-    return [
-      {
-        // Apply security headers to all routes
-        source: "/(.*)",
-        headers: securityHeaders,
-      },
-    ];
+  output: 'export',
+  images: {
+    unoptimized: true,
   },
+  productionBrowserSourceMaps: false,
 };
 
 export default nextConfig;

@@ -5,6 +5,7 @@ import { AuthProvider } from "@/lib/auth-context";
 import { StoreProvider } from "@/lib/store-context";
 import { SubscriptionProvider } from "@/lib/subscription-context";
 import { SidebarProvider } from "@/lib/sidebar-context";
+import DatabaseInit from "@/components/DatabaseInit";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -30,15 +31,17 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} h-full`} data-scroll-behavior="smooth">
       <body className="min-h-full bg-surface text-on-surface antialiased">
-        <AuthProvider>
-          <SubscriptionProvider>
-            <StoreProvider>
-              <SidebarProvider>
-                {children}
-              </SidebarProvider>
-            </StoreProvider>
-          </SubscriptionProvider>
-        </AuthProvider>
+        <DatabaseInit>
+          <AuthProvider>
+            <SubscriptionProvider>
+              <StoreProvider>
+                <SidebarProvider>
+                  {children}
+                </SidebarProvider>
+              </StoreProvider>
+            </SubscriptionProvider>
+          </AuthProvider>
+        </DatabaseInit>
       </body>
     </html>
   );

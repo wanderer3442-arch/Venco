@@ -31,13 +31,13 @@ export const chatResponses: ChatResponse[] = [
   // ─── GREETINGS ─────────────────────────────────────────────────────────────
   {
     keywords: ['hello', 'hi', 'hey', 'greetings', 'sup', 'yo', 'good morning', 'good evening', 'good afternoon'],
-    response: "Hey! I'm V, your certified health & fitness assistant. I can help with:\n\n💪 Exercise & workouts\n🥗 Nutrition & meal planning\n📊 Body metrics & progress\n😴 Sleep & recovery\n💊 Supplements\n🧠 Mental health\n\nWhat would you like to know?",
-    followUp: ['Analyze my progress', 'Suggest a meal', 'Exercise tips', 'Sleep advice'],
+    response: "Hey! 👋 I'm V — your gym buddy who happens to know a lot about health and fitness.\n\nI can help with workouts, nutrition, sleep, supplements, you name it. What's on your mind?",
+    followUp: ['Suggest a meal', 'Workout tips', 'How much protein?', 'Sleep advice'],
     category: 'greeting',
   },
   {
     keywords: ['who are you', 'what are you', 'tell me about yourself', 'your name'],
-    response: "I'm V — your AI health assistant backed by certified guidelines from WHO, CDC, ACSM, Harvard, and the International Society of Sports Nutrition. I provide evidence-based advice on nutrition, exercise, sleep, and wellness.\n\n⚠️ I'm not a doctor. Always consult a healthcare professional for medical conditions.",
+    response: "I'm V — think of me as a fitness nerd who's read way too many research papers so you don't have to. I pull advice from WHO, CDC, Harvard, and sports nutrition guidelines to give you stuff that actually works.\n\nNot a doctor though — for medical stuff, always check with a real one.",
     followUp: ['What can you do?', 'Health tips', 'Meal suggestions'],
     category: 'greeting',
   },
@@ -45,75 +45,25 @@ export const chatResponses: ChatResponse[] = [
   // ─── NUTRITION — MACROS ────────────────────────────────────────────────────
   {
     keywords: ['protein', 'how much protein', 'protein intake', 'protein per day', 'protein needs'],
-    response: `📊 **Protein Guidelines (ISSN 2017):**
-
-• Sedentary: 0.8-1.0 g/kg/day
-• Active/Moderate: 1.2-1.6 g/kg/day
-• Muscle building: 1.6-2.2 g/kg/day
-• Fat loss: 1.8-2.4 g/kg/day
-• Elderly (65+): 1.0-1.2 g/kg/day
-
-**Per meal:** 0.4-0.55g/kg (20-40g for most adults)
-
-**Best sources:** Chicken breast (31g/100g), salmon (20g/100g), eggs (6g each), Greek yogurt (10g/100g), lentils (9g/100g)
-
-Tip: Spread protein evenly across meals for optimal muscle protein synthesis.`,
+    response: `Protein — the building block of muscle! Here's what the research says:\n\n📊 **How much you need (ISSN 2017):**\n• Just staying active: 0.8–1.0 g/kg/day\n• Regular gym-goer: 1.2–1.6 g/kg/day\n• Building muscle: 1.6–2.2 g/kg/day\n• Losing fat (to keep muscle): 1.8–2.4 g/kg/day\n• Over 65: 1.0–1.2 g/kg/day\n\n💡 **Per meal:** Aim for 20–40g — that's the sweet spot for muscle protein synthesis.\n\n**Top sources:**\n• Chicken breast — 31g per 100g\n• Salmon — 20g per 100g\n• Eggs — 6g each\n• Greek yogurt — 10g per 100g\n• Lentils — 9g per 100g\n\n🎯 **Pro tip:** Spread your protein across meals instead of loading it all into dinner. Your muscles respond better to consistent intake throughout the day.`,
     followUp: ['Best protein foods', 'Protein timing', 'Calculate my macros'],
     category: 'nutrition',
   },
   {
     keywords: ['carbs', 'carbohydrates', 'how many carbs', 'carb intake', 'low carb'],
-    response: `📊 **Carbohydrate Guidelines (IOM/ACSM):**
-
-• Sedentary: 3-5 g/kg/day
-• Moderate exercise: 5-7 g/kg/day
-• High intensity athlete: 8-12 g/kg/day
-• Endurance athlete: 6-10 g/kg/day
-
-**Quality matters:** Choose complex carbs (oats, brown rice, sweet potatoes, quinoa) over refined (white bread, sugar).
-
-**Carbs aren't the enemy!** They fuel your brain, muscles, and workout performance. Low-carb diets can impair high-intensity exercise.`,
+    response: `Carbs are NOT the enemy — they fuel your brain, muscles, and workouts. Here's the breakdown:\n\n📊 **How much you need (IOM/ACSM):**\n• Sedentary: 3–5 g/kg/day\n• Moderate exercise: 5–7 g/kg/day\n• High intensity athlete: 8–12 g/kg/day\n• Endurance athlete: 6–10 g/kg/day\n\n✅ **Quality matters:** Go for complex carbs — oats, brown rice, sweet potatoes, quinoa. They give you sustained energy without the crash.\n\n❌ **Skip the refined stuff:** White bread, sugary drinks, candy — they spike your blood sugar and leave you hungry again in an hour.\n\n💡 **Bottom line:** Low-carb diets can kill your gym performance. You need carbs to lift heavy and recover well. Don't fear them — just choose wisely.`,
     followUp: ['Best carb sources', 'When to eat carbs', 'Low carb vs keto'],
     category: 'nutrition',
   },
   {
     keywords: ['fat', 'fats', 'healthy fat', 'fat intake', 'dietary fat'],
-    response: `📊 **Fat Guidelines (IOM):**
-
-• General: 20-35% of total calories
-• Minimum: Don't go below 20% (hormone health)
-• Per kg: 0.8-1.0 g/kg/day
-
-**Types matter:**
-✅ Unsaturated: Olive oil, avocados, nuts, fatty fish
-⚠️ Saturated: Moderate amounts (red meat, cheese)
-❌ Trans fats: Avoid completely (processed foods)
-
-**Essential fatty acids:** Omega-3 (fish, flaxseed) and Omega-6 (nuts, seeds) are required for brain health and inflammation control.`,
+    response: `Fat isn't the villain — your body actually needs it for hormones, brain function, and absorbing vitamins.\n\n📊 **How much (IOM):**\n• General: 20–35% of your daily calories\n• Don't go below 20% — your hormones will thank you\n• That's roughly 0.8–1.0 g/kg/day\n\n✅ **The good fats (eat plenty):**\n• Olive oil, avocados, nuts, fatty fish (salmon, sardines)\n\n⚠️ **Saturated fats (in moderation):**\n• Red meat, cheese, butter — fine occasionally\n\n❌ **Trans fats (avoid completely):**\n• Found in processed/fried foods — seriously bad for your heart\n\n💡 **Don't skip fats on a diet.** They keep you full, support testosterone production, and help your body absorb vitamins A, D, E, and K.`,
     followUp: ['Best fat sources', 'Omega-3 benefits', 'Saturated fat risks'],
     category: 'nutrition',
   },
   {
     keywords: ['calories', 'calorie', 'calorie intake', 'daily calories', 'how many calories'],
-    response: `📊 **Calorie Guidelines:**
-
-Your daily needs depend on TDEE (Total Daily Energy Expenditure):
-• Sedentary: BMR × 1.2
-• Light activity: BMR × 1.375
-• Moderate: BMR × 1.55
-• Active: BMR × 1.725
-• Very active: BMR × 1.9
-
-**Targets:**
-• Weight loss: TDEE - 500 kcal/day
-• Muscle gain: TDEE + 300 kcal/day
-• Maintenance: TDEE = intake
-
-**Formula (Mifflin-St Jeor):**
-Men: 10×weight(kg) + 6.25×height(cm) - 5×age + 5
-Women: 10×weight(kg) + 6.25×height(cm) - 5×age - 161
-
-Use our Calculator page for personalized numbers!`,
+    response: `Your calorie needs depend on how active you are. Here's how to figure it out:\n\n📊 **TDEE (Total Daily Energy Expenditure):**\n• Sedentary (desk job): BMR × 1.2\n• Light activity: BMR × 1.375\n• Moderate (3–5 gym sessions): BMR × 1.55\n• Active (6–7 sessions): BMR × 1.725\n• Very active (physical job + training): BMR × 1.9\n\n🎯 **What to aim for:**\n• Lose weight: TDEE minus 500 kcal/day\n• Build muscle: TDEE plus 300 kcal/day\n• Maintain: Match your TDEE\n\n📐 **Quick BMR formula (Mifflin-St Jeor):**\n• Men: 10×weight(kg) + 6.25×height(cm) – 5×age + 5\n• Women: 10×weight(kg) + 6.25×height(cm) – 5×age – 161\n\nHead over to the Calculator page for your personalized numbers!`,
     followUp: ['Calculate my TDEE', 'Weight loss calories', 'Muscle gain calories'],
     category: 'nutrition',
   },
@@ -121,96 +71,25 @@ Use our Calculator page for personalized numbers!`,
   // ─── NUTRITION — MEALS ────────────────────────────────────────────────────
   {
     keywords: ['meal', 'food', 'eat', 'breakfast', 'lunch', 'dinner', 'snack', 'what to eat', 'suggest meal', 'meal suggestion'],
-    response: `🍽️ **Meal Suggestions (USDA guidelines):**
-
-**Breakfast (400-500 kcal):**
-• Oatmeal + banana + almond butter + whey
-• Greek yogurt + berries + granola + honey
-• Eggs (3) + whole grain toast + avocado
-
-**Lunch (500-600 kcal):**
-• Grilled chicken salad + olive oil dressing
-• Quinoa bowl + vegetables + paneer
-• Lentil soup + whole grain bread
-
-**Dinner (400-550 kcal):**
-• Baked salmon + sweet potato + broccoli
-• Chicken stir-fry + brown rice
-• Tofu curry + quinoa + vegetables
-
-**Snacks (150-250 kcal):**
-• Apple + peanut butter
-• Greek yogurt + nuts
-• Protein shake + banana
-• Cottage cheese + berries
-
-Aim for 3-5 meals/day, every 3-4 hours.`,
+    response: `Not sure what to eat? Here are some solid options based on USDA guidelines:\n\n🍳 **Breakfast (400–500 kcal):**\n• Oatmeal + banana + almond butter + whey scoop\n• Greek yogurt + berries + granola + honey\n• 3 eggs + whole grain toast + avocado\n\n🥗 **Lunch (500–600 kcal):**\n• Grilled chicken salad with olive oil dressing\n• Quinoa bowl + veggies + paneer\n• Lentil soup + whole grain bread\n\n🍗 **Dinner (400–550 kcal):**\n• Baked salmon + sweet potato + broccoli\n• Chicken stir-fry + brown rice\n• Tofu curry + quinoa + vegetables\n\n🍎 **Snacks (150–250 kcal):**\n• Apple + peanut butter\n• Greek yogurt + nuts\n• Protein shake + banana\n• Cottage cheese + berries\n\n🎯 **Rule of thumb:** Aim for 3–5 meals spread throughout the day, every 3–4 hours.`,
     followUp: ['Calculate my macros', 'Meal timing tips', 'High protein meals'],
     category: 'nutrition',
   },
   {
     keywords: ['meal plan', 'meal prep', 'meal planning', 'weekly meal', 'diet plan'],
-    response: `📋 **Meal Planning Tips (ISSN):**
-
-**Structure:**
-• 3-5 meals per day
-• Each meal: 0.4-0.55g protein/kg body weight
-• Pre-workout (1-3 hrs): Carbs + moderate protein
-• Post-workout (within 2 hrs): Protein + carbs
-
-**Prep tips:**
-• Batch cook proteins (chicken, lentils) on Sunday
-• Pre-cut vegetables for the week
-• Prepare overnight oats for quick breakfasts
-• Keep healthy snacks accessible
-
-**Macro balance:** 40% carbs, 30% protein, 30% fat (adjustable based on goals)
-
-Use our Meal Plan page to track your weekly food intake!`,
+    response: `Meal prepping is a game-changer — here's how to do it right:\n\n📋 **The structure:**\n• 3–5 meals per day\n• Each meal: 0.4–0.55g protein per kg of body weight\n• Pre-workout (1–3 hrs before): Carbs + moderate protein\n• Post-workout (within 2 hrs): Protein + carbs\n\n🥘 **Prep tips that actually work:**\n• Batch cook proteins (chicken, lentils) on Sunday\n• Pre-cut your veggies for the week\n• Make overnight oats for grab-and-go breakfasts\n• Keep healthy snacks in reach\n\n📊 **Macro balance:** 40% carbs, 30% protein, 30% fat — adjust based on your goals.\n\n💡 Check out the Meal Plan page to track your weekly intake!`,
     followUp: ['Pre-workout meals', 'Post-workout meals', 'Snack ideas'],
     category: 'nutrition',
   },
   {
     keywords: ['pre workout', 'pre-workout', 'before workout', 'eat before', 'before exercise'],
-    response: `⏰ **Pre-Workout Nutrition (ISSN):**
-
-**Timing:** 1-3 hours before exercise
-
-**What to eat:**
-• Easy-to-digest carbs + moderate protein
-• Banana + peanut butter (1 hr before)
-• Oatmeal with honey (2-3 hrs before)
-• Rice cakes with almond butter (1 hr before)
-• Greek yogurt with berries (1-2 hrs before)
-
-**Avoid:** High fat, high fiber, large meals (slow digestion)
-
-**Quick option (30 min before):** Small banana or sports drink
-
-Fuel your workout for better performance and recovery!`,
+    response: `What you eat before a workout matters. Here's the timing:\n\n⏰ **1–3 hours before:**\n• Oatmeal with honey\n• Banana + peanut butter\n• Greek yogurt with berries\n• Rice cakes with almond butter\n\n⏰ **30 minutes before (quick fuel):**\n• Small banana\n• Sports drink\n• A handful of dates\n\n❌ **Avoid:** High fat, high fiber, or large meals — they sit in your stomach and slow you down.\n\n💡 **The goal:** Give your body easy-to-digest carbs + a bit of protein so you have energy without feeling heavy.`,
     followUp: ['Post-workout nutrition', 'Best pre-workout foods', 'Hydration tips'],
     category: 'nutrition',
   },
   {
     keywords: ['post workout', 'post-workout', 'after workout', 'after exercise', 'recovery meal'],
-    response: `⏰ **Post-Workout Nutrition (ISSN 2017):**
-
-**Timing:** Within 2 hours after exercise
-
-**What to eat:**
-• Protein (20-40g) + Carbs
-• Chicken breast + rice + vegetables
-• Protein shake + banana
-• Greek yogurt + granola + fruit
-• Eggs + whole grain toast + avocado
-
-**Ratios:**
-• Strength training: 2:1 carbs:protein
-• Endurance: 3:1 or 4:1 carbs:protein
-
-**Why?** Your muscles are primed for nutrient uptake. Protein repairs muscle; carbs replenish glycogen stores.
-
-Don't skip this window — it speeds recovery significantly!`,
+    response: `Your post-workout meal is crucial for recovery. Here's what to eat and when:\n\n⏰ **Within 2 hours after exercise**\n\n🍽️ **What to eat:**\n• Protein (20–40g) + Carbs\n• Chicken breast + rice + vegetables\n• Protein shake + banana\n• Greek yogurt + granola + fruit\n• Eggs + whole grain toast + avocado\n\n📊 **The ratio depends on your workout:**\n• Strength training → 2:1 carbs to protein\n• Endurance training → 3:1 or 4:1 carbs to protein\n\n💡 **Why this matters:** Your muscles are like sponges after a workout — they soak up nutrients really efficiently. Protein repairs the muscle damage, carbs refill your energy stores.\n\nDon't skip this window — it makes a real difference in how fast you recover!`,
     followUp: ['Pre-workout meals', 'Protein shake timing', 'Recovery tips'],
     category: 'nutrition',
   },
@@ -218,28 +97,7 @@ Don't skip this window — it speeds recovery significantly!`,
   // ─── HYDRATION ─────────────────────────────────────────────────────────────
   {
     keywords: ['water', 'hydrate', 'hydration', 'drink', 'how much water', 'dehydration', 'thirst'],
-    response: `💧 **Hydration Guidelines (IOM 2004 / ACSM):**
-
-**Daily needs:**
-• Men: 3.7 L (125 oz)
-• Women: 2.7 L (91 oz)
-
-**During exercise:**
-• Before: 500 mL, 2-4 hours before
-• During: 150-250 mL every 15-20 minutes
-• After: 1.5 L per kg of body weight lost
-
-**Urine color guide:**
-• Pale yellow = well hydrated ✓
-• Dark yellow = drink more
-• Amber = dehydrated, drink now
-• Clear = over-hydrated, reduce
-
-**Tips:**
-• Keep a water bottle visible
-• Drink a glass first thing in the morning
-• Set hourly reminders
-• Electrolytes for exercise >60 minutes`,
+    response: `Water is boring to talk about but essential for everything — from muscle function to fat loss.\n\n💧 **Daily targets:**\n• Men: about 3.7 liters\n• Women: about 2.7 liters\n\n🏃 **During exercise:**\n• Before: 500 mL, 2–4 hours prior\n• During: 150–250 mL every 15–20 minutes\n• After: 1.5 L per kg of body weight lost through sweat\n\n🔍 **Quick check — urine color:**\n• Pale yellow = good ✓\n• Dark yellow = drink more\n• Amber = dehydrated\n• Completely clear = over-hydrating\n\n🎯 **Easy tips:**\n• Keep a water bottle where you can see it\n• Drink a glass first thing in the morning\n• Set hourly reminders on your phone\n• If you're sweating a lot, add electrolytes`,
     followUp: ['Electrolyte tips', 'Water vs sports drinks', 'Hydration reminders'],
     category: 'hydration',
   },
@@ -247,219 +105,49 @@ Don't skip this window — it speeds recovery significantly!`,
   // ─── EXERCISE — GENERAL ───────────────────────────────────────────────────
   {
     keywords: ['exercise', 'workout', 'train', 'gym', 'run', 'cardio', 'exercise tips', 'workout tips'],
-    response: `💪 **Exercise Guidelines (CDC/ACSM 2020):**
-
-**Weekly targets:**
-• 150 min moderate aerobic OR 75 min vigorous
-• 2+ strength training sessions (all major muscles)
-• Flexibility training 2-3 days/week
-
-**Today's workout suggestion:**
-1. Warm-up: 5-10 min (dynamic stretching)
-2. Main workout: 30-45 min
-3. Cool-down: 5-10 min (static stretching)
-
-**Key principles:**
-• Progressive overload (increase weight/reps)
-• Proper form over heavy weight
-• Rest between sets: 60-90 seconds
-• Rest days are essential (muscles grow during rest)
-
-Consistency > intensity. Show up every day!`,
+    response: `Here's what the CDC and ACSM actually recommend — no fluff:\n\n📅 **Weekly targets:**\n• 150 min moderate aerobic (brisk walking, cycling) OR 75 min vigorous (running, swimming)\n• 2+ strength sessions hitting all major muscles\n• Flexibility work 2–3 days/week\n\n🔥 **What a good session looks like:**\n1. Warm-up: 5–10 min dynamic stretching\n2. Main workout: 30–45 min\n3. Cool-down: 5–10 min static stretching\n\n📈 **The principles that matter:**\n• Progressive overload — keep making it harder\n• Form over ego — heavy weights with bad form = injury\n• 60–90 seconds rest between sets\n• Rest days are when you actually grow\n\n💡 **The real secret?** Consistency beats intensity. Showing up 4 times a week at moderate effort will beat one killer session followed by skipping a week.`,
     followUp: ['Full body workout', 'Upper/lower split', 'Home exercises'],
     category: 'exercise',
   },
   {
     keywords: ['warm up', 'warmup', 'warm-up', 'before workout', 'stretching'],
-    response: `🔥 **Warm-Up Protocol (ACSM):**
-
-**Duration:** 5-10 minutes before every workout
-
-**Dynamic stretches:**
-• Arm circles (10 each direction)
-• Leg swings (10 each leg)
-• Hip rotations (10 each direction)
-• Bodyweight squats (10 reps)
-• Walking lunges (10 each leg)
-• High knees (30 seconds)
-• Butt kicks (30 seconds)
-
-**Why it matters:**
-• Increases blood flow to muscles
-• Raises core temperature
-• Improves range of motion
-• Reduces injury risk by 50%
-
-**Never** static stretch cold muscles — do it after the workout instead.`,
+    response: `Don't skip your warm-up — it cuts injury risk by about 50%. Here's what to do:\n\n🔥 **5–10 minutes before every session:**\n• Arm circles — 10 each direction\n• Leg swings — 10 each leg\n• Hip rotations — 10 each direction\n• Bodyweight squats — 10 reps\n• Walking lunges — 10 each leg\n• High knees — 30 seconds\n• Butt kicks — 30 seconds\n\n⚠️ **Important:** Don't static stretch cold muscles! That's for after your workout. Dynamic movement warms you up; static stretching cools you down.`,
     followUp: ['Cool-down routine', 'Dynamic vs static stretching', 'Pre-workout stretches'],
     category: 'exercise',
   },
   {
     keywords: ['cool down', 'cooldown', 'cool-down', 'after workout', 'post workout stretch'],
-    response: `❄️ **Cool-Down Protocol (ACSM):**
-
-**Duration:** 5-10 minutes after every workout
-
-**Routine:**
-1. Light walking (3-5 min) — gradual heart rate reduction
-2. Static stretching (30-60 seconds per muscle):
-   • Hamstring stretch
-   • Quad stretch
-   • Chest stretch
-   • Shoulder stretch
-   • Hip flexor stretch
-   • Calf stretch
-3. Deep breathing (1 min)
-
-**Why it matters:**
-• Prevents blood pooling in extremities
-• Reduces muscle soreness (DOMS)
-• Improves flexibility over time
-• Promotes recovery
-
-Hold stretches to the point of mild tension, not pain.`,
+    response: `Cooling down properly helps your body transition back to resting state. Here's the routine:\n\n❄️ **5–10 minutes after every session:**\n1. Light walking — 3–5 min to bring your heart rate down gradually\n2. Static stretches — hold each 30–60 seconds:\n   • Hamstrings\n   • Quads\n   • Chest\n   • Shoulders\n   • Hip flexors\n   • Calves\n3. Deep breathing — 1 minute\n\n💡 **Why it matters:**\n• Prevents blood from pooling in your legs\n• Reduces next-day soreness\n• Improves flexibility over time\n\nStretch to the point of mild tension — never pain.`,
     followUp: ['Warm-up routine', 'Stretching routine', 'Recovery tips'],
     category: 'exercise',
   },
   {
     keywords: ['compound', 'compound exercise', 'best exercises', 'multi joint', 'multi-joint'],
-    response: `🏋️ **Compound Exercises (NSCA Position Stand):**
-
-Compound movements work multiple joints and muscle groups — the most efficient exercises for strength and muscle:
-
-**Lower Body:**
-• Barbell Squat — Quads, glutes, hamstrings, core
-• Deadlift — Hamstrings, glutes, back, traps
-• Walking Lunge — Quads, glutes, hamstrings
-
-**Upper Body Push:**
-• Bench Press — Chest, shoulders, triceps
-• Overhead Press — Shoulders, triceps, core
-• Dip — Chest, triceps
-
-**Upper Body Pull:**
-• Barbell Row — Back, biceps, rear delts
-• Pull-Up — Lats, biceps, core
-
-**Full Body:**
-• Kettlebell Swing — Glutes, hamstrings, core
-• Burpee — Full body conditioning
-
-Always prioritize compound exercises in your routine!`,
+    response: `Compound exercises are the heavy hitters — they work multiple joints and muscle groups at once. Here's why they're king:\n\n🏋️ **Lower body:**\n• Barbell Squat — quads, glutes, hamstrings, core\n• Deadlift — hamstrings, glutes, back, traps\n• Walking Lunge — quads, glutes, hamstrings\n\n🏋️ **Upper push:**\n• Bench Press — chest, shoulders, triceps\n• Overhead Press — shoulders, triceps, core\n• Dip — chest, triceps\n\n🏋️ **Upper pull:**\n• Barbell Row — back, biceps, rear delts\n• Pull-Up — lats, biceps, core\n\n🏋️ **Full body:**\n• Kettlebell Swing — glutes, hamstrings, core\n• Burpee — full body conditioning\n\n💡 **Rule:** Build your workout around compounds first, then add isolation work to hit weak spots.`,
     followUp: ['Isolation exercises', 'Beginner routine', 'Advanced routine'],
     category: 'exercise',
   },
   {
     keywords: ['isolation', 'isolation exercise', 'single muscle', 'bicep curl', 'tricep extension'],
-    response: `🎯 **Isolation Exercises:**
-
-Isolation exercises target one muscle group at a time. Use them after compound exercises to address weaknesses or imbalances.
-
-**Examples by muscle:**
-• Biceps: Barbell Curl, Hammer Curl, Preacher Curl
-• Triceps: Pushdown, Overhead Extension, Skull Crusher
-• Shoulders: Lateral Raise, Front Raise, Rear Delt Fly
-• Legs: Leg Extension, Leg Curl, Calf Raise
-• Abs: Cable Crunch, Ab Rollout, Leg Raise
-
-**When to use:**
-• After compound movements
-• To correct muscle imbalances
-• For rehabilitation
-• For aesthetic focus
-
-**Rep range:** 10-15 reps, 2-3 sets
-**Rest:** 30-60 seconds
-
-Compounds first, isolation second!`,
+    response: `Isolation exercises hit one muscle at a time — they're great for fixing imbalances or adding extra volume after your main lifts.\n\n🎯 **Examples by muscle:**\n• Biceps: Barbell Curl, Hammer Curl, Preacher Curl\n• Triceps: Pushdown, Overhead Extension, Skull Crusher\n• Shoulders: Lateral Raise, Front Raise, Rear Delt Fly\n• Legs: Leg Extension, Leg Curl, Calf Raise\n• Abs: Cable Crunch, Ab Rollout, Leg Raise\n\n📊 **When and how:**\n• Do them after compound exercises\n• 10–15 reps, 2–3 sets\n• 30–60 seconds rest\n\n💡 Think of it this way: compounds are your main course, isolation work is the side dish. Both matter, but prioritize the main stuff.`,
     followUp: ['Compound exercises', 'Bicep workout', 'Shoulder workout'],
     category: 'exercise',
   },
   {
     keywords: ['progressive overload', 'overload', 'increase weight', 'getting stronger', 'stalled progress', 'plateau'],
-    response: `📈 **Progressive Overload (NSCA):**
-
-The #1 principle for continued progress. Without it, your body adapts and stops changing.
-
-**Methods to progress:**
-1. **Increase weight** — Add 2.5-5 kg when you hit top of rep range
-2. **Increase reps** — Add 1-2 reps per set each week
-3. **Increase sets** — Add 1 set per exercise
-4. **Decrease rest** — Reduce rest periods by 10-15 seconds
-5. **Improve form** — Better mind-muscle connection
-
-**Example progression:**
-Week 1: 60kg × 3 × 8 reps
-Week 2: 60kg × 3 × 9 reps
-Week 3: 60kg × 3 × 10 reps
-Week 4: 62.5kg × 3 × 8 reps
-
-**The 2.5-5% rule:** Increase load by 2.5-5% when target reps achieved.
-
-Track your workouts! If you're not tracking, you're guessing.`,
+    response: `This is THE most important principle for getting results. Without it, your body adapts and stops changing.\n\n📈 **How to progressively overload:**\n1. Add weight — when you hit the top of your rep range, bump it up by 2.5–5 kg\n2. Add reps — squeeze out 1–2 more reps per set each week\n3. Add sets — throw in an extra set per exercise\n4. Cut rest — reduce rest periods by 10–15 seconds\n5. Better form — improve your mind-muscle connection\n\n📋 **Example progression:**\nWeek 1: 60kg × 3 × 8 reps\nWeek 2: 60kg × 3 × 9 reps\nWeek 3: 60kg × 3 × 10 reps\nWeek 4: 62.5kg × 3 × 8 reps\n\n🎯 **The 2.5–5% rule:** Increase the load by 2.5–5% once you hit your target reps.\n\n💡 If you're not tracking your workouts, you're guessing. Log everything!`,
     followUp: ['How to track progress', 'Deload weeks', 'When to change program'],
     category: 'exercise',
   },
   {
     keywords: ['rest day', 'rest days', 'recovery', 'how often rest', 'overtraining'],
-    response: `😴 **Rest & Recovery (ACSM):**
-
-**Yes, rest days are essential!**
-
-**How much rest:**
-• 1-2 rest days per week (minimum)
-• 48-72 hours between training same muscle groups
-• 7-9 hours sleep per night
-
-**What happens during rest:**
-• Muscle repair and growth
-• Glycogen replenishment
-• Hormone optimization (testosterone, growth hormone)
-• Nervous system recovery
-• Mental recharge
-
-**Signs of overtraining:**
-• Persistent fatigue
-• Decreased performance
-• Elevated resting heart rate
-• Poor sleep
-• Frequent illness
-• Mood changes
-
-**Active recovery:** Light walking, yoga, foam rolling on rest days.
-
-Listen to your body — more training ≠ better results.`,
+    response: `Yes, rest days are actually essential — here's why:\n\n😴 **How much rest:**\n• 1–2 rest days per week minimum\n• 48–72 hours between training the same muscle group\n• 7–9 hours of sleep nightly\n\n🔬 **What happens when you rest:**\n• Muscles repair and grow\n• Glycogen stores refill\n• Hormones optimize (testosterone, growth hormone)\n• Nervous system recovers\n• Mental batteries recharge\n\n⚠️ **Signs you're overdoing it:**\n• Constant fatigue that doesn't go away\n• Performance dropping instead of improving\n• Elevated resting heart rate\n• Terrible sleep\n• Getting sick more often\n• Mood swings\n\n🧘 **Active recovery days:** Light walking, yoga, foam rolling — don't just sit on the couch all day.\n\n💡 **The truth:** More training ≠ better results. Your body grows during rest, not during the workout itself.`,
     followUp: ['Deload weeks', 'Sleep tips', 'Foam rolling guide'],
     category: 'exercise',
   },
   {
     keywords: ['deload', 'deload week', 'take a break', 'reduce intensity'],
-    response: `🔄 **Deload Weeks (NSCA):**
-
-**What:** Planned reduction in training volume/intensity (every 4-8 weeks)
-
-**How:**
-• Reduce weight by 40-60%
-• Keep same exercises
-• Same number of sets
-• Focus on form and technique
-
-**Duration:** 1 week
-
-**Why it's important:**
-• Allows full recovery
-• Prevents overtraining
-• Reduces injury risk
-• Mental freshness
-• Sets up next training block
-
-**Signs you need a deload:**
-• Performance declining
-• Persistent soreness
-• Poor motivation
-• Poor sleep
-
-Think of deloads as investing in long-term progress, not losing progress.`,
+    response: `A deload is a planned week where you dial back the intensity — it's not slacking, it's smart training.\n\n🔄 **What to do:**\n• Drop the weight by 40–60%\n• Keep the same exercises\n• Same number of sets\n• Focus on perfect form\n\n📅 **When:** Every 4–8 weeks\n\n💡 **Why it works:**\n• Lets your body fully recover\n• Prevents overtraining\n• Reduces injury risk\n• Refreshes you mentally\n• Sets you up for a stronger next cycle\n\n⚠️ **Signs you need one now:**\n• Performance is declining\n• You're sore all the time\n• You dread going to the gym\n• Sleep is off\n\nThink of deloads as an investment in long-term progress, not a step backwards.`,
     followUp: ['How to track progress', 'Training periodization', 'Signs of overtraining'],
     category: 'exercise',
   },
@@ -901,32 +589,7 @@ Use our Calculator page for your personalized numbers!`,
   // ─── SLEEP ─────────────────────────────────────────────────────────────────
   {
     keywords: ['sleep', 'rest', 'tired', 'fatigue', 'insomnia', 'cant sleep', 'sleep better', 'sleep quality'],
-    response: `😴 **Sleep Guidelines (National Sleep Foundation):**
-
-**Duration:** 7-9 hours per night (adults), 8-10 hours (athletes)
-
-**Sleep hygiene checklist:**
-✓ Consistent sleep/wake time (even weekends)
-✓ Cool room (18-20°C / 65-68°F)
-✓ Complete darkness
-✓ No screens 30-60 min before bed
-✓ No caffeine after 2 PM
-✓ No alcohol close to bedtime
-✓ No large meals 2-3 hours before bed
-✓ Regular exercise (not too close to bed)
-
-**Sleep stages:**
-• Deep sleep: Physical recovery, growth hormone
-• REM sleep: Mental recovery, memory, learning
-
-**Impact of poor sleep:**
-• Increases hunger hormones by 28%
-• Reduces testosterone by 10-15%
-• Impairs muscle recovery
-• Reduces workout performance by 20-30%
-• Increases injury risk
-
-Sleep is the most underrated performance enhancer!`,
+    response: `Sleep is honestly the most underrated performance enhancer. Here's what actually matters:\n\n😴 **Duration:**\n• Adults: 7–9 hours\n• Athletes: 8–10 hours\n\n🌙 **Sleep hygiene checklist:**\n• Same sleep/wake time every day — yes, weekends too\n• Cool room: 18–20°C (65–68°F)\n• Complete darkness\n• No screens 30–60 min before bed\n• No caffeine after 2 PM\n• No alcohol close to bedtime\n• No big meals 2–3 hours before bed\n• Exercise regularly, but not right before bed\n\n🔬 **Why it matters:**\n• Deep sleep = physical recovery + growth hormone release\n• REM sleep = mental recovery + memory + learning\n• Poor sleep increases hunger hormones by 28%\n• Bad sleep drops testosterone by 10–15%\n• Bad sleep cuts workout performance by 20–30%\n\n💡 **Bottom line:** You can't out-train bad sleep. Fix this first before anything else.`,
     followUp: ['Sleep routine tips', 'Relaxation techniques', 'Exercise and sleep'],
     category: 'sleep',
   },
@@ -934,31 +597,7 @@ Sleep is the most underrated performance enhancer!`,
   // ─── MENTAL HEALTH ────────────────────────────────────────────────────────
   {
     keywords: ['stress', 'anxiety', 'mental health', 'mind', 'calm', 'relax', 'overwhelmed', 'burnout'],
-    response: `🧠 **Stress Management (APA/Mental Health Foundation):**
-
-**Exercise & mood:**
-• 30 minutes moderate exercise 3x/week
-• Releases endorphins, serotonin, BDNF
-• Can be as effective as antidepressants for mild-moderate depression
-
-**Breathing techniques:**
-• 4-7-8: Inhale 4s → Hold 7s → Exhale 8s
-• Box breathing: 4s inhale → 4s hold → 4s exhale → 4s hold
-• Diaphragmatic: Breathe into belly, not chest
-
-**Mindfulness:**
-• Start with 5 minutes daily
-• Increase 1 min/week up to 20 min
-• Best time: Morning or before bed
-
-**Other strategies:**
-• Time in nature (15+ minutes)
-• Social connection
-• Journaling
-• Limiting screen time
-• Saying no to excessive commitments
-
-**If stress is persistent:** Please talk to a healthcare professional.`,
+    response: `Feeling stressed? Exercise is genuinely one of the best things you can do for your mind.\n\n💪 **Exercise & mood:**\n• 30 minutes of moderate exercise, 3x/week\n• Releases endorphins, serotonin, and BDNF (brain fertilizer)\n• Studies show it can be as effective as antidepressants for mild-moderate depression\n\n🫁 **Breathing techniques that work:**\n• 4-7-8: Inhale 4s → Hold 7s → Exhale 8s (great for falling asleep)\n• Box breathing: 4s inhale → 4s hold → 4s exhale → 4s hold\n• Diaphragmatic: Breathe into your belly, not your chest\n\n🧘 **Mindfulness:**\n• Start with just 5 minutes a day\n• Add 1 minute per week up to 20\n• Morning or before bed works best\n\n🌿 **Other stuff that helps:**\n• Get outside in nature for 15+ minutes\n• Talk to people you care about\n• Write things down\n• Reduce screen time\n• Learn to say no to things that drain you\n\n⚠️ **If stress is constant or overwhelming:** Please talk to a healthcare professional. There's no shame in getting support.`,
     followUp: ['Guided meditation', 'Workout for stress', 'Sleep tips'],
     category: 'mental',
   },
@@ -966,62 +605,13 @@ Sleep is the most underrated performance enhancer!`,
   // ─── SUPPLEMENTS ──────────────────────────────────────────────────────────
   {
     keywords: ['supplement', 'supplements', 'whey', 'creatine', 'protein powder', 'vitamin', 'fish oil', 'bcaa'],
-    response: `💊 **Evidence-Based Supplements (ISSN/Mayo Clinic):**
-
-**Strong evidence:**
-• Whey Protein: 20-40g per serving, post-workout or between meals
-• Creatine Monohydrate: 3-5g daily (no loading needed)
-• Caffeine: 3-6 mg/kg, 30-60 min before exercise
-
-**Moderate evidence:**
-• Vitamin D: 1000-2000 IU daily (if deficient)
-• Omega-3 Fish Oil: 1-3g EPA+DHA daily
-• Magnesium: 200-400mg daily (before bed for sleep)
-
-**Limited evidence:**
-• BCAAs: Less effective than whey protein alone
-• Glutamine: Marginal benefit if protein intake is adequate
-• Testosterone boosters: Mostly ineffective
-
-**Priority order:**
-1. Whole foods first
-2. Whey protein (convenience)
-3. Creatine (strongest evidence)
-4. Vitamin D (if deficient)
-5. Omega-3
-
-⚠️ Supplements supplement a good diet — they don't replace it.`,
+    response: `Let's cut through the marketing noise. Here's what the research actually supports:\n\n✅ **Strong evidence (worth taking):**\n• Whey Protein — 20–40g per serving, post-workout or between meals. Convenient way to hit your protein targets.\n• Creatine Monohydrate — 3–5g daily. Cheapest, most studied, actually works. No loading needed.\n• Caffeine — 3–6 mg/kg, 30–60 min before training. Proven ergogenic aid.\n\n👍 **Moderate evidence (good if deficient):**\n• Vitamin D — 1000–2000 IU daily. Most people are deficient.\n• Omega-3 Fish Oil — 1–3g EPA+DHA daily. Good for inflammation and brain health.\n• Magnesium — 200–400mg daily, especially before bed. Helps with sleep too.\n\n🤷 **Limited evidence (save your money):**\n• BCAAs — if you eat enough protein, these are redundant\n• Glutamine — marginal benefit at best\n• Testosterone boosters — mostly worthless\n\n📋 **Priority order:**\n1. Whole foods first, always\n2. Whey protein (convenience)\n3. Creatine (strongest evidence)\n4. Vitamin D (if deficient)\n5. Omega-3\n\n⚠️ Supplements are the cherry on top — they don't replace a solid diet.`,
     followUp: ['Best protein powder', 'Creatine guide', 'Vitamin D sources'],
     category: 'supplements',
   },
   {
     keywords: ['creatine', 'creatine supplement', 'creatine monohydrate'],
-    response: `💊 **Creatine Guide (ISSN 2017):**
-
-**What:** Natural compound that recycles ATP (energy) for muscles
-
-**Dosage:** 3-5g daily (no loading phase needed)
-
-**Benefits (strong evidence):**
-• Increases strength by 5-10%
-• Improves power output
-• Enhances muscle growth
-• May improve brain function
-• Safe for long-term use
-
-**Timing:** Any time of day, consistency matters more than timing
-
-**Myths debunked:**
-❌ Doesn't cause kidney damage (healthy individuals)
-❌ Doesn't cause hair loss
-❌ Doesn't require loading phase
-❌ Isn't a steroid
-
-**Best form:** Creatine monohydrate (cheapest, most studied)
-
-**Hydration:** Drink extra water while on creatine (it draws water into muscles)
-
-One of the most researched and effective supplements available!`,
+    response: `Creatine is the single most researched supplement out there, and it actually works. Here's the lowdown:\n\n💊 **What it does:** Recycles ATP (your muscles' energy currency) so you can push harder.\n\n📊 **Dosage:** 3–5g daily. That's it. No loading phase needed.\n\n✅ **Proven benefits:**\n• Strength gains of 5–10%\n• Better power output\n• More muscle growth\n• May even help brain function\n• Safe for long-term use\n\n⏰ **Timing:** Doesn't matter — just take it daily. Consistency beats timing.\n\n❌ **Myths debunked:**\n• "It hurts your kidneys" — nope, in healthy people\n• "It causes hair loss" — one study, never replicated\n• "You need to load it" — unnecessary\n• "It's a steroid" — it's a natural compound found in meat\n\n📝 **Best form:** Creatine monohydrate. Cheapest, most studied, works perfectly.\n\n💧 **One thing:** Drink a bit more water while on it — it pulls water into your muscles.`,
     followUp: ['Whey protein', 'Pre-workout supplements', 'How to build muscle'],
     category: 'supplements',
   },
@@ -1322,47 +912,19 @@ A well-planned plant-based diet supports excellent athletic performance!`,
   // ─── FAQ / GENERAL ────────────────────────────────────────────────────────
   {
     keywords: ['help', 'what can you do', 'capabilities', 'features', 'commands'],
-    response: `🤖 **What I Can Help With:**
-
-💪 **Exercise:**
-• Workout programs (beginner to advanced)
-• Exercise form and technique
-• Progressive overload strategies
-• Body-part specific training
-• Cardio and HIIT guidance
-
-🥗 **Nutrition:**
-• Macro calculations
-• Meal planning and timing
-• Food recommendations
-• Pre/post workout nutrition
-• Special diets (vegan, keto, etc.)
-
-📊 **Health:**
-• BMI and TDEE calculations
-• Body composition tracking
-• Health condition guidance
-• Supplement recommendations
-
-😴 **Recovery:**
-• Sleep optimization
-• Stress management
-• Flexibility and mobility
-• Injury prevention
-
-I provide evidence-based advice from certified guidelines. What would you like to know?`,
+    response: `Hey — I'm V, your fitness sidekick. Here's what I can help with:\n\n💪 Exercise: Workout programs, exercise form, progressive overload, body-part splits, cardio guidance\n🥗 Nutrition: Macro calculations, meal planning, pre/post workout meals, special diets\n📊 Health: BMI, TDEE, body composition, weight management, health conditions\n😴 Sleep: How to sleep better, sleep hygiene, recovery\n💊 Supplements: What's worth taking and what's marketing\n🧠 Mental Health: Stress management, breathing techniques, mindfulness\n🏥 Conditions: Diabetes, hypertension, back pain — with medical disclaimers\n\nAll my advice comes from certified sources like WHO, CDC, ACSM, and sports nutrition guidelines. What do you want to know?`,
     followUp: ['Calculate my TDEE', 'Suggest a meal', 'Workout plan'],
     category: 'general',
   },
   {
     keywords: ['thank', 'thanks', 'appreciate', 'awesome', 'great', 'perfect', 'nice'],
-    response: "You're welcome! I'm here to help you reach your goals. Remember:\n\n• Consistency beats perfection\n• Small changes compound into big results\n• Listen to your body\n• Celebrate every small victory\n\nWhat else can I help with?",
+    response: "Happy to help! Remember — consistency beats perfection, small changes add up, and your body is always communicating with you. Listen to it.\n\nWhat else can I help with?",
     followUp: ['Analyze my progress', 'Suggest a meal', 'Workout plan'],
     category: 'general',
   },
   {
     keywords: ['bye', 'goodbye', 'see you', 'later', 'done', 'exit'],
-    response: "Goodbye! Keep up the great work on your fitness journey. I'm always here when you need me. Stay consistent and stay healthy! 💪",
+    response: "Catch you later! Keep showing up — that's literally 90% of the battle. I'm here whenever you need me. 💪",
     followUp: ['See you next time'],
     category: 'general',
   },
@@ -1407,18 +969,18 @@ export function findResponse(input: string): string {
 
   // Smart fallback based on topic detection
   if (lower.match(/\b(exercise|workout|train|gym|lift|reps|sets)\b/)) {
-    return "I can help with exercise! Here are some topics:\n\n💪 **Workout programs:** Full body, upper/lower, push/pull/legs\n🎯 **Body parts:** Chest, back, legs, arms, shoulders, core\n📈 **Principles:** Progressive overload, warm-up, cool-down\n🏃 **Cardio:** HIIT, steady state, heart rate zones\n\nTry asking something specific like \"Chest workout\" or \"How to warm up\"!";
+    return "I can help with exercise! Try asking about:\n\n• Workout programs — full body, upper/lower, push/pull/legs\n• Body parts — chest, back, legs, arms, shoulders, core\n• Principles — progressive overload, warm-up, cool-down\n• Cardio — HIIT, steady state, heart rate zones\n\nFor example, try \"Chest workout\" or \"How to warm up\"";
   }
 
   if (lower.match(/\b(food|eat|meal|diet|nutrition|calorie|protein|carb|fat)\b/)) {
-    return "I can help with nutrition! Here are some topics:\n\n🥗 **Meal planning:** Pre-workout, post-workout, daily meals\n📊 **Macros:** Protein, carbs, fats, calories\n💧 **Hydration:** Daily water, electrolytes\n💊 **Supplements:** Whey, creatine, vitamins\n\nTry asking something specific like \"How much protein\" or \"Suggest a meal\"!";
+    return "I can help with nutrition! Try asking about:\n\n• Meal planning — pre-workout, post-workout, daily meals\n• Macros — protein, carbs, fats, calories\n• Hydration — daily water, electrolytes\n• Supplements — whey, creatine, vitamins\n\nFor example, try \"How much protein\" or \"Suggest a meal\"";
   }
 
   if (lower.match(/\b(sleep|rest|tired|fatigue|insomnia)\b/)) {
-    return "I can help with sleep! Key tips:\n\n😴 **Duration:** 7-9 hours per night\n🌙 **Sleep hygiene:** Cool dark room, consistent schedule, no screens before bed\n💪 **Exercise helps:** Regular physical activity improves sleep quality\n☕ **Caffeine:** Avoid after 2 PM\n\nTry asking \"Sleep tips\" for detailed advice!";
+    return "I can help with sleep! Here are the key things:\n\n• 7–9 hours per night is the target\n• Keep your room cool and dark\n• Same sleep time every day — even weekends\n• No screens before bed\n• Avoid caffeine after 2 PM\n\nTry asking \"Sleep tips\" for the full breakdown!";
   }
 
-  return "I'm still learning! Here's what I can help with:\n\n💪 **Exercise** — Workout programs, exercises, cardio, progressive overload\n🥗 **Nutrition** — Macros, meal planning, pre/post workout meals\n📊 **Health** — BMI, TDEE, body composition, weight management\n😴 **Sleep** — Duration, hygiene, tips\n💊 **Supplements** — Whey, creatine, vitamins\n🧠 **Mental health** — Stress, anxiety, mindfulness\n🏥 **Conditions** — Diabetes, hypertension, back pain\n\nTry asking something specific!";
+  return "I'm still learning! Here's what I know about:\n\n💪 Exercise — workouts, form, cardio, progressive overload\n🥗 Nutrition — macros, meals, hydration\n📊 Health — BMI, TDEE, weight management\n😴 Sleep — duration, hygiene, recovery\n💊 Supplements — whey, creatine, vitamins\n🧠 Mental health — stress, anxiety, mindfulness\n🏥 Conditions — diabetes, hypertension, back pain\n\nTry asking something specific!";
 }
 
 export function getFollowUps(input: string): string[] {

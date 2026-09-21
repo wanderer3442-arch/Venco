@@ -336,7 +336,7 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-18 right-2 left-2 sm:bottom-24 sm:left-auto sm:right-6 z-50 w-auto sm:w-[380px] h-[460px] sm:h-[520px] max-h-[calc(100vh-5.5rem)] bg-surface rounded-2xl shadow-elevated border border-outline-variant/20 flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 fade-in duration-200">
+        <div className="fixed inset-0 sm:inset-4 md:inset-8 z-50 bg-surface rounded-none sm:rounded-2xl shadow-elevated border-0 sm:border sm:border-outline-variant/20 flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 fade-in duration-200">
           {/* Header */}
           <div className="bg-gradient-to-r from-primary to-primary-light px-3 py-2">
             <div className="flex items-center justify-between">
@@ -361,17 +361,17 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3">
             {messages.map((msg) => (
-              <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
+              <div key={msg.id} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : ''}`}>
                 {msg.role === 'assistant' && (
-                  <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Bot className="w-5 h-5 text-primary" />
+                  <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Bot className="w-4 h-4 text-primary" />
                   </div>
                 )}
-                <div className={`max-w-[80%] ${msg.role === 'user' ? 'text-right' : ''}`}>
+                <div className={`max-w-[85%] ${msg.role === 'user' ? 'text-right' : ''}`}>
                   <div
-                    className={`p-3 rounded-2xl text-sm whitespace-pre-wrap ${
+                    className={`px-3 py-2 rounded-2xl text-xs whitespace-pre-wrap leading-relaxed ${
                       msg.role === 'user'
                         ? 'bg-primary text-on-primary rounded-tr-sm'
                         : 'bg-surface-container text-on-surface rounded-tl-sm'
@@ -379,14 +379,14 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
                   >
                     {msg.content}
                   </div>
-                  <p className="text-xs text-on-surface-variant mt-1">{msg.timestamp}</p>
+                  <p className="text-[10px] text-on-surface-variant mt-0.5">{msg.timestamp}</p>
                   {msg.followUps && msg.followUps.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-2">
+                    <div className="flex flex-wrap gap-1 mt-1.5">
                       {msg.followUps.map((followUp, i) => (
                         <button
                           key={i}
                           onClick={() => handleSend(followUp)}
-                          className="px-2.5 py-1 bg-surface-container hover:bg-surface-container-high rounded-full text-xs text-secondary font-medium transition-colors"
+                          className="px-2 py-0.5 bg-surface-container hover:bg-surface-container-high rounded-full text-[10px] text-secondary font-medium transition-colors"
                         >
                           {followUp}
                         </button>
@@ -395,22 +395,22 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
                   )}
                 </div>
                 {msg.role === 'user' && (
-                  <div className="w-8 h-8 bg-secondary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <User className="w-5 h-5 text-secondary" />
+                  <div className="w-7 h-7 bg-secondary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <User className="w-4 h-4 text-secondary" />
                   </div>
                 )}
               </div>
             ))}
             {isTyping && (
-              <div className="flex gap-3">
-                <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-5 h-5 text-primary" />
+              <div className="flex gap-2">
+                <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Bot className="w-4 h-4 text-primary" />
                 </div>
-                <div className="bg-surface-container rounded-2xl rounded-tl-sm px-4 py-3">
+                <div className="bg-surface-container rounded-2xl rounded-tl-sm px-3 py-2">
                   <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <div className="w-2 h-2 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <div className="w-2 h-2 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <div className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-1.5 h-1.5 bg-on-surface-variant rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                 </div>
               </div>
@@ -419,8 +419,8 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
           </div>
 
           {/* Quick Actions */}
-          <div className="px-4 pb-2">
-            <div className="flex gap-2 overflow-x-auto pb-2">
+          <div className="px-3 pb-1.5">
+            <div className="flex gap-1.5 overflow-x-auto pb-1.5">
               {[
                 'How much protein should I eat?',
                 'Suggest a meal',
@@ -430,7 +430,7 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
                 <button
                   key={action}
                   onClick={() => handleSend(action)}
-                  className="px-3 py-1.5 bg-surface-container hover:bg-surface-container-high rounded-full text-xs text-on-surface-variant font-medium whitespace-nowrap transition-colors"
+                  className="px-2.5 py-1 bg-surface-container hover:bg-surface-container-high rounded-full text-[10px] text-on-surface-variant font-medium whitespace-nowrap transition-colors"
                 >
                   {action}
                 </button>
@@ -439,7 +439,7 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
           </div>
 
           {/* Input */}
-          <div className="p-4 border-t border-outline-variant/30">
+          <div className="p-3 border-t border-outline-variant/30">
             <div className="flex gap-2">
               <input
                 type="text"
@@ -447,14 +447,14 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Ask V anything..."
-                className="flex-1 h-10 px-4 rounded-lg border border-outline-variant bg-surface-container-lowest text-sm text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                className="flex-1 h-9 px-3 rounded-lg border border-outline-variant bg-surface-container-lowest text-xs text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               />
               <button
                 onClick={() => handleSend()}
                 disabled={!message.trim() || isTyping}
-                className="h-10 px-4 bg-primary text-on-primary rounded-lg font-medium text-sm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="h-9 px-3 bg-primary text-on-primary rounded-lg font-medium text-xs hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
               >
-                <Send className="w-4 h-4" />
+                <Send className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>

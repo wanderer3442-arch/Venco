@@ -41,18 +41,18 @@
   --color-warning: #e29100;
   --color-info: #0058be;
 
-  /* Typography Scale — compact */
+  /* Typography Scale — balanced */
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 
-  --text-display-lg: clamp(20px, 3.5vw, 26px);
-  --text-headline-lg: clamp(15px, 2.5vw, 20px);
-  --text-headline-md: clamp(13px, 2vw, 16px);
-  --text-headline-sm: clamp(12px, 1.8vw, 14px);
-  --text-body-lg: 13px;
-  --text-body-md: 12px;
-  --text-label-md: 11px;
-  --text-label-sm: 10px;
-  --text-stat-value: clamp(14px, 2vw, 18px);
+  --text-display-lg: clamp(22px, 4vw, 28px);
+  --text-headline-lg: clamp(17px, 3vw, 22px);
+  --text-headline-md: clamp(14px, 2.5vw, 17px);
+  --text-headline-sm: clamp(12px, 2vw, 15px);
+  --text-body-lg: 15px;
+  --text-body-md: 14px;
+  --text-label-md: 13px;
+  --text-label-sm: 11px;
+  --text-stat-value: clamp(16px, 2.5vw, 20px);
 
   /* Spacing — tighter */
   --spacing-gutter: 16px;

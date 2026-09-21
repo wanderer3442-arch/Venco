@@ -189,21 +189,21 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
     return (
       <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-outline-variant/30">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-light rounded-xl flex items-center justify-center">
-              <Bot className="w-6 h-6 text-on-primary" />
+        <div className="flex items-center justify-between px-3 py-2 border-b border-outline-variant/30">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary-light rounded-lg flex items-center justify-center">
+              <Bot className="w-4 h-4 text-on-primary" />
             </div>
             <div>
-              <h3 className="text-base font-semibold text-on-surface">V AI Assistant</h3>
-              <p className="text-xs text-on-surface-variant">
-                {hasApiKey() ? 'AI Powered' : isPaid ? 'Gemini AI • Upgrade for OpenRouter' : `Free • ${dailyCount}/${FREE_DAILY_LIMIT} messages today`}
+              <h3 className="text-sm font-semibold text-on-surface">V</h3>
+              <p className="text-[10px] text-on-surface-variant">
+                {hasApiKey() ? 'AI Powered' : isPaid ? 'Gemini AI • Online' : `Free • ${dailyCount}/${FREE_DAILY_LIMIT} messages today`}
               </p>
             </div>
           </div>
           {onClose && (
-            <button onClick={onClose} className="p-2 hover:bg-surface-container rounded-lg">
-              <X className="w-5 h-5 text-on-surface-variant" />
+            <button onClick={onClose} className="p-1.5 hover:bg-surface-container rounded-lg">
+              <X className="w-4 h-4 text-on-surface-variant" />
             </button>
           )}
         </div>
@@ -338,24 +338,24 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
       {isOpen && (
         <div className="fixed bottom-18 right-2 left-2 sm:bottom-24 sm:left-auto sm:right-6 z-50 w-auto sm:w-[380px] h-[460px] sm:h-[520px] max-h-[calc(100vh-5.5rem)] bg-surface rounded-2xl shadow-elevated border border-outline-variant/20 flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 fade-in duration-200">
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary to-primary-light p-4">
+          <div className="bg-gradient-to-r from-primary to-primary-light px-3 py-2">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Bot className="w-6 h-6 text-on-primary" />
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                  <Bot className="w-4 h-4 text-on-primary" />
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-on-primary">V AI Assistant</h3>
-                  <p className="text-xs text-on-primary/80">
+                  <h3 className="text-sm font-semibold text-on-primary">V</h3>
+                  <p className="text-[10px] text-on-primary/80">
                     {hasApiKey() ? 'AI Powered • Online' : isPaid ? 'Gemini AI • Online' : `Free • ${dailyCount}/${FREE_DAILY_LIMIT} messages`}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
               >
-                <X className="w-5 h-5 text-on-primary" />
+                <X className="w-4 h-4 text-on-primary" />
               </button>
             </div>
           </div>

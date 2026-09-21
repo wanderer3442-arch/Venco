@@ -376,43 +376,45 @@ export default function FoodIntakePage() {
         </div>
 
         {/* Free Food Search */}
-        <div className="bg-surface rounded-xl border border-outline-variant/30 p-6 mb-6">
+        <div className="bg-surface rounded-xl border border-outline-variant/30 p-4 md:p-6 mb-6">
           <div className="flex items-center gap-2 mb-3">
-            <Search className="w-5 h-5 text-primary" />
-            <h3 className="text-body-lg font-bold text-on-surface">Add Food</h3>
+            <Search className="w-4 h-4 text-primary" />
+            <h3 className="text-body-md font-bold text-on-surface">Add Food</h3>
           </div>
-          <div className="flex gap-3">
-            <div className="flex-1">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1 min-w-0">
               <AutocompleteInput
                 placeholder="Search any food..."
                 onSelect={(food) => handleAddFood(selectedMeal, food)}
                 allergies={allergies}
               />
             </div>
-            <div className="flex items-center gap-1 bg-surface-container-lowest border border-outline-variant/40 rounded-lg px-2">
-              <button
-                onClick={() => setAddQuantity(Math.max(1, addQuantity - 1))}
-                className="w-7 h-7 flex items-center justify-center rounded text-on-surface text-sm font-bold hover:bg-surface-container-high transition-colors"
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 bg-surface-container-lowest border border-outline-variant/40 rounded-lg px-2">
+                <button
+                  onClick={() => setAddQuantity(Math.max(1, addQuantity - 1))}
+                  className="w-7 h-7 flex items-center justify-center rounded text-on-surface text-sm font-bold hover:bg-surface-container-high transition-colors"
+                >
+                  −
+                </button>
+                <span className="text-sm font-semibold text-on-surface w-5 text-center">{addQuantity}</span>
+                <button
+                  onClick={() => setAddQuantity(addQuantity + 1)}
+                  className="w-7 h-7 flex items-center justify-center rounded text-on-surface text-sm font-bold hover:bg-surface-container-high transition-colors"
+                >
+                  +
+                </button>
+              </div>
+              <select
+                value={selectedMeal}
+                onChange={(e) => setSelectedMeal(e.target.value as 'breakfast' | 'lunch' | 'dinner')}
+                className="px-3 py-2 bg-surface-container-lowest border border-outline-variant/40 rounded-lg text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
               >
-                −
-              </button>
-              <span className="text-sm font-semibold text-on-surface w-5 text-center">{addQuantity}</span>
-              <button
-                onClick={() => setAddQuantity(addQuantity + 1)}
-                className="w-7 h-7 flex items-center justify-center rounded text-on-surface text-sm font-bold hover:bg-surface-container-high transition-colors"
-              >
-                +
-              </button>
+                {mealTypes.map((meal) => (
+                  <option key={meal.id} value={meal.id}>{meal.label}</option>
+                ))}
+              </select>
             </div>
-            <select
-              value={selectedMeal}
-              onChange={(e) => setSelectedMeal(e.target.value as 'breakfast' | 'lunch' | 'dinner')}
-              className="px-4 py-3 bg-surface-container-lowest border border-outline-variant/40 rounded-lg text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
-            >
-              {mealTypes.map((meal) => (
-                <option key={meal.id} value={meal.id}>{meal.label}</option>
-              ))}
-            </select>
           </div>
         </div>
 
@@ -425,8 +427,8 @@ export default function FoodIntakePage() {
               <div key={meal.id} className="border border-outline-variant/30 rounded-xl overflow-hidden">
                 <div className={`flex items-center justify-between p-4 ${meal.bg} border-b border-outline-variant/20`}>
                   <div className="flex items-center gap-2">
-                    <Icon className={`w-5 h-5 ${meal.color}`} />
-                    <h4 className="text-body-lg font-bold text-on-surface capitalize">{meal.id}</h4>
+                    <Icon className={`w-4 h-4 ${meal.color}`} />
+                    <h4 className="text-body-md font-bold text-on-surface capitalize">{meal.id}</h4>
                   </div>
                   <span className="text-sm font-semibold text-on-surface-variant">
                     {entries.reduce((sum, s) => sum + s.calories * (s.quantity || 1), 0)} kcal

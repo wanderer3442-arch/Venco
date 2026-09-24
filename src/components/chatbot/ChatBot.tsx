@@ -3,11 +3,13 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { Send, X, MessageCircle, Bot, User, Sparkles, Minimize2 } from 'lucide-react';
 import { getChatResponse } from '@/lib/ai-service';
-import { hasApiKey } from '@/lib/food-recognition';
 import { findResponse, getFollowUps } from '@/lib/chatbot-responses';
+import { sumMealNutrition, estimateExerciseCalories } from '@/lib/calculations';
+import { PLAN_DAY_NAMES } from '@/lib/exercise-planner';
 import { useSubscription } from '@/lib/subscription-context';
 import { useStore } from '@/lib/store-context';
 import { useAuth } from '@/lib/auth-context';
+import { useBackHandler } from '@/lib/back-handler';
 
 interface Message {
   id: number;
@@ -15,6 +17,11 @@ interface Message {
   content: string;
   timestamp: string;
   followUps?: string[];
+}
+
+interface ChatHistoryMessage {
+  role: string;
+  content: string;
 }
 
 interface ChatBotProps {
@@ -42,7 +49,7 @@ function incrementDailyCount(): number {
   return current + 1;
 }
 
-function getGeminiKeyForPaid(): boolean {
+function hasGeminiKey(): boolean {
   if (typeof window === 'undefined') return false;
   return !!localStorage.getItem('gemini_api_key');
 }
@@ -65,39 +72,84 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
   const { isPro, isPremium } = useSubscription();
   const isPaid = isPro || isPremium;
   const { user } = useAuth();
-  const { profile, meals, waterLogs, calculations, bodyMetrics, workoutPlan } = useStore();
+  const {
+    profile, meals, calculations, workoutPlan,
+    foodPreferences, subscription,
+    getExercisesForDate, getWaterForDate, getSleepForDate,
+  } = useStore();
 
-  // Build personalized context for AI
+  // Greet by name once the user is known
+  useEffect(() => {
+    if (!user?.username) return;
+    setMessages(prev =>
+      prev.map(m =>
+        m.id === 1 && m.role === 'assistant'
+          ? { ...m, content: `Hello ${user.username}! I'm V, your Gym at Home AI Health Assistant. How can I help you today?` }
+          : m
+      )
+    );
+  }, [user?.username]);
+
+  // Build personalized context for AI (real data only)
   const chatContext = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
-    const todayMeals = meals.filter((m: any) => m.loggedAt?.startsWith(today));
-    const todayCalories = todayMeals.reduce((sum: number, m: any) => sum + (m.calories || 0), 0);
-    const todayProtein = todayMeals.reduce((sum: number, m: any) => sum + (m.protein || 0), 0);
-    const todayWater = waterLogs
-      .filter((w: any) => w.date?.startsWith(today))
-      .reduce((sum: number, w: any) => sum + (w.amount || 0), 0) / 1000;
-    const recentMealNames = todayMeals.slice(-3).map((m: any) => m.foodName).join(', ');
+    const todayMeals = meals.filter(m => m.loggedAt.startsWith(today));
+    const nutrition = sumMealNutrition(todayMeals);
+    const todayExercises = getExercisesForDate(today);
+    const todayWaterL = getWaterForDate(today) / 1000;
+    const todaySleep = getSleepForDate(today);
+    const burnedCalories = todayExercises.reduce((sum, e) => sum + estimateExerciseCalories(e), 0);
+
+    const todayDayName = PLAN_DAY_NAMES[(new Date().getDay() + 6) % 7];
+    const plannedToday = workoutPlan?.exercises.filter(e => e.day === todayDayName) || [];
+    const fmtExercise = (e: { exerciseName: string; sets: number; reps: number; weight?: number; duration?: number }) =>
+      e.duration && e.sets === 1 && e.reps === 1
+        ? `${e.exerciseName} ${e.duration}min`
+        : `${e.exerciseName} ${e.sets}x${e.reps}${e.weight !== undefined ? ` @${e.weight}kg` : ''}`;
 
     return {
-      profile: profile ? {
-        bmi: calculations?.bmi || null,
-        weight: profile.weight,
-        height: profile.height,
-        age: profile.age,
-        activityLevel: profile.activityLevel || 'moderate',
-        targetCalories: calculations?.targetCalories,
-      } : null,
-      recentMeals: recentMealNames || undefined,
+      username: user?.username,
+      profile: profile
+        ? {
+            gender: profile.gender,
+            bmi: calculations?.bmi || null,
+            bmr: calculations?.bmr || null,
+            tdee: calculations?.tdee || null,
+            weight: profile.weight,
+            height: profile.height,
+            age: profile.age,
+            activityLevel: profile.activityLevel || 'moderate',
+            targetCalories: calculations?.targetCalories,
+            protein: calculations?.protein,
+            carbs: calculations?.carbs,
+            fat: calculations?.fat,
+            hydration: calculations?.hydration,
+            healthProblems: profile.healthProblems?.length ? profile.healthProblems : undefined,
+          }
+        : null,
+      planTier: subscription.plan,
+      recentMeals: todayMeals.map(m => m.foodName).join(', ') || undefined,
       healthGoal: profile?.goal || undefined,
-      dailyCalories: todayCalories || undefined,
-      dailyProtein: todayProtein || undefined,
-      dailyWater: todayWater || undefined,
+      dailyCalories: nutrition.calories || undefined,
+      dailyProtein: nutrition.protein || undefined,
+      dailyCarbs: nutrition.carbs || undefined,
+      dailyFat: nutrition.fat || undefined,
+      dailyWater: todayWaterL || undefined,
+      waterGoal: calculations?.hydration || undefined,
+      sleepHours: todaySleep || undefined,
+      burnedCalories: burnedCalories || undefined,
+      todayWorkout: plannedToday.map(fmtExercise).join('; ') || undefined,
+      loggedWorkout: todayExercises.map(fmtExercise).join('; ') || undefined,
+      allergies: foodPreferences.allergies?.length ? foodPreferences.allergies : undefined,
     };
-  }, [profile, meals, waterLogs, calculations]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile, meals, calculations, workoutPlan, foodPreferences, subscription, user?.id]);
 
   useEffect(() => {
     setDailyCount(getDailyCount());
-  }, [messages]);
+  }, []);
+
+  useBackHandler(mode === 'floating' && isOpen, () => setIsOpen(false));
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -138,14 +190,19 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
     setMessage('');
     setIsTyping(true);
 
+    const nextCount = incrementDailyCount();
+    setDailyCount(nextCount);
+
     try {
       let response: string;
       let followUps: string[] = [];
 
-      if (hasApiKey() || (isPaid && getGeminiKeyForPaid())) {
-        response = await getChatResponse(sendText, chatContext, isPaid);
+      if (isPaid && hasGeminiKey()) {
+        const history: ChatHistoryMessage[] = messages
+          .slice(-6)
+          .map(m => ({ role: m.role, content: m.content }));
+        response = await getChatResponse(sendText, chatContext, isPaid, history);
         followUps = getFollowUps(sendText);
-        incrementDailyCount();
       } else {
         response = findResponse(sendText);
         followUps = getFollowUps(sendText);
@@ -197,7 +254,7 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
             <div>
               <h3 className="text-sm font-semibold text-on-surface">V</h3>
               <p className="text-[10px] text-on-surface-variant">
-                {hasApiKey() ? 'AI Powered' : isPaid ? 'Gemini AI • Online' : `Free • ${dailyCount}/${FREE_DAILY_LIMIT} messages today`}
+                {isPaid && hasGeminiKey() ? 'Gemini AI • Online' : `Free • ${dailyCount}/${FREE_DAILY_LIMIT} messages today`}
               </p>
             </div>
           </div>
@@ -347,7 +404,7 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
                 <div>
                   <h3 className="text-sm font-semibold text-on-primary">V</h3>
                   <p className="text-[10px] text-on-primary/80">
-                    {hasApiKey() ? 'AI Powered • Online' : isPaid ? 'Gemini AI • Online' : `Free • ${dailyCount}/${FREE_DAILY_LIMIT} messages`}
+                    {isPaid && hasGeminiKey() ? 'Gemini AI • Online' : `Free • ${dailyCount}/${FREE_DAILY_LIMIT} messages`}
                   </p>
                 </div>
               </div>

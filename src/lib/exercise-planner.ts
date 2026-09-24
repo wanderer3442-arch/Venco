@@ -6,10 +6,14 @@ export interface ExercisePlanInput {
   profile: Profile;
   equipment: Equipment;
   daysPerWeek: number;
+  customSplit?: string[][];
 }
 
 export function generateWorkoutPlan(input: ExercisePlanInput): WorkoutPlan {
-  const { profile, equipment, daysPerWeek } = input;
+  const { profile, equipment, daysPerWeek, customSplit } = input;
+  const split =
+    customSplit && customSplit.length > 0 ? customSplit : getDefaultSplit(daysPerWeek);
+  const effectiveDays = split.length;
 
   if (!profile.weight || !profile.height || !profile.activityLevel || !profile.goal) {
     return {
@@ -17,9 +21,10 @@ export function generateWorkoutPlan(input: ExercisePlanInput): WorkoutPlan {
       name: 'Incomplete Profile',
       goal: 'maintain',
       equipment,
-      daysPerWeek,
+      daysPerWeek: effectiveDays,
       exercises: [],
       isGenerated: true,
+      split,
     };
   }
 
@@ -28,7 +33,6 @@ export function generateWorkoutPlan(input: ExercisePlanInput): WorkoutPlan {
   const tdee = calculateTDEE(bmr, profile.activityLevel);
 
   const difficulty = getDifficultyLevel(profile, bmi);
-  const split = getWorkoutSplit(daysPerWeek);
   const exercisesForPlan = getExercisesForPlan(equipment, difficulty);
 
   const workoutExercises: WorkoutExercise[] = [];
@@ -37,16 +41,18 @@ export function generateWorkoutPlan(input: ExercisePlanInput): WorkoutPlan {
     const dayName = getDayName(dayIndex);
     muscleGroups.forEach(muscleGroup => {
       const muscleExercises = exercisesForPlan.filter(e => e.muscleGroup === muscleGroup);
-      const selected = selectExercises(muscleExercises, getExercisesPerMuscle(daysPerWeek));
+      const selected = selectExercises(muscleExercises, getExercisesPerMuscle(effectiveDays));
 
       selected.forEach(exercise => {
         const { sets, reps, duration } = getSetsReps(exercise, profile.goal!, difficulty);
+        const weight = getDefaultWeight(exercise);
         workoutExercises.push({
           exerciseId: exercise.id,
           exerciseName: exercise.name,
           sets,
           reps,
           duration,
+          ...(weight !== undefined ? { weight } : {}),
           day: dayName,
         });
       });
@@ -55,12 +61,13 @@ export function generateWorkoutPlan(input: ExercisePlanInput): WorkoutPlan {
 
   return {
     id: `plan-${Date.now()}`,
-    name: getPlanName(profile.goal, daysPerWeek),
+    name: getPlanName(profile.goal, effectiveDays),
     goal: profile.goal,
     equipment,
-    daysPerWeek,
+    daysPerWeek: effectiveDays,
     exercises: workoutExercises,
     isGenerated: true,
+    split,
   };
 }
 
@@ -70,7 +77,28 @@ function getDifficultyLevel(profile: Profile, bmi: { value: number; category: st
   return 'intermediate';
 }
 
-function getWorkoutSplit(daysPerWeek: number): string[][] {
+export const PLAN_DAY_NAMES = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
+
+export const MUSCLE_GROUP_OPTIONS = [
+  'chest',
+  'back',
+  'shoulders',
+  'biceps',
+  'triceps',
+  'legs',
+  'core',
+  'full_body',
+] as const;
+
+export function getDefaultSplit(daysPerWeek: number): string[][] {
   const splits: Record<number, string[][]> = {
     2: [
       ['chest', 'back', 'core'],
@@ -103,12 +131,23 @@ function getWorkoutSplit(daysPerWeek: number): string[][] {
       ['core', 'full_body'],
     ],
   };
-  return splits[Math.min(daysPerWeek, 6)] || splits[3];
+  return (splits[Math.min(daysPerWeek, 6)] || splits[3]).map((day) => [...day]);
 }
 
 function getDayName(dayIndex: number): string {
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  return days[dayIndex] || `Day ${dayIndex + 1}`;
+  return PLAN_DAY_NAMES[dayIndex] || `Day ${dayIndex + 1}`;
+}
+
+const BODYWEIGHT_RE = /push-up|pull-up|chin-up|dip|plank|crunch|lunge|bridge|wall sit|superman|bird|dead bug|leg raise|hold|step-up|mountain|burpee|pike|inverted|chair dip|sit-up|twist|rollout|hanging/i;
+
+export function getDefaultWeight(exercise: Exercise): number | undefined {
+  if (exercise.category !== 'strength') return undefined;
+  const n = exercise.name.toLowerCase();
+  if (BODYWEIGHT_RE.test(n)) return undefined;
+  if (n.includes('barbell') || n.includes('deadlift') || n.includes('leg press')) return 40;
+  if (n.includes('dumbbell')) return 10;
+  if (exercise.equipment === 'gym') return 20;
+  return undefined;
 }
 
 function getExercisesPerMuscle(daysPerWeek: number): number {

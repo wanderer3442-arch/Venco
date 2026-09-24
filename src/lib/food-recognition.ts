@@ -1,10 +1,10 @@
-import { detectFoodFromPhoto, detectWeeklyMealPlan, FoodSuggestion, DayMealPlan } from './ai-service';
+import { detectFoodFromPhoto, detectWeeklyMealPlan, FoodSuggestion, DayMealPlan, hasGeminiKey } from './ai-service';
 
 export type { FoodSuggestion, DayMealPlan };
 
 export function hasApiKey(): boolean {
   if (typeof window === 'undefined') return false;
-  return !!localStorage.getItem('openrouter_api_key');
+  return hasGeminiKey();
 }
 
 export async function detectFoodFromImage(

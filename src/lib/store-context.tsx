@@ -91,7 +91,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan | null>(null);
   const [bodyMetrics, setBodyMetrics] = useState<BodyMetric[]>([]);
-  const [subscription, setSubscription] = useState<Subscription>({ plan: 'premium', expiresAt: null });
+  const [subscription, setSubscription] = useState<Subscription>({ plan: 'free', expiresAt: null });
   const [foodPreferences, setFoodPreferences] = useState<WeeklyFoodPreference>({
     monday: { breakfast: [], lunch: [], dinner: [] },
     tuesday: { breakfast: [], lunch: [], dinner: [] },
@@ -152,7 +152,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (parsed.foodPreferences) setFoodPreferences(parsed.foodPreferences);
         if (parsed.waterLogs) setWaterLogs(parsed.waterLogs);
         if (parsed.sleepLogs) setSleepLogs(parsed.sleepLogs);
-        if (parsed.badges) setBadges(parsed.badges);
+        if (parsed.badges) {
+          const seenIds = new Set<string>();
+          setBadges(parsed.badges.filter((b: Badge) => {
+            if (seenIds.has(b.id)) return false;
+            seenIds.add(b.id);
+            return true;
+          }));
+        }
         if (parsed.theme) setTheme(parsed.theme);
         if (parsed.isProfileSet) setIsProfileSet(parsed.isProfileSet);
       } catch {
@@ -392,7 +399,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
 
     if (newBadges.length > 0) {
-      setBadges(prev => [...prev, ...newBadges]);
+      setBadges(prev => {
+        const existingIds = new Set(prev.map(b => b.id));
+        const uniqueNew = newBadges.filter(b => !existingIds.has(b.id));
+        return uniqueNew.length > 0 ? [...prev, ...uniqueNew] : prev;
+      });
     }
   };
 

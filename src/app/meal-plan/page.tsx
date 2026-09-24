@@ -4,6 +4,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useState, useMemo } from 'react';
 import { Check, Sun, CloudSun, Moon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStore } from '@/lib/store-context';
+import { sumMealNutrition, getFoodById } from '@/lib/calculations';
 import { DayFoodIntake } from '@/lib/types';
 
 function CalorieRing({ consumed, target }: { consumed: number; target: number }) {
@@ -107,13 +108,15 @@ export default function MealPlanPage() {
   }, [todayPrefs]);
 
   const eatenTotals = useMemo(() => {
-    let calories = 0, protein = 0, carbs = 0, fat = 0;
+    const logged = sumMealNutrition(todayLoggedMeals);
+    let calories = logged.calories, protein = logged.protein, carbs = logged.carbs, fat = logged.fat;
     const types: Array<'breakfast' | 'lunch' | 'dinner'> = ['breakfast', 'lunch', 'dinner'];
     types.forEach((type) => {
       const items = (todayPrefs[type] || []) as any[];
       items.forEach((item: any) => {
         const key = `${type}::${item.foodName || item.name}`;
-        if (loggedSet.has(key)) {
+        const fid = item.foodId || '';
+        if (loggedSet.has(key) && !(fid && getFoodById(fid))) {
           calories += item.calories || 0;
           protein += item.protein || 0;
           carbs += item.carbs || 0;
@@ -122,7 +125,7 @@ export default function MealPlanPage() {
       });
     });
     return { calories, protein, carbs, fat };
-  }, [todayPrefs, loggedSet]);
+  }, [todayPrefs, loggedSet, todayLoggedMeals]);
 
   const targetCals = calculations?.targetCalories || 0;
   const targetProtein = calculations?.protein || 0;

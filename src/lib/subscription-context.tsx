@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Subscription, SubscriptionPlan } from './types';
+import { getSubscription, initializeBilling } from './billing-service';
 
 interface SubscriptionContextType {
   subscription: Subscription;
@@ -35,17 +36,33 @@ const planHierarchy: Record<SubscriptionPlan, number> = {
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [subscription, setSubscription] = useState<Subscription>({
-    plan: 'premium',
+    plan: 'free',
     expiresAt: null,
   });
 
   useEffect(() => {
     const saved = localStorage.getItem('gymathome_subscription');
     if (saved) {
-      const parsed = JSON.parse(saved);
-      parsed.plan = 'premium';
-      setSubscription(parsed);
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.expiresAt && new Date(parsed.expiresAt) < new Date()) {
+          setSubscription({ plan: 'free', expiresAt: null });
+          return;
+        }
+        setSubscription(parsed);
+      } catch {
+        setSubscription({ plan: 'free', expiresAt: null });
+      }
     }
+
+    const verifySubscription = async () => {
+      await initializeBilling();
+      const result = await getSubscription();
+      if (result.subscribed) {
+        setSubscription({ plan: result.plan as SubscriptionPlan, expiresAt: result.expiresAt });
+      }
+    };
+    verifySubscription();
   }, []);
 
   useEffect(() => {

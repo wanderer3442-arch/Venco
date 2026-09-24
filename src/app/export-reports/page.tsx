@@ -23,7 +23,6 @@ import {
 import { useAuth } from '@/lib/auth-context';
 import { useStore } from '@/lib/store-context';
 import { allFoods } from '@/lib/food-database';
-import { exercises as allExercises } from '@/lib/exercise-database';
 import jsPDF from 'jspdf';
 import { useSubscription } from '@/lib/subscription-context';
 import Link from 'next/link';
@@ -50,7 +49,7 @@ const dayLabels: Record<string, string> = {
 
 export default function ExportReportsPage() {
   const { user } = useAuth();
-  const { profile, meals, exercises: exerciseLogs, bodyMetrics, calculations, workoutPlan, habits } = useStore();
+  const { profile, meals, exercises: exerciseLogs, bodyMetrics, calculations, workoutPlan, habits, sleepLogs } = useStore();
   const { hasFeature } = useSubscription();
   const [timePeriod, setTimePeriod] = useState('Last 30 Days');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -78,9 +77,58 @@ export default function ExportReportsPage() {
     setCheckedSections((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const avgCalories = meals.length > 0
-    ? Math.round(meals.reduce((sum: number, m: any) => sum + (m.calories || 0), 0) / Math.max(meals.length, 1))
+  const mealCalories = (m: { foodId: string; quantity: number }) => {
+    const food = allFoods.find((f) => f.id === m.foodId);
+    return food ? food.nutrition.calories * (m.quantity || 1) : 0;
+  };
+
+  const periodDays = timePeriod === 'Last 7 Days' ? 7
+    : timePeriod === 'Last 30 Days' ? 30
+    : timePeriod === 'Last 3 Months' ? 90
+    : Math.max(1, Math.ceil((Date.now() - new Date(new Date().getFullYear(), 0, 1).getTime()) / 86400000));
+  const periodStart = new Date(Date.now() - periodDays * 86400000).toISOString().split('T')[0];
+  const inPeriod = (dateStr?: string) => !dateStr || dateStr >= periodStart;
+
+  const periodMeals = meals.filter((m: any) => inPeriod(m.loggedAt?.split('T')[0]));
+  const periodExercises = exerciseLogs.filter((e: any) => inPeriod(e.loggedAt?.split('T')[0]));
+  const periodMetrics = bodyMetrics.filter((b: any) => inPeriod(b.date));
+  const periodSleep = sleepLogs.filter((s: any) => inPeriod(s.date));
+  const avgSleep = periodSleep.length > 0
+    ? (periodSleep.reduce((sum: number, s: any) => sum + (s.hours || 0), 0) / periodSleep.length)
     : 0;
+
+  const avgCalories = periodMeals.length > 0
+    ? Math.round(periodMeals.reduce((sum: number, m: any) => sum + mealCalories(m), 0) / periodMeals.length)
+    : 0;
+
+  const macroPcts = (() => {
+    const p = (calculations?.protein || 0) * 4;
+    const c = (calculations?.carbs || 0) * 4;
+    const f = (calculations?.fat || 0) * 9;
+    const total = p + c + f;
+    if (total === 0) return { protein: 30, carbs: 40, fat: 30 };
+    return {
+      protein: Math.round((p / total) * 100),
+      carbs: Math.round((c / total) * 100),
+      fat: Math.round((f / total) * 100),
+    };
+  })();
+
+  const last7Calories = (() => {
+    const out: { day: string; kcal: number }[] = [];
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const ds = d.toISOString().split('T')[0];
+      const kcal = meals
+        .filter((m: any) => m.loggedAt?.split('T')[0] === ds)
+        .reduce((sum: number, m: any) => sum + mealCalories(m), 0);
+      out.push({ day: dayNames[d.getDay()], kcal: Math.round(kcal) });
+    }
+    return out;
+  })();
+  const maxDayKcal = Math.max(...last7Calories.map((d) => d.kcal), 1);
 
   // Group exercises by day for the plan
   const planDays = workoutPlan ? (() => {
@@ -149,7 +197,7 @@ export default function ExportReportsPage() {
         doc.text('DAY', 18, y + 5.5);
         doc.text('FOCUS', 45, y + 5.5);
         doc.text('EXERCISES', 75, y + 5.5);
-        doc.text('VOLUME', 145, y + 5.5);
+        doc.text('SETS x REPS x KG', 145, y + 5.5);
         y += 9;
 
         doc.setFont('helvetica', 'normal');
@@ -163,7 +211,8 @@ export default function ExportReportsPage() {
           doc.text(dp.label, 45, y + 4);
           const exNames = dp.exercises.slice(0, 3).map((e: any) => e.exerciseName).join(', ');
           doc.text(exNames.substring(0, 45), 75, y + 4);
-          doc.text(`${dp.exercises[0]?.sets || 3} Sets x ${dp.exercises[0]?.reps || 10} Reps`, 145, y + 4);
+          const w = dp.exercises[0]?.weight;
+          doc.text(`${dp.exercises[0]?.sets || 3}x${dp.exercises[0]?.reps || 10}${w ? `x${w}` : ''}`, 145, y + 4);
           y += 8;
         });
         y += 5;
@@ -241,12 +290,12 @@ export default function ExportReportsPage() {
 
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
-        doc.text('40% Carbs', 55, y + 6);
-        doc.text(`(${targetCarbs}g)`, 80, y + 6);
-        doc.text('30% Protein', 55, y + 12);
-        doc.text(`(${targetProtein}g)`, 85, y + 12);
-        doc.text('30% Fats', 55, y + 18);
-        doc.text(`(${targetFat}g)`, 78, y + 18);
+        doc.text(`${macroPcts.carbs}% Carbs`, 55, y + 6);
+        doc.text(`(${targetCarbs}g)`, 85, y + 6);
+        doc.text(`${macroPcts.protein}% Protein`, 55, y + 12);
+        doc.text(`(${targetProtein}g)`, 90, y + 12);
+        doc.text(`${macroPcts.fat}% Fats`, 55, y + 18);
+        doc.text(`(${targetFat}g)`, 80, y + 18);
 
         // Color dots
         doc.setFillColor(0, 108, 73);
@@ -269,46 +318,24 @@ export default function ExportReportsPage() {
       const dayWidth = (pageWidth - 40) / 7;
       days.forEach((day, i) => {
         const x = 15 + i * dayWidth;
+        const dayData = last7Calories.find((d) => d.day === day);
+        const barW = Math.max(0.05, (dayData?.kcal || 0) / maxDayKcal);
         doc.setFillColor(245, 247, 250);
         doc.roundedRect(x, y, dayWidth - 3, 15, 2, 2, 'F');
         doc.setFontSize(6);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(100, 100, 100);
         doc.text(day, x + (dayWidth - 3) / 2, y + 5, { align: 'center' });
-        // Mini bars
         doc.setFillColor(0, 108, 73);
-        doc.rect(x + 3, y + 8, (dayWidth - 9) * 0.8, 1.5, 'F');
-        doc.setFillColor(0, 88, 190);
-        doc.rect(x + 3, y + 10.5, (dayWidth - 9) * 0.5, 1.5, 'F');
+        doc.rect(x + 3, y + 9, (dayWidth - 9) * barW, 3, 'F');
+        doc.setFontSize(5);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`${dayData?.kcal || 0}`, x + (dayWidth - 3) / 2, y + 14.5, { align: 'center' });
       });
       y += 20;
 
-      // Meal suggestions
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(0, 0, 0);
-      doc.text('Breakfast:', 18, y);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Oatmeal with Berries & Whey', 40, y);
-      y += 5;
-      doc.setFont('helvetica', 'bold');
-      doc.text('Lunch:', 18, y);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Grilled Chicken & Quinoa Salad', 35, y);
-      y += 5;
-      doc.setFont('helvetica', 'bold');
-      doc.text('Dinner:', 18, y);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Baked Salmon with Asparagus', 36, y);
-      y += 5;
-      doc.setFont('helvetica', 'bold');
-      doc.text('Snacks:', 18, y);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Greek Yogurt, Almonds', 38, y);
-      y += 10;
-
       // Recent logged meals
-      if (meals.length > 0) {
+      if (periodMeals.length > 0) {
         doc.setFontSize(9);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 88, 190);
@@ -316,14 +343,21 @@ export default function ExportReportsPage() {
         y += 6;
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(0, 0, 0);
-        meals.slice(-6).forEach((m: any) => {
+        periodMeals.slice(-8).reverse().forEach((m: any) => {
           doc.setFontSize(8);
           doc.text(`${m.loggedAt?.split('T')[0] || ''}`, 18, y);
           doc.text(`${m.foodName || 'N/A'}`, 45, y);
-          doc.text(`${m.calories || 0} kcal`, 130, y);
+          doc.text(`${m.mealType || ''}`, 110, y);
+          doc.text(`${Math.round(mealCalories(m))} kcal`, 140, y);
           y += 5;
         });
         y += 5;
+      } else {
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(150, 150, 150);
+        doc.text('No meals logged in this period.', 18, y);
+        y += 8;
       }
     }
 
@@ -338,7 +372,7 @@ export default function ExportReportsPage() {
       y += 14;
 
       const stats = [
-        { label: 'Average Sleep', value: '7.2 hrs', color: [0, 88, 190] },
+        { label: 'Average Sleep', value: avgSleep > 0 ? `${avgSleep.toFixed(1)} hrs` : '--', color: [0, 88, 190] },
       ];
 
       const statWidth = (pageWidth - 50) / 3;
@@ -410,7 +444,7 @@ export default function ExportReportsPage() {
     }
 
     // === BODY METRICS ===
-    if (checkedSections.body && bodyMetrics.length > 0) {
+    if (checkedSections.body && periodMetrics.length > 0) {
       doc.setFillColor(0, 108, 73);
       doc.rect(15, y - 5, 4, 12, 'F');
       doc.setTextColor(0, 108, 73);
@@ -433,7 +467,7 @@ export default function ExportReportsPage() {
 
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(0, 0, 0);
-      bodyMetrics.slice(-7).forEach((b: any, i) => {
+      periodMetrics.slice(-7).forEach((b: any, i) => {
         if (i % 2 === 0) {
           doc.setFillColor(250, 250, 255);
           doc.rect(15, y - 2, pageWidth - 30, 7, 'F');
@@ -473,13 +507,14 @@ export default function ExportReportsPage() {
 
     if (checkedSections.exercise && planDays.length > 0) {
       rows.push(toRow(['EXERCISE PLAN', '', '', '', '']));
-      rows.push(toRow(['Day', 'Focus', 'Exercises', 'Sets x Reps', '']));
+      rows.push(toRow(['Day', 'Focus', 'Exercises', 'Sets x Reps x Kg', '']));
       planDays.forEach((dp) => {
+        const w = dp.exercises[0]?.weight;
         rows.push(toRow([
           dp.day,
           dp.label,
           dp.exercises.map((e: any) => e.exerciseName).join(', '),
-          `${dp.exercises[0]?.sets || 3}x${dp.exercises[0]?.reps || 10}`,
+          `${dp.exercises[0]?.sets || 3}x${dp.exercises[0]?.reps || 10}${w ? `x${w}` : ''}`,
           '',
         ]));
       });
@@ -494,8 +529,8 @@ export default function ExportReportsPage() {
       rows.push(toRow(['Fats', `${calculations?.fat || 0}g`, '', '', '']));
       rows.push(toRow(['', '', '', '', '']));
       rows.push(toRow(['Recent Meals', '', '', '', '']));
-      meals.slice(-10).forEach((m: any) => {
-        rows.push(toRow([m.loggedAt?.split('T')[0] || '', m.foodName || '', `${m.calories || 0} kcal`, '', '']));
+      periodMeals.slice(-10).forEach((m: any) => {
+        rows.push(toRow([m.loggedAt?.split('T')[0] || '', m.foodName || '', `${Math.round(mealCalories(m))} kcal`, '', '']));
       });
       rows.push(toRow(['', '', '', '', '']));
     }
@@ -521,10 +556,10 @@ export default function ExportReportsPage() {
       rows.push(toRow(['', '', '', '', '']));
     }
 
-    if (checkedSections.body && bodyMetrics.length > 0) {
+    if (checkedSections.body && periodMetrics.length > 0) {
       rows.push(toRow(['BODY METRICS', '', '', '', '']));
       rows.push(toRow(['Date', 'Weight (kg)', 'Height (cm)', '', '']));
-      bodyMetrics.forEach((b: any) => {
+      periodMetrics.forEach((b: any) => {
         rows.push(toRow([b.date || '', String(b.weight || ''), String(b.height || ''), '', '']));
       });
     }
@@ -689,7 +724,7 @@ export default function ExportReportsPage() {
                             <Droplets className="w-3.5 h-3.5 text-[#855300]" />
                             <span className="text-[9px] uppercase tracking-wider text-gray-500 font-medium">Hydration</span>
                           </div>
-                          <p className="text-lg font-bold text-[#855300]">{calculations?.hydration || 3}L</p>
+                          <p className="text-lg font-bold text-[#855300]">{calculations?.hydration || '--'}L</p>
                           <p className="text-[9px] text-gray-400">liters / day</p>
                         </div>
                         <div className="bg-gradient-to-br from-[#BA1A1A]/5 to-[#BA1A1A]/10 rounded-lg p-3 border border-[#BA1A1A]/10">
@@ -709,28 +744,28 @@ export default function ExportReportsPage() {
                             <div className="flex-1">
                               <div className="flex items-center justify-between text-[10px] mb-1">
                                 <span className="text-gray-600">Carbs</span>
-                                <span className="font-semibold text-gray-800">40% — {calculations?.carbs || 0}g</span>
+                                <span className="font-semibold text-gray-800">{macroPcts.carbs}% — {calculations?.carbs || 0}g</span>
                               </div>
                               <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div className="h-full bg-[#006C49] rounded-full" style={{ width: '40%' }} />
+                                <div className="h-full bg-[#006C49] rounded-full" style={{ width: `${macroPcts.carbs}%` }} />
                               </div>
                             </div>
                             <div className="flex-1">
                               <div className="flex items-center justify-between text-[10px] mb-1">
                                 <span className="text-gray-600">Protein</span>
-                                <span className="font-semibold text-gray-800">30% — {calculations?.protein || 0}g</span>
+                                <span className="font-semibold text-gray-800">{macroPcts.protein}% — {calculations?.protein || 0}g</span>
                               </div>
                               <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div className="h-full bg-[#0058BE] rounded-full" style={{ width: '30%' }} />
+                                <div className="h-full bg-[#0058BE] rounded-full" style={{ width: `${macroPcts.protein}%` }} />
                               </div>
                             </div>
                             <div className="flex-1">
                               <div className="flex items-center justify-between text-[10px] mb-1">
                                 <span className="text-gray-600">Fats</span>
-                                <span className="font-semibold text-gray-800">30% — {calculations?.fat || 0}g</span>
+                                <span className="font-semibold text-gray-800">{macroPcts.fat}% — {calculations?.fat || 0}g</span>
                               </div>
                               <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div className="h-full bg-[#855300] rounded-full" style={{ width: '30%' }} />
+                                <div className="h-full bg-[#855300] rounded-full" style={{ width: `${macroPcts.fat}%` }} />
                               </div>
                             </div>
                           </div>
@@ -765,7 +800,7 @@ export default function ExportReportsPage() {
                                     <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-semibold bg-[#0058BE]/10 text-[#0058BE]">{dp.label}</span>
                                   </td>
                                   <td className="px-4 py-2.5 text-gray-600">{dp.exercises.slice(0, 2).map((e: any) => e.exerciseName).join(', ')}{dp.exercises.length > 2 ? ` +${dp.exercises.length - 2} more` : ''}</td>
-                                  <td className="px-4 py-2.5 text-gray-500 font-mono text-[10px]">{dp.exercises[0]?.sets || 3}x{dp.exercises[0]?.reps || 10}</td>
+                                  <td className="px-4 py-2.5 text-gray-500 font-mono text-[10px]">{dp.exercises[0]?.sets || 3}x{dp.exercises[0]?.reps || 10}{dp.exercises[0]?.weight ? `x${dp.exercises[0].weight}kg` : ''}</td>
                                 </tr>
                               ))}
                             </tbody>
@@ -785,43 +820,41 @@ export default function ExportReportsPage() {
                     <div>
                       <div className="flex items-center gap-2 mb-4">
                         <div className="w-1 h-5 bg-[#855300] rounded-full" />
-                        <h4 className="text-[13px] font-bold text-gray-900 uppercase tracking-wider">Weekly Meal Schedule</h4>
+                        <h4 className="text-[13px] font-bold text-gray-900 uppercase tracking-wider">Last 7 Days — Calories</h4>
                       </div>
                       <div className="grid grid-cols-7 gap-1.5 mb-4">
-                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
-                          <div key={day} className="text-center">
-                            <p className="text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-1">{day}</p>
-                            <div className="bg-gray-50 rounded p-1.5 space-y-1 border border-gray-100">
-                              <div className="h-1 w-full bg-[#006C49]/30 rounded-full" />
-                              <div className="h-1 w-4/5 bg-[#0058BE]/30 rounded-full mx-auto" />
-                              <div className="h-1 w-3/5 bg-[#855300]/30 rounded-full mx-auto" />
+                        {last7Calories.map((d) => (
+                          <div key={d.day} className="text-center">
+                            <p className="text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-1">{d.day}</p>
+                            <div className="bg-gray-50 rounded p-1.5 border border-gray-100 flex flex-col items-center justify-end h-16">
+                              <div className="w-full bg-[#006C49]/80 rounded-full" style={{ height: `${Math.max(4, (d.kcal / maxDayKcal) * 48)}px` }} />
+                              <span className="text-[8px] font-semibold text-gray-600 mt-1">{d.kcal}</span>
                             </div>
                           </div>
                         ))}
                       </div>
                       <div className="space-y-1.5">
-                        {[
-                          { meal: 'Breakfast', desc: 'Oatmeal with Berries & Whey Protein', cal: '420 kcal', color: '#006C49' },
-                          { meal: 'Lunch', desc: 'Grilled Chicken & Quinoa Salad', cal: '550 kcal', color: '#0058BE' },
-                          { meal: 'Dinner', desc: 'Baked Salmon with Asparagus', cal: '480 kcal', color: '#855300' },
-                          { meal: 'Snacks', desc: 'Greek Yogurt, Mixed Nuts', cal: '280 kcal', color: '#BA1A1A' },
-                        ].map((item) => (
-                          <div key={item.meal} className="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
-                            <div className="flex items-center gap-2">
-                              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: item.color }} />
-                              <span className="text-[11px] font-semibold text-gray-800">{item.meal}</span>
-                              <span className="text-[10px] text-gray-400">—</span>
-                              <span className="text-[10px] text-gray-500">{item.desc}</span>
+                        {periodMeals.length === 0 ? (
+                          <p className="text-[10px] text-gray-400 italic">No meals logged in this period</p>
+                        ) : (
+                          [...periodMeals].reverse().slice(0, 6).map((m: any, i: number) => (
+                            <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
+                              <div className="flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-[#006C49]" />
+                                <span className="text-[11px] font-semibold text-gray-800">{m.foodName || 'N/A'}</span>
+                                <span className="text-[10px] text-gray-400 capitalize">— {m.mealType || ''}</span>
+                                <span className="text-[10px] text-gray-500">{m.loggedAt?.split('T')[0] || ''}</span>
+                              </div>
+                              <span className="text-[10px] font-mono text-gray-400">{Math.round(mealCalories(m))} kcal</span>
                             </div>
-                            <span className="text-[10px] font-mono text-gray-400">{item.cal}</span>
-                          </div>
-                        ))}
+                          ))
+                        )}
                       </div>
                     </div>
                   )}
 
                   {/* Body Metrics */}
-                  {checkedSections.body && bodyMetrics.length > 0 && (
+                  {checkedSections.body && periodMetrics.length > 0 && (
                     <div>
                       <div className="flex items-center gap-2 mb-4">
                         <div className="w-1 h-5 bg-[#BA1A1A] rounded-full" />
@@ -838,7 +871,7 @@ export default function ExportReportsPage() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-100">
-                            {bodyMetrics.slice(-5).map((b: any, i: number) => {
+                            {periodMetrics.slice(-5).map((b: any, i: number) => {
                               const bmi = b.weight && profile?.height ? (b.weight / ((profile.height / 100) ** 2)).toFixed(1) : '--';
                               return (
                                 <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
@@ -870,9 +903,9 @@ export default function ExportReportsPage() {
                       </div>
                       <div className="grid grid-cols-3 gap-3">
                         {[
-                          { label: 'Resting HR', value: '62 bpm', sub: 'Normal range', color: '#006C49' },
-                          { label: 'Avg Sleep', value: '7.2 hrs', sub: 'Target: 7-9 hrs', color: '#0058BE' },
-                          { label: 'Blood Pressure', value: '118/76', sub: 'Optimal', color: '#855300' },
+                          { label: 'Avg Sleep', value: avgSleep > 0 ? `${avgSleep.toFixed(1)} hrs` : '--', sub: 'Target: 7-9 hrs', color: '#0058BE' },
+                          { label: 'Avg kcal / meal', value: avgCalories > 0 ? `${avgCalories} kcal` : '--', sub: `${periodMeals.length} meals in period`, color: '#006C49' },
+                          { label: 'Workouts Logged', value: String(periodExercises.length), sub: timePeriod, color: '#855300' },
                         ].map((stat) => (
                           <div key={stat.label} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
                             <p className="text-[9px] uppercase tracking-wider text-gray-400 mb-1">{stat.label}</p>

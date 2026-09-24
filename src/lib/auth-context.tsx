@@ -14,6 +14,23 @@ import {
 // ─── Session Configuration ────────────────────────────────────────────────────
 const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
+// ─── Developer allowlist ──────────────────────────────────────────────────────
+// Accounts matching these get role: 'admin' automatically (Dev Console access).
+// Comparison is case-insensitive. Password is never stored here.
+const DEVELOPER_EMAILS = new Set<string>([
+  'gymathome@gmail.com',
+]);
+const DEVELOPER_USERNAMES = new Set<string>([
+  'dev',
+]);
+
+function isDeveloperIdentity(email: string, username: string): boolean {
+  return (
+    DEVELOPER_EMAILS.has(email.trim().toLowerCase()) ||
+    DEVELOPER_USERNAMES.has(username.trim().toLowerCase())
+  );
+}
+
 // ─── Common password blocklist ────────────────────────────────────────────────
 const COMMON_PASSWORDS = new Set([
   'password', 'password1', 'password123', 'password1234', 'password12345',
@@ -29,6 +46,7 @@ interface AuthContextType extends AuthState {
   login: (emailOrUsername: string, password: string) => Promise<{ success: boolean; error?: string; lockoutSeconds?: number }>;
   logout: () => void;
   updateUsername: (username: string) => void;
+  promoteToAdmin: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,6 +57,7 @@ interface StoredUser {
   username: string;
   password: string; // PBKDF2 hash: "iterations:salt:hash"
   createdAt: string;
+  role?: 'user' | 'admin';
 }
 
 interface StoredSession {
@@ -174,6 +193,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       username,
       password: hashedPassword,
       createdAt: new Date().toISOString(),
+      ...(isDeveloperIdentity(email, username) ? { role: 'admin' as const } : {}),
     };
 
     users.push(newUser);
@@ -264,7 +284,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearAttempts(emailOrUsername);
 
     const { password: _, ...userWithoutPassword } = found;
-    const user: User = userWithoutPassword;
+    let user: User = userWithoutPassword;
+
+    // Developer allowlist — promote on login (covers accounts created before allowlist existed)
+    if (isDeveloperIdentity(found.email, found.username) && found.role !== 'admin') {
+      found.role = 'admin';
+      saveUsers(users);
+      user = { ...user, role: 'admin' };
+    }
 
     setAuthState({ user, isAuthenticated: true });
     persistSession(user);
@@ -302,8 +329,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     persistSession(updatedUser);
   };
 
+  const promoteToAdmin = () => {
+    if (!authState.user) return;
+
+    const users = getUsers();
+    const userIndex = users.findIndex(u => u.id === authState.user!.id);
+    if (userIndex !== -1) {
+      users[userIndex].role = 'admin';
+      saveUsers(users);
+    }
+
+    const updatedUser = { ...authState.user, role: 'admin' as const };
+    setAuthState({ user: updatedUser, isAuthenticated: true });
+    persistSession(updatedUser);
+  };
+
   return (
-    <AuthContext.Provider value={{ ...authState, signup, login, logout, updateUsername }}>
+    <AuthContext.Provider value={{ ...authState, signup, login, logout, updateUsername, promoteToAdmin }}>
       {children}
     </AuthContext.Provider>
   );

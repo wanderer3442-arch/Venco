@@ -15,9 +15,12 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  MessageSquareWarning,
+  Terminal,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useSidebar } from '@/lib/sidebar-context';
+import { useBackHandler } from '@/lib/back-handler';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -29,6 +32,7 @@ const navItems = [
   { href: '/export-reports', label: 'Download', icon: Download },
   { href: '/profile', label: 'Profile', icon: User },
   { href: '/choose-plan', label: 'Choose Plan', icon: CreditCard },
+  { href: '/report-problem', label: 'Report a Problem', icon: MessageSquareWarning },
 ];
 
 export default function Sidebar() {
@@ -36,6 +40,13 @@ export default function Sidebar() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const { collapsed, mobileOpen, toggle, setMobileOpen } = useSidebar();
+
+  useBackHandler(mobileOpen, () => setMobileOpen(false));
+
+  const isAdmin = user?.role === 'admin';
+  const allNavItems = isAdmin
+    ? [...navItems, { href: '/dev-console', label: 'Dev Console', icon: Terminal }]
+    : navItems;
 
   const handleLogout = () => {
     logout();
@@ -75,7 +86,7 @@ export default function Sidebar() {
 
         {/* Navigation */}
         <nav className="p-3 space-y-1">
-          {navItems.map((item) => {
+          {allNavItems.map((item) => {
             const isActive = pathname === item.href;
             return (
               <Link

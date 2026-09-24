@@ -6,6 +6,7 @@ import { StoreProvider } from "@/lib/store-context";
 import { SubscriptionProvider } from "@/lib/subscription-context";
 import { SidebarProvider } from "@/lib/sidebar-context";
 import DatabaseInit from "@/components/DatabaseInit";
+import BackButtonHandler from "@/components/BackButtonHandler";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -37,6 +38,7 @@ export default function RootLayout({
               <StoreProvider>
                 <SidebarProvider>
                   {children}
+                  <BackButtonHandler />
                 </SidebarProvider>
               </StoreProvider>
             </SubscriptionProvider>

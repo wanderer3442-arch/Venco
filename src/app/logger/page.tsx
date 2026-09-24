@@ -6,7 +6,6 @@ import {
   Droplets,
   Moon,
   Scale,
-  Heart,
   Check,
   Clock,
   TrendingUp,
@@ -28,13 +27,12 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { useStore } from '@/lib/store-context';
-import { allFoods } from '@/lib/food-database';
+import { sumMealNutrition } from '@/lib/calculations';
 
 const habitCategories = [
   { id: 'water', name: 'Water Intake', icon: Droplets, color: '#0058be', unit: 'ml', target: 2500 },
   { id: 'sleep', name: 'Sleep', icon: Moon, color: '#006c49', unit: 'hrs', target: 8 },
   { id: 'weight', name: 'Weight', icon: Scale, color: '#f57c00', unit: 'kg', target: null },
-  { id: 'heart-rate', name: 'Heart Rate', icon: Heart, color: '#e53935', unit: 'bpm', target: null },
 ];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -63,9 +61,7 @@ export default function LoggerPage() {
     bodyMetrics,
     addBodyMetric,
     meals,
-    exercises,
     getMealsForDate,
-    getExercisesForDate,
     profile,
     waterLogs,
     addWater,
@@ -73,6 +69,7 @@ export default function LoggerPage() {
     addSleep,
     getSleepForDate,
     sleepLogs,
+    calculations,
   } = useStore();
 
   const [selectedHabit, setSelectedHabit] = useState('water');
@@ -93,6 +90,9 @@ export default function LoggerPage() {
   const completedHabits = todayHabits.filter((h) => h.completed).length;
   const totalHabits = todayHabits.length;
 
+  const waterTargetMl = Math.round((calculations?.hydration || 2.5) * 1000);
+  const calorieGoal = calculations?.targetCalories || 0;
+
   const weeklyData = useMemo(() => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const result = [];
@@ -102,12 +102,6 @@ export default function LoggerPage() {
       d.setDate(now.getDate() - i);
       const dateStr = d.toISOString().split('T')[0];
       const dayMeals = getMealsForDate(dateStr);
-      const dayExercises = getExercisesForDate(dateStr);
-      let calories = 0;
-      dayMeals.forEach((m) => {
-        const food = allFoods.find((f) => f.id === m.foodId);
-        if (food) calories += food.nutrition.calories * m.quantity;
-      });
       const metric = bodyMetrics.find((m) => m.date === dateStr);
       const dayWater = waterLogs.filter(w => w.date === dateStr).reduce((sum, w) => sum + w.amount, 0);
       result.push({
@@ -115,20 +109,18 @@ export default function LoggerPage() {
         water: dayWater || 0,
         sleep: getSleepForDate(dateStr) || 0,
         weight: metric?.weight || 0,
-        calories: calories || 0,
-        steps: 0,
-        heartRate: 0,
+        calories: sumMealNutrition(dayMeals).calories,
       });
     }
     return result;
-  }, [meals, bodyMetrics, profile.weight, waterLogs, sleepLogs]);
+  }, [meals, bodyMetrics, waterLogs, sleepLogs]);
 
   const latestMetric = bodyMetrics.length > 0
-    ? bodyMetrics.sort((a, b) => b.date.localeCompare(a.date))[0]
+    ? [...bodyMetrics].sort((a, b) => b.date.localeCompare(a.date))[0]
     : null;
 
   const weightChartData = useMemo(() => {
-    return bodyMetrics
+    return [...bodyMetrics]
       .sort((a, b) => a.date.localeCompare(b.date))
       .slice(-14)
       .map((m) => ({
@@ -138,7 +130,7 @@ export default function LoggerPage() {
   }, [bodyMetrics]);
 
   const bodyMetricHistory = useMemo(() => {
-    return bodyMetrics
+    return [...bodyMetrics]
       .sort((a, b) => a.date.localeCompare(b.date))
       .slice(-7)
       .map((m) => ({
@@ -180,10 +172,7 @@ export default function LoggerPage() {
   };
 
   const todayTotalCalories = useMemo(() => {
-    return getMealsForDate(today).reduce((sum, m) => {
-      const food = allFoods.find((f) => f.id === m.foodId);
-      return sum + (food ? food.nutrition.calories * m.quantity : 0);
-    }, 0);
+    return sumMealNutrition(getMealsForDate(today)).calories;
   }, [meals, today]);
 
   return (
@@ -240,7 +229,7 @@ export default function LoggerPage() {
           {/* Today's Progress */}
           <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-3">
             {habitCategories.map((cat) => {
-              const target = cat.target;
+              const target = cat.id === 'water' ? waterTargetMl : cat.target;
               const todayWater = getWaterForDate(today);
               const current = cat.id === 'water' ? todayWater
                 : cat.id === 'sleep' ? getSleepForDate(today)
@@ -419,7 +408,7 @@ export default function LoggerPage() {
             </ResponsiveContainer>
           </div>
           <div className="flex flex-wrap items-center justify-between mt-2 text-xs text-on-surface-variant gap-1">
-            <span>Goal: 2,500 ml</span>
+            <span>Goal: {waterTargetMl.toLocaleString()} ml</span>
             <span>Avg: {Math.round(weeklyData.reduce((sum, d) => sum + d.water, 0) / 7).toLocaleString()} ml</span>
           </div>
         </div>
@@ -452,9 +441,9 @@ export default function LoggerPage() {
           </div>
         </div>
 
-        {/* Calories & Steps Combo Chart */}
+        {/* Calories Chart */}
         <div className="bg-surface rounded-xl border border-outline-variant p-4 md:p-6">
-          <h2 className="text-headline-md font-semibold text-on-surface mb-4">Calories & Steps</h2>
+          <h2 className="text-headline-md font-semibold text-on-surface mb-4">Calories</h2>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={weeklyData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
@@ -467,7 +456,7 @@ export default function LoggerPage() {
             </ResponsiveContainer>
           </div>
           <div className="flex flex-wrap items-center justify-between mt-2 text-xs text-on-surface-variant gap-1">
-            <span>Goal: {profile.weight && profile.height && profile.age ? Math.round(10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5) : 0} kcal</span>
+            <span>Goal: {calorieGoal.toLocaleString()} kcal</span>
             <span>Avg: {Math.round(weeklyData.reduce((sum, d) => sum + d.calories, 0) / weeklyData.length).toLocaleString()} kcal</span>
           </div>
         </div>

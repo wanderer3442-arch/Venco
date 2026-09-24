@@ -43,3 +43,6 @@ next-env.d.ts
 # loose files
 Logo maker project*
 mess.jpeg
+
+# dev server log
+/dev-server.log

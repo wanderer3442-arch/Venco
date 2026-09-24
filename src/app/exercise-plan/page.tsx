@@ -10,19 +10,27 @@ import {
   Settings,
   Eye,
   TrendingUp,
-  Calendar,
-  Layers,
   AlertTriangle,
   Pencil,
   Trash2,
   Activity,
   RefreshCw,
+  Check,
 } from 'lucide-react';
 import { useStore } from '@/lib/store-context';
 import { exercises } from '@/lib/exercise-database';
-import { generateWorkoutPlan, getWeeklyWorkoutSummary } from '@/lib/exercise-planner';
+import {
+  generateWorkoutPlan,
+  getWeeklyWorkoutSummary,
+  getDefaultSplit,
+  getDefaultWeight,
+  PLAN_DAY_NAMES,
+  MUSCLE_GROUP_OPTIONS,
+} from '@/lib/exercise-planner';
 import { Equipment, WorkoutExercise } from '@/lib/types';
 import WorkoutTimer from '@/components/WorkoutTimer';
+import { useBackHandler } from '@/lib/back-handler';
+import { X, CalendarDays, MapPin, Target, Layers3 } from 'lucide-react';
 
 type LocationFilter = 'gym' | 'home';
 
@@ -37,25 +45,33 @@ const muscleLabels: Record<string, string> = {
   full_body: 'Full Body',
 };
 
-const dayLabels: Record<string, string> = {
-  Monday: 'Push',
-  Tuesday: 'Pull',
-  Wednesday: 'Legs',
-  Thursday: 'Upper',
-  Friday: 'Lower',
-  Saturday: 'Full Body',
-  Sunday: 'Rest',
-};
+function splitLabel(split: string[][] | undefined, daysPerWeek: number): string {
+  if (!split || split.length === 0) {
+    return daysPerWeek === 3 ? 'Push/Pull/Legs' : `${daysPerWeek}-Day Split`;
+  }
+  return split
+    .map((groups) => groups.map((g) => muscleLabels[g] || g).join(' + '))
+    .join(' / ');
+}
 
 export default function ExercisePlanPage() {
-  const { profile, workoutPlan, setWorkoutPlan, exercises: loggedExercises } = useStore();
+  const { profile, workoutPlan, setWorkoutPlan, exercises: loggedExercises, addExercise, removeExercise, getExercisesForDate } = useStore();
   const [location, setLocation] = useState<LocationFilter>('gym');
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
+  const [addWeight, setAddWeight] = useState('');
+  const [editKey, setEditKey] = useState<string | null>(null);
+  const [editVal, setEditVal] = useState('');
   const [expandedDay, setExpandedDay] = useState<string>(() => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     return days[new Date().getDay()];
   });
+  const [daysPerWeek, setDaysPerWeek] = useState(3);
+  const [showSplitModal, setShowSplitModal] = useState(false);
+  const [draftSplit, setDraftSplit] = useState<string[][]>(() => getDefaultSplit(3));
+
+  useBackHandler(showSplitModal, () => setShowSplitModal(false));
+  useBackHandler(showAddModal, () => setShowAddModal(false));
 
   const plan = workoutPlan;
 
@@ -66,19 +82,45 @@ export default function ExercisePlanPage() {
       if (!grouped[ex.day]) grouped[ex.day] = [];
       grouped[ex.day].push(ex);
     });
-    return Object.entries(grouped).map(([day, exercises]) => ({
+    const planSplit = plan.split && plan.split.length > 0 ? plan.split : undefined;
+    return Object.entries(grouped).map(([day, exercises], idx) => ({
       day,
-      label: dayLabels[day] || day,
+      label: planSplit?.[idx]
+        ? planSplit[idx].map((g) => muscleLabels[g] || g).join(' + ')
+        : day,
       exercises,
     }));
   }, [plan]);
+
+  const openSplitEditor = () => {
+    setDraftSplit(plan?.split && plan.split.length > 0 ? plan.split.map((d) => [...d]) : getDefaultSplit(daysPerWeek));
+    setShowSplitModal(true);
+  };
+
+  const changeDaysPerWeek = (n: number) => {
+    setDaysPerWeek(n);
+    setDraftSplit(getDefaultSplit(n));
+  };
+
+  const toggleMuscle = (dayIndex: number, muscle: string) => {
+    setDraftSplit((prev) =>
+      prev.map((groups, idx) => {
+        if (idx !== dayIndex) return groups;
+        if (groups.includes(muscle)) {
+          if (groups.length === 1) return groups;
+          return groups.filter((g) => g !== muscle);
+        }
+        return [...groups, muscle];
+      })
+    );
+  };
 
   const weeklyVolume = useMemo(() => {
     if (!plan) {
       return [
         { muscle: 'Chest', sets: 0, pct: 0, color: 'bg-primary' },
-        { muscle: 'Back', sets: 0, pct: 0, color: 'bg-primary' },
-        { muscle: 'Legs', sets: 0, pct: 0, color: 'bg-secondary' },
+        { muscle: 'Back', sets: 0, pct: 0, color: 'bg-secondary' },
+        { muscle: 'Legs', sets: 0, pct: 0, color: 'bg-tertiary' },
       ];
     }
     const counts: Record<string, number> = {};
@@ -90,11 +132,22 @@ export default function ExercisePlanPage() {
       }
     });
     const maxSets = Math.max(...Object.values(counts), 1);
+    const palette = ['bg-primary', 'bg-secondary', 'bg-tertiary'];
+    const active = Object.entries(counts)
+      .filter(([, sets]) => sets > 0)
+      .sort((a, b) => b[1] - a[1])
+      .map(([muscle, sets], i) => ({
+        muscle: muscleLabels[muscle] || muscle,
+        sets,
+        pct: Math.round((sets / maxSets) * 100),
+        color: palette[i % palette.length],
+      }));
+    if (active.length > 0) return active;
     return ['chest', 'back', 'legs'].map((muscle) => ({
       muscle: muscleLabels[muscle] || muscle,
-      sets: counts[muscle] || 0,
-      pct: Math.round(((counts[muscle] || 0) / maxSets) * 100),
-      color: muscle === 'legs' ? 'bg-secondary' : 'bg-primary',
+      sets: 0,
+      pct: 0,
+      color: muscle === 'legs' ? 'bg-tertiary' : muscle === 'back' ? 'bg-secondary' : 'bg-primary',
     }));
   }, [plan]);
 
@@ -115,7 +168,7 @@ export default function ExercisePlanPage() {
         const dayExercises = loggedExercises.filter((e) => e.loggedAt.startsWith(dateStr));
         count += dayExercises.length;
       }
-      data.push({ week: weekStr, value: count * 50 + 150, height: `${Math.min(20 + count * 10, 100)}%` });
+      data.push({ week: weekStr, value: count, height: count === 0 ? 8 : `${Math.min(20 + count * 10, 100)}%` });
     }
     return data;
   }, [loggedExercises]);
@@ -124,20 +177,28 @@ export default function ExercisePlanPage() {
     const newPlan = generateWorkoutPlan({
       profile,
       equipment: location as Equipment,
-      daysPerWeek: 3,
+      daysPerWeek,
+      customSplit: draftSplit,
     });
     setWorkoutPlan(newPlan);
+    setShowSplitModal(false);
+    setExpandedDay('Monday');
   };
 
   const addExerciseToDay = (day: string, exerciseId: string) => {
     if (!plan) return;
     const dbEx = exercises.find((e) => e.id === exerciseId);
     if (!dbEx) return;
+    const parsedWeight = parseFloat(addWeight);
+    const weight = !isNaN(parsedWeight) && parsedWeight > 0
+      ? Math.round(parsedWeight * 2) / 2
+      : getDefaultWeight(dbEx);
     const newExercise: WorkoutExercise = {
       exerciseId: dbEx.id,
       exerciseName: dbEx.name,
       sets: profile.goal === 'gain' ? 4 : 3,
       reps: profile.goal === 'lose' ? 12 : profile.goal === 'gain' ? 8 : 10,
+      ...(weight !== undefined ? { weight } : {}),
       day,
     };
     setWorkoutPlan({
@@ -145,6 +206,7 @@ export default function ExercisePlanPage() {
       exercises: [...plan.exercises, newExercise],
     });
     setShowAddModal(false);
+    setAddWeight('');
   };
 
   const removeExerciseFromDay = (day: string, exerciseId: string) => {
@@ -154,6 +216,50 @@ export default function ExercisePlanPage() {
       exercises: plan.exercises.filter(
         (e) => !(e.day === day && e.exerciseId === exerciseId)
       ),
+    });
+  };
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayLogs = getExercisesForDate(todayStr);
+
+  const startEdit = (key: string, val: number | undefined) => {
+    setEditKey(key);
+    setEditVal(val !== undefined ? String(val) : '');
+  };
+
+  const commitEdit = (day: string, exerciseId: string, field: 'sets' | 'reps' | 'weight') => {
+    if (!plan) return;
+    const num = parseFloat(editVal);
+    setWorkoutPlan({
+      ...plan,
+      exercises: plan.exercises.map((e) => {
+        if (e.day !== day || e.exerciseId !== exerciseId) return e;
+        if (isNaN(num)) return e;
+        if (field === 'weight') {
+          const w = Math.max(0, Math.round(num * 2) / 2);
+          return w === 0 ? { ...e, weight: undefined } : { ...e, weight: w };
+        }
+        return { ...e, [field]: Math.max(1, Math.round(num)) };
+      }),
+    });
+    setEditKey(null);
+  };
+
+  const toggleDone = (exercise: WorkoutExercise) => {
+    const existing = todayLogs.find((e) => e.exerciseId === exercise.exerciseId);
+    if (existing) {
+      removeExercise(existing.id);
+      return;
+    }
+    addExercise({
+      id: crypto.randomUUID(),
+      exerciseId: exercise.exerciseId,
+      exerciseName: exercise.exerciseName,
+      sets: exercise.sets,
+      reps: exercise.reps,
+      ...(exercise.weight !== undefined ? { weight: exercise.weight } : {}),
+      ...(exercise.duration !== undefined ? { duration: exercise.duration } : {}),
+      loggedAt: new Date().toISOString(),
     });
   };
 
@@ -179,6 +285,13 @@ export default function ExercisePlanPage() {
           </div>
           <div className="flex gap-3 flex-wrap">
             <button
+              onClick={openSplitEditor}
+              className="px-4 py-2 rounded-lg bg-surface-container text-on-surface text-label-md font-medium hover:bg-surface-container-high transition-colors shadow-sm flex items-center gap-2 border border-outline-variant"
+            >
+              <Settings className="w-5 h-5" />
+              Edit Split
+            </button>
+            <button
               onClick={generatePlan}
               className="px-4 py-2 rounded-lg bg-primary text-on-primary text-label-md font-medium hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-2"
             >
@@ -197,59 +310,121 @@ export default function ExercisePlanPage() {
           </div>
         </div>
 
-        {/* Plan Overview Bar */}
-        <div className="bg-surface-container-low border border-outline-variant/50 rounded-xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="flex gap-4 items-center">
-            <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
-              <Activity className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-headline-md text-lg text-on-surface">Plan Overview</h2>
-                {plan && (
-                  <span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider">
-                    Active
-                  </span>
-                )}
+        {/* Plan Overview */}
+        <div className="bg-surface rounded-xl border border-outline-variant shadow-[0_4px_15px_-3px_rgba(15,23,42,0.04)] overflow-hidden">
+          <div className="px-5 py-4 border-b border-outline-variant/40 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Activity className="w-5 h-5 text-primary" />
               </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-label-md text-on-surface-variant">
-                <span className="flex items-center gap-1">
-                  <TrendingUp className="w-4 h-4" />
-                  Focus: {profile.goal === 'lose' ? 'Fat Loss' : profile.goal === 'gain' ? 'Muscle Growth' : 'General Fitness'}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
-                  {plan?.daysPerWeek || 3} Days/Week
-                </span>
-                <span className="flex items-center gap-1">
-                  <Layers className="w-4 h-4" />
-                  Split: {plan?.daysPerWeek === 3 ? 'Push/Pull/Legs' : `${plan?.daysPerWeek || 3}-Day Split`}
-                </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-headline-md font-semibold text-on-surface">Plan Overview</h2>
+                  {plan && (
+                    <span className="bg-primary text-on-primary px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                      Active
+                    </span>
+                  )}
+                </div>
+                <p className="text-label-md text-on-surface-variant mt-0.5">
+                  {plan ? plan.name : 'No plan generated yet'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={openSplitEditor}
+                className="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface text-label-md font-medium hover:bg-surface-container-high transition-colors border border-outline-variant/60 flex items-center gap-1.5"
+              >
+                <Settings className="w-4 h-4" />
+                Edit Split
+              </button>
+            </div>
+          </div>
+
+          {/* Stat tiles */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-outline-variant/40">
+            <div className="px-5 py-4 flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0">
+                <TrendingUp className="w-4.5 h-4.5 text-secondary" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-label-sm text-on-surface-variant uppercase tracking-wide">Focus</p>
+                <p className="text-body-md font-semibold text-on-surface truncate">
+                  {profile.goal === 'lose' ? 'Fat Loss' : profile.goal === 'gain' ? 'Muscle Growth' : 'General Fitness'}
+                </p>
+              </div>
+            </div>
+            <div className="px-5 py-4 flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <CalendarDays className="w-4.5 h-4.5 text-primary" />
+              </div>
+              <div>
+                <p className="text-label-sm text-on-surface-variant uppercase tracking-wide">Frequency</p>
+                <p className="text-body-md font-semibold text-on-surface">
+                  {plan?.daysPerWeek || daysPerWeek} Days / Week
+                </p>
+              </div>
+            </div>
+            <div className="px-5 py-4 flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-tertiary/10 flex items-center justify-center shrink-0">
+                <Layers3 className="w-4.5 h-4.5 text-tertiary" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-label-sm text-on-surface-variant uppercase tracking-wide">Split</p>
+                <p className="text-body-md font-semibold text-on-surface truncate">
+                  {splitLabel(plan?.split, plan?.daysPerWeek || daysPerWeek)}
+                </p>
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className="flex bg-surface-container-highest rounded-lg p-1 mr-2">
-              <button
-                onClick={() => setLocation('gym')}
-                className={`px-3 py-1 rounded-md text-label-md text-xs transition-all ${
-                  location === 'gym'
-                    ? 'bg-surface text-primary shadow-sm font-semibold'
-                    : 'text-on-surface-variant hover:text-on-surface'
-                }`}
-              >
-                Gym
-              </button>
-              <button
-                onClick={() => setLocation('home')}
-                className={`px-3 py-1 rounded-md text-label-md text-xs transition-all ${
-                  location === 'home'
-                    ? 'bg-surface text-primary shadow-sm font-semibold'
-                    : 'text-on-surface-variant hover:text-on-surface'
-                }`}
-              >
-                Home
-              </button>
+
+          {/* Controls */}
+          <div className="px-5 py-4 border-t border-outline-variant/40 bg-surface-container-low/50 flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-label-md text-on-surface-variant">Days</span>
+              <div className="flex bg-surface-container-highest rounded-lg p-1">
+                {[2, 3, 4, 5, 6].map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => changeDaysPerWeek(n)}
+                    className={`w-8 h-7 rounded-md text-label-md text-xs transition-all ${
+                      daysPerWeek === n
+                        ? 'bg-surface text-primary shadow-sm font-semibold'
+                        : 'text-on-surface-variant hover:text-on-surface'
+                    }`}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-label-md text-on-surface-variant">Location</span>
+              <div className="flex bg-surface-container-highest rounded-lg p-1">
+                <button
+                  onClick={() => setLocation('gym')}
+                  className={`px-3 py-1 rounded-md text-label-md text-xs transition-all flex items-center gap-1 ${
+                    location === 'gym'
+                      ? 'bg-surface text-primary shadow-sm font-semibold'
+                      : 'text-on-surface-variant hover:text-on-surface'
+                  }`}
+                >
+                  <MapPin className="w-3.5 h-3.5" />
+                  Gym
+                </button>
+                <button
+                  onClick={() => setLocation('home')}
+                  className={`px-3 py-1 rounded-md text-label-md text-xs transition-all flex items-center gap-1 ${
+                    location === 'home'
+                      ? 'bg-surface text-primary shadow-sm font-semibold'
+                      : 'text-on-surface-variant hover:text-on-surface'
+                  }`}
+                >
+                  <Home className="w-3.5 h-3.5" />
+                  Home
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -333,41 +508,80 @@ export default function ExercisePlanPage() {
                       <div className="flex flex-col gap-2">
                         {dayPlan.exercises.map((exercise) => {
                           const dbEx = exercises.find((e) => e.id === exercise.exerciseId);
+                          const isDone = todayLogs.some((e) => e.exerciseId === exercise.exerciseId);
+                          const rowKey = `${dayPlan.day}:${exercise.exerciseId}`;
+                          const editingField = editKey?.startsWith(rowKey) ? editKey.slice(rowKey.length + 1) : null;
+                          const renderStat = (field: 'sets' | 'reps' | 'weight', value: number | undefined, label: string) => {
+                            const key = `${rowKey}:${field}`;
+                            if (editKey === key) {
+                              return (
+                                <div className="text-center">
+                                  <input
+                                    type="number"
+                                    step={field === 'weight' ? 0.5 : 1}
+                                    min={field === 'weight' ? 0 : 1}
+                                    value={editVal}
+                                    onChange={(e) => setEditVal(e.target.value)}
+                                    onBlur={() => commitEdit(dayPlan.day, exercise.exerciseId, field)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') commitEdit(dayPlan.day, exercise.exerciseId, field);
+                                      if (e.key === 'Escape') setEditKey(null);
+                                    }}
+                                    autoFocus
+                                    className="w-14 h-8 text-center text-lg font-bold text-on-surface bg-surface-container rounded border border-primary outline-none"
+                                  />
+                                  <div className="text-label-md text-on-surface-variant text-xs">{label}</div>
+                                </div>
+                              );
+                            }
+                            return (
+                              <button
+                                onClick={() => startEdit(key, value)}
+                                className="text-center min-w-[44px] rounded hover:bg-surface-container px-1"
+                                title={`Edit ${label.toLowerCase()}`}
+                              >
+                                <div className="text-stat-value text-xl sm:text-2xl text-on-surface font-bold">
+                                  {field === 'weight' ? (value !== undefined ? value : 'BW') : value}
+                                </div>
+                                <div className="text-label-md text-on-surface-variant text-xs">
+                                  {field === 'weight' ? 'kg' : label}
+                                </div>
+                              </button>
+                            );
+                          };
                           return (
                             <div
                               key={exercise.exerciseId}
-                              className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg hover:bg-surface-container-lowest border border-transparent hover:border-outline-variant transition-all gap-3 group/item"
+                              className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg hover:bg-surface-container-lowest border transition-all gap-3 group/item ${
+                                isDone ? 'border-primary/40 bg-primary/5' : 'border-transparent hover:border-outline-variant'
+                              }`}
                             >
                               <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-surface-container flex items-center justify-center text-primary shrink-0">
-                                  <Dumbbell className="w-5 h-5 sm:w-6 sm:h-6" />
-                                </div>
+                                <button
+                                  onClick={() => toggleDone(exercise)}
+                                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shrink-0 transition-all ${
+                                    isDone
+                                      ? 'bg-primary text-on-primary'
+                                      : 'bg-surface-container text-outline hover:bg-primary/10 hover:text-primary'
+                                  }`}
+                                  title={isDone ? 'Logged today — tap to undo' : 'Mark as done'}
+                                >
+                                  <Check className="w-4 h-4 sm:w-5 sm:h-5" />
+                                </button>
                                 <div className="min-w-0">
-                                  <h4 className="text-body-md font-semibold text-on-surface truncate">
+                                  <h4 className={`text-body-md font-semibold truncate ${isDone ? 'text-on-surface' : 'text-on-surface'}`}>
                                     {exercise.exerciseName}
                                   </h4>
                                   <p className="text-xs text-on-surface-variant truncate">
                                     {dbEx ? `${muscleLabels[dbEx.muscleGroup]} · ${dbEx.category}` : exercise.day}
+                                    {isDone && <span className="text-primary font-semibold"> · Done today</span>}
                                   </p>
                                 </div>
                               </div>
                               <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 pt-2 sm:pt-0 border-t sm:border-t-0 border-outline-variant/30">
-                                <div className="text-center">
-                                  <div className="text-stat-value text-xl sm:text-2xl text-on-surface font-bold">
-                                    {exercise.sets}
-                                  </div>
-                                  <div className="text-label-md text-on-surface-variant text-xs">
-                                    Sets
-                                  </div>
-                                </div>
-                                <div className="text-center">
-                                  <div className="text-stat-value text-xl sm:text-2xl text-on-surface font-bold">
-                                    {exercise.reps}
-                                  </div>
-                                  <div className="text-label-md text-on-surface-variant text-xs">
-                                    Reps
-                                  </div>
-                                </div>
+                                {renderStat('sets', exercise.sets, 'Sets')}
+                                {renderStat('reps', exercise.reps, 'Reps')}
+                                {renderStat('weight', exercise.weight, 'Weight')}
                                 <div className="flex gap-1 opacity-80 sm:opacity-60 group-hover/item:opacity-100 transition-opacity">
                                   <button
                                     onClick={() => removeExerciseFromDay(dayPlan.day, exercise.exerciseId)}
@@ -428,8 +642,8 @@ export default function ExercisePlanPage() {
                       }`}
                       style={{ height: item.height }}
                     >
-                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 text-label-md text-on-surface opacity-0 group-hover:opacity-100 transition-opacity bg-surface px-2 py-1 rounded shadow-sm border border-outline-variant/50 text-xs">
-                        {item.value}
+                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 text-label-md text-on-surface opacity-0 group-hover:opacity-100 transition-opacity bg-surface px-2 py-1 rounded shadow-sm border border-outline-variant/50 text-xs whitespace-nowrap">
+                        {item.value} exercise{item.value === 1 ? '' : 's'}
                       </div>
                     </div>
                   ))}
@@ -474,17 +688,136 @@ export default function ExercisePlanPage() {
           </div>
         )}
 
-        {/* Add Exercise Modal */}
-        {showAddModal && plan && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-surface rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[80vh] overflow-hidden flex flex-col">
-              <div className="flex items-center justify-between p-4 border-b border-outline-variant">
-                <h3 className="text-headline-md font-semibold text-on-surface">Add Exercise</h3>
-                <button onClick={() => setShowAddModal(false)} className="text-on-surface-variant hover:text-on-surface">
-                  <Trash2 className="w-5 h-5" />
+        {/* Split Editor Modal */}
+        {showSplitModal && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4">
+            <div className="bg-surface sm:rounded-2xl rounded-t-2xl shadow-xl w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 fade-in duration-200">
+              {/* Header */}
+              <div className="px-5 py-4 border-b border-outline-variant/50 flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <Layers3 className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-headline-md font-semibold text-on-surface">Edit Day Splits</h3>
+                    <p className="text-label-md text-on-surface-variant mt-0.5">
+                      Choose muscle groups for each training day
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowSplitModal(false)}
+                  className="p-2 rounded-lg hover:bg-surface-container transition-colors text-on-surface-variant"
+                >
+                  <X className="w-5 h-5" />
                 </button>
               </div>
-              <div className="p-4 border-b border-outline-variant">
+
+              {/* Days per week */}
+              <div className="px-5 py-3 border-b border-outline-variant/40 bg-surface-container-low/50 flex items-center justify-between">
+                <span className="text-label-md font-medium text-on-surface-variant">Days per week</span>
+                <div className="flex bg-surface-container-highest rounded-lg p-1">
+                  {[2, 3, 4, 5, 6].map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => changeDaysPerWeek(n)}
+                      className={`w-8 h-7 rounded-md text-label-md text-xs transition-all ${
+                        daysPerWeek === n
+                          ? 'bg-surface text-primary shadow-sm font-semibold'
+                          : 'text-on-surface-variant hover:text-on-surface'
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Day cards */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {draftSplit.map((groups, dayIndex) => (
+                  <div
+                    key={dayIndex}
+                    className="rounded-xl border border-outline-variant/50 overflow-hidden bg-surface-container-lowest"
+                  >
+                    <div className="flex items-center gap-3 px-4 py-3 bg-surface-container-low border-b border-outline-variant/40">
+                      <div className="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center text-label-md font-bold shrink-0">
+                        {dayIndex + 1}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-body-md font-semibold text-on-surface">
+                          {PLAN_DAY_NAMES[dayIndex]}
+                        </p>
+                        <p className="text-label-md text-on-surface-variant truncate">
+                          {groups.map((g) => muscleLabels[g] || g).join(' + ') || 'Rest'}
+                        </p>
+                      </div>
+                      <span className="text-label-sm text-on-surface-variant bg-surface-container rounded-full px-2 py-0.5 shrink-0">
+                        {groups.length} {groups.length === 1 ? 'group' : 'groups'}
+                      </span>
+                    </div>
+                    <div className="p-3 flex flex-wrap gap-2">
+                      {MUSCLE_GROUP_OPTIONS.map((muscle) => {
+                        const active = groups.includes(muscle);
+                        return (
+                          <button
+                            key={muscle}
+                            onClick={() => toggleMuscle(dayIndex, muscle)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 min-h-[32px] ${
+                              active
+                                ? 'bg-primary text-on-primary shadow-sm'
+                                : 'bg-surface-container text-on-surface-variant hover:text-on-surface border border-outline-variant/60'
+                            }`}
+                          >
+                            {active && <Check className="w-3.5 h-3.5" />}
+                            {muscleLabels[muscle]}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Footer */}
+              <div className="p-4 border-t border-outline-variant/50 bg-surface flex gap-3">
+                <button
+                  onClick={() => setDraftSplit(getDefaultSplit(daysPerWeek))}
+                  className="flex-1 h-11 rounded-xl text-label-md font-medium bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors border border-outline-variant"
+                >
+                  Reset to Default
+                </button>
+                <button
+                  onClick={generatePlan}
+                  className="flex-1 h-11 rounded-xl text-label-md font-bold bg-primary text-on-primary hover:bg-primary/90 transition-colors shadow-sm flex items-center justify-center gap-2"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Apply & Generate
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Add Exercise Modal */}
+        {showAddModal && plan && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4">
+            <div className="bg-surface sm:rounded-2xl rounded-t-2xl shadow-xl w-full sm:max-w-lg max-h-[85vh] sm:max-h-[80vh] overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between p-4 border-b border-outline-variant/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center">
+                    <Plus className="w-5 h-5 text-secondary" />
+                  </div>
+                  <div>
+                    <h3 className="text-headline-md font-semibold text-on-surface">Add Exercise</h3>
+                    <p className="text-label-md text-on-surface-variant">Adds to {planDays[0]?.day || 'first day'}</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowAddModal(false)} className="p-2 rounded-lg hover:bg-surface-container transition-colors text-on-surface-variant">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-4 border-b border-outline-variant flex gap-3">
                 <input
                   type="text"
                   placeholder="Search exercises..."
@@ -492,8 +825,20 @@ export default function ExercisePlanPage() {
                     const query = e.target.value.toLowerCase();
                     setSelectedExercise(query);
                   }}
-                  className="w-full h-10 px-4 rounded-lg border border-outline-variant bg-surface-container-lowest text-body-md outline-none focus:border-primary"
+                  className="flex-1 h-10 px-4 rounded-lg border border-outline-variant bg-surface-container-lowest text-body-md outline-none focus:border-primary"
                 />
+                <div className="relative w-28 shrink-0">
+                  <input
+                    type="number"
+                    step="0.5"
+                    min="0"
+                    value={addWeight}
+                    onChange={(e) => setAddWeight(e.target.value)}
+                    placeholder="kg"
+                    className="w-full h-10 px-3 pr-7 rounded-lg border border-outline-variant bg-surface-container-lowest text-body-md outline-none focus:border-primary"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-label-md text-on-surface-variant">kg</span>
+                </div>
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
                 {filteredExercises

@@ -32,6 +32,12 @@ const levelToActivity: Record<string, string> = {
   '1.9': 'extra_active',
 };
 
+const goalOptions: { value: 'lose' | 'maintain' | 'gain'; label: string; hint: string }[] = [
+  { value: 'lose', label: 'Lose Weight', hint: 'Fat loss — target ~500 kcal/day deficit (USDA)' },
+  { value: 'maintain', label: 'Maintain Weight', hint: 'Stay at your current weight & body comp' },
+  { value: 'gain', label: 'Build Muscle', hint: 'Bulk — target +300 kcal/day surplus (ACSM)' },
+];
+
 export default function CalculatorPage() {
   const { profile, updateProfile, setIsProfileSet } = useStore();
   const router = useRouter();
@@ -42,6 +48,7 @@ export default function CalculatorPage() {
   const [height, setHeight] = useState(profile.height ? String(profile.height) : '');
   const [weight, setWeight] = useState(profile.weight ? String(profile.weight) : '');
   const [activity, setActivity] = useState<ActivityLevel>(profile.activityLevel ? (activityToLevel[profile.activityLevel] || '1.55') : '1.55');
+  const [goal, setGoal] = useState<'lose' | 'maintain' | 'gain'>(profile.goal || 'maintain');
 
   const results = useMemo(() => {
     const ageNum = parseFloat(age);
@@ -207,6 +214,34 @@ export default function CalculatorPage() {
                 ))}
               </div>
             </div>
+
+            {/* Step 3: Goal */}
+            <div className="bg-surface-container-lowest rounded-xl p-6 border border-surface-container-highest shadow-[0_10px_15px_-3px_rgba(11,28,48,0.05),0_4px_6px_-2px_rgba(11,28,48,0.025)]">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface flex items-center justify-center font-bold text-label-md">
+                  3
+                </div>
+                <h2 className="text-headline-md font-semibold text-on-surface">Your Goal</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {goalOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setGoal(opt.value)}
+                    className={`p-4 rounded-lg border text-left transition-colors ${
+                      goal === opt.value
+                        ? 'border-primary bg-surface-container-low'
+                        : 'border-outline-variant hover:bg-surface-container-lowest'
+                    }`}
+                  >
+                    <span className={`block text-body-md font-bold ${goal === opt.value ? 'text-primary' : 'text-on-surface'}`}>
+                      {opt.label}
+                    </span>
+                    <span className="block text-label-md text-on-surface-variant mt-1">{opt.hint}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Results Section */}
@@ -222,8 +257,11 @@ export default function CalculatorPage() {
                 <span className="text-body-md opacity-80">kcal/day</span>
               </div>
               <p className="text-label-md mt-4 opacity-90 relative z-10">
-                Maintenance calories based on Mifflin-St Jeor formula +{' '}
-                {activityLevels.find((l) => l.value === activity)?.label.split('(')[0].trim()}.
+                {goal === 'lose'
+                  ? `Fat loss target: ~${(results ? Math.max(0, results.tdee - 500) : 0).toLocaleString()} kcal/day (TDEE − 500, USDA).`
+                  : goal === 'gain'
+                  ? `Muscle gain target: ~${(results ? results.tdee + 300 : 0).toLocaleString()} kcal/day (TDEE + 300, ACSM).`
+                  : `Maintenance calories based on Mifflin-St Jeor formula + ${activityLevels.find((l) => l.value === activity)?.label.split('(')[0].trim()}.`}
               </p>
             </div>
 
@@ -300,7 +338,7 @@ export default function CalculatorPage() {
                     height: parseFloat(height) as any,
                     weight: parseFloat(weight) as any,
                     activityLevel: levelToActivity[activity] as any,
-                    goal: profile.goal || 'maintain',
+                    goal,
                   });
                   setIsProfileSet(true);
                   setSaved(true);

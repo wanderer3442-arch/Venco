@@ -14,6 +14,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [mounted, setMounted] = useState(false);
+  const [cameFromBack, setCameFromBack] = useState(false);
   const [loading, setLoading] = useState(false);
   const [lockoutSeconds, setLockoutSeconds] = useState(0);
   const lockoutRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -30,13 +31,14 @@ export default function LoginPage() {
 
   useEffect(() => {
     setMounted(true);
+    setCameFromBack(sessionStorage.getItem('came_from_back') === '1');
   }, []);
 
   useEffect(() => {
-    if (mounted && isAuthenticated) {
+    if (mounted && isAuthenticated && !cameFromBack) {
       router.push('/dashboard');
     }
-  }, [mounted, isAuthenticated, router]);
+  }, [mounted, isAuthenticated, cameFromBack, router]);
 
   // Countdown timer for lockout
   const startLockoutCountdown = (seconds: number, identifier: string) => {
@@ -56,7 +58,7 @@ export default function LoginPage() {
     return () => { if (lockoutRef.current) clearInterval(lockoutRef.current); };
   }, []);
 
-  if (!mounted || isAuthenticated) {
+  if (!mounted || (isAuthenticated && !cameFromBack)) {
     return null;
   }
 
@@ -173,12 +175,14 @@ export default function LoginPage() {
       {/* Right Panel - Auth Forms */}
       <div className="flex-1 flex items-center justify-center p-8 bg-surface">
         <div className="w-full max-w-md">
-          {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center gap-3 mb-10">
+          {/* Mobile Logo — outside the auth box */}
+          <div className="lg:hidden flex items-center gap-3 mb-6">
             <img src="/logo.png" alt="Gym at Home" className="w-12 h-12 rounded-xl object-cover shadow-md" />
             <span className="text-2xl font-bold text-on-surface">Gym at Home</span>
           </div>
 
+          {/* Auth box */}
+          <div className="bg-surface border border-outline-variant/60 rounded-2xl shadow-[0_4px_24px_-6px_rgba(15,23,42,0.10)] p-6 sm:p-8">
           {/* Welcome Header */}
           <div className="mb-8">
             <h2 className="text-headline-lg font-bold text-on-surface mb-2">
@@ -405,6 +409,7 @@ export default function LoginPage() {
               )}
             </p>
           </div>
+          </div>{/* /Auth box */}
         </div>
       </div>
 

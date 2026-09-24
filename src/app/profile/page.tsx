@@ -25,7 +25,7 @@ import {
 } from 'recharts';
 import { useAuth } from '@/lib/auth-context';
 import { useStore } from '@/lib/store-context';
-import { allFoods } from '@/lib/food-database';
+import { estimateExerciseCalories } from '@/lib/calculations';
 
 export default function ProfilePage() {
   const { user, updateUsername } = useAuth();
@@ -59,10 +59,7 @@ export default function ProfilePage() {
   const totalMealsLogged = meals.length;
 
   const totalCaloriesBurned = useMemo(() => {
-    return exercises.reduce((sum, ex) => {
-      const duration = ex.duration || (ex.sets * ex.reps * 0.1);
-      return sum + Math.round(duration * 7);
-    }, 0);
+    return exercises.reduce((sum, ex) => sum + estimateExerciseCalories(ex), 0);
   }, [exercises]);
 
   const streak = useMemo(() => {
@@ -81,11 +78,11 @@ export default function ProfilePage() {
   }, [meals, exercises]);
 
   const latestMetric = bodyMetrics.length > 0
-    ? bodyMetrics.sort((a, b) => b.date.localeCompare(a.date))[0]
+    ? [...bodyMetrics].sort((a, b) => b.date.localeCompare(a.date))[0]
     : null;
 
   const weightChartData = useMemo(() => {
-    return bodyMetrics
+    return [...bodyMetrics]
       .sort((a, b) => a.date.localeCompare(b.date))
       .slice(-14)
       .map((m) => ({
@@ -390,7 +387,7 @@ export default function ProfilePage() {
                   No body metrics logged yet. Use the Logger to track your weight.
                 </p>
               ) : (
-                bodyMetrics
+                [...bodyMetrics]
                   .sort((a, b) => b.date.localeCompare(a.date))
                   .slice(0, 5)
                   .map((metric, index) => (

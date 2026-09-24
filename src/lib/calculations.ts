@@ -1,4 +1,5 @@
-import { Profile, Calculations } from './types';
+import { Profile, Calculations, MealEntry, ExerciseEntry } from './types';
+import { allFoods } from './food-database';
 
 export function calculateBMI(weight: number, heightCm: number): { value: number; category: string } {
   const heightM = heightCm / 100;
@@ -35,9 +36,9 @@ export function calculateTDEE(bmr: number, activityLevel: string): number {
 export function calculateTargetCalories(tdee: number, goal: string): number {
   switch (goal) {
     case 'lose':
-      return tdee - 400;
+      return tdee - 500;
     case 'gain':
-      return tdee + 350;
+      return tdee + 300;
     default:
       return tdee;
   }
@@ -89,4 +90,48 @@ export function calculateAll(profile: Profile): Calculations {
     fat: macros.fat,
     hydration,
   };
+}
+
+// ─── Shared nutrition / burn helpers (single source of truth) ────────────────
+
+export interface MealNutrition {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+const foodById = new Map(allFoods.map((f) => [f.id, f]));
+
+export function getFoodById(id: string) {
+  return foodById.get(id);
+}
+
+/** Sum nutrition for meals via foodId lookup (MealEntry has no inline macros). */
+export function sumMealNutrition(meals: MealEntry[]): MealNutrition {
+  let calories = 0, protein = 0, carbs = 0, fat = 0;
+  for (const m of meals) {
+    const food = foodById.get(m.foodId);
+    if (!food) continue;
+    const q = m.quantity || 1;
+    calories += food.nutrition.calories * q;
+    protein += food.nutrition.protein * q;
+    carbs += food.nutrition.carbohydrates * q;
+    fat += food.nutrition.fat * q;
+  }
+  return {
+    calories: Math.round(calories),
+    protein: Math.round(protein),
+    carbs: Math.round(carbs),
+    fat: Math.round(fat),
+  };
+}
+
+/** Unified calories-burned estimate for a logged exercise entry. */
+export function estimateExerciseCalories(entry: ExerciseEntry): number {
+  if (entry.duration && entry.duration > 0) {
+    return Math.round(entry.duration * 7);
+  }
+  const weight = entry.weight || 0;
+  return Math.round(entry.sets * entry.reps * (0.1 + weight * 0.02));
 }

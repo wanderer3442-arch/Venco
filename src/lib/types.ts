@@ -5,6 +5,7 @@ export interface User {
   email: string;
   username: string;
   createdAt: string;
+  role?: 'user' | 'admin';
 }
 
 export interface AuthState {
@@ -236,6 +237,7 @@ export interface WorkoutPlan {
   daysPerWeek: number;
   exercises: WorkoutExercise[];
   isGenerated: boolean;
+  split?: string[][];
 }
 
 export interface WorkoutExercise {

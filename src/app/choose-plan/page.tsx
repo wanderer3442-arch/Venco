@@ -1,9 +1,11 @@
 'use client';
 
-import { Check, X, Star, Zap, Crown, Shield, ArrowRight } from 'lucide-react';
+import { Check, X, Star, Zap, Shield, ArrowRight } from 'lucide-react';
 import { useState } from 'react';
 import { useSubscription } from '@/lib/subscription-context';
 import { SubscriptionPlan } from '@/lib/types';
+import { purchaseSubscription } from '@/lib/billing-service';
+import { Capacitor } from '@capacitor/core';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
 type BillingCycle = 'monthly' | 'annual';
@@ -21,9 +23,11 @@ const plans = [
       { name: 'Meal planning', included: true },
       { name: 'Exercise planning', included: true },
       { name: 'Weekly progress reports', included: true },
-      { name: 'AI Chatbot (30 msgs/day)', included: true },
+      { name: 'AI Chatbot (local responses)', included: true },
       { name: 'Health conditions', included: false },
       { name: 'Export reports', included: false },
+      { name: 'AI Chatbot (Gemini powered)', included: false },
+      { name: 'Food photo recognition', included: false },
     ],
   },
   {
@@ -39,7 +43,8 @@ const plans = [
       { name: 'Meal planning', included: true },
       { name: 'Exercise planning', included: true },
       { name: 'Weekly progress reports', included: true },
-      { name: 'AI Chatbot (unlimited)', included: true },
+      { name: 'AI Chatbot (Gemini, 30 msgs/day)', included: true },
+      { name: 'Food photo recognition', included: true },
       { name: 'Health conditions', included: true },
       { name: 'Export reports', included: true },
     ],
@@ -66,9 +71,21 @@ export default function ChoosePlanPage() {
 
   const handleSubscribe = async () => {
     setIsProcessing(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setPlan(selectedPlan);
-    setIsProcessing(false);
+    try {
+      if (Capacitor.isNativePlatform()) {
+        const product = billingCycle === 'monthly' ? 'monthly' : 'annual';
+        const result = await purchaseSubscription(product);
+        if (result.subscribed) {
+          setPlan(selectedPlan);
+        }
+      } else {
+        alert('Subscriptions are available on the Android app.');
+      }
+    } catch {
+      alert('Purchase failed. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const isCurrentPlan = (planId: SubscriptionPlan) => subscription.plan === planId;
@@ -289,25 +306,25 @@ export default function ChoosePlanPage() {
             <div className="p-4 bg-surface-container rounded-xl">
               <h3 className="text-sm font-semibold text-on-surface mb-2">Can I switch plans anytime?</h3>
               <p className="text-sm text-on-surface-variant">
-                Yes! Upgrade or downgrade anytime. Changes take effect immediately with prorated payments.
+                Payments are processed securely by Google Play. Your subscription manages automatically through your Play Store account.
               </p>
             </div>
             <div className="p-4 bg-surface-container rounded-xl">
               <h3 className="text-sm font-semibold text-on-surface mb-2">Is there a free trial?</h3>
               <p className="text-sm text-on-surface-variant">
-                All paid plans include a 14-day free trial. No credit card required.
+                Start with the Free plan. Upgrade to Pro any time — no commitment required.
               </p>
             </div>
             <div className="p-4 bg-surface-container rounded-xl">
               <h3 className="text-sm font-semibold text-on-surface mb-2">What payment methods?</h3>
               <p className="text-sm text-on-surface-variant">
-                UPI, credit/debit cards, net banking, and popular wallets like Paytm and Google Pay.
+                Google Play handles payments — UPI, credit/debit cards, net banking, and wallets like Paytm and Google Pay are all supported through your Play Store account.
               </p>
             </div>
             <div className="p-4 bg-surface-container rounded-xl">
               <h3 className="text-sm font-semibold text-on-surface mb-2">Can I cancel?</h3>
               <p className="text-sm text-on-surface-variant">
-                Cancel anytime from account settings. Access continues until the billing period ends.
+                Cancel anytime from Google Play subscriptions. Access continues until the billing period ends.
               </p>
             </div>
           </div>

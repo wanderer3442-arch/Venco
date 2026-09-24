@@ -1,7 +1,7 @@
 'use client';
 
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Lightbulb,
   Search,
@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { useStore } from '@/lib/store-context';
 import { allFoods } from '@/lib/food-database';
+import { sumMealNutrition } from '@/lib/calculations';
 import { FoodItem } from '@/lib/types';
 
 const healthTips = [
@@ -24,11 +25,19 @@ const healthTips = [
   "Getting sunlight in the morning regulates your circadian rhythm.",
 ];
 
-const heatmapColors = ['stroke-primary', 'stroke-primary/60', 'stroke-primary/20', 'stroke-primary', 'stroke-surface-container-high', 'stroke-primary/40', 'stroke-primary'];
+const heatmapColor = (val: number) => {
+  if (val === 0) return 'stroke-surface-container-high';
+  if (val < 50) return 'stroke-primary/30';
+  if (val < 90) return 'stroke-primary/70';
+  return 'stroke-primary';
+};
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { calculations, meals, exercises, getMealsForDate, getExercisesForDate } = useStore();
+  const {
+    calculations, meals, exercises, waterLogs, sleepLogs, workoutPlan,
+    getMealsForDate, getExercisesForDate, getWaterForDate, getSleepForDate,
+  } = useStore();
   const [tipIndex, setTipIndex] = useState(0);
   const [mounted, setMounted] = useState(false);
   const [foodSearch, setFoodSearch] = useState('');
@@ -50,15 +59,31 @@ export default function DashboardPage() {
 
   const today = new Date().toISOString().split('T')[0];
   const todayMeals = useMemo(() => getMealsForDate(today), [meals, today]);
+  const todayWaterMl = useMemo(() => getWaterForDate(today), [waterLogs, today]);
+  const todaySleep = useMemo(() => getSleepForDate(today), [sleepLogs, today]);
+  const hydrationTarget = calculations?.hydration || 0;
+
+  const manualGoals = useRef<Set<number>>(new Set());
 
   useEffect(() => {
     setGoals(prev => prev.map(g => {
-      if (g.id === 1) return { ...g, completed: todayMeals.length > 0, pct: todayMeals.length > 0 ? 100 : 0 };
-      if (g.id === 2) return { ...g, completed: false, pct: 0 };
-      if (g.id === 3) return { ...g, completed: getExercisesForDate(today).length > 0, pct: getExercisesForDate(today).length > 0 ? 100 : 0 };
+      if (manualGoals.current.has(g.id)) return g;
+      if (g.id === 1) {
+        const done = todayMeals.length > 0;
+        return { ...g, completed: done, pct: done ? 100 : 0 };
+      }
+      if (g.id === 2) {
+        if (hydrationTarget <= 0) return g;
+        const pct = Math.min(Math.round(((todayWaterMl / 1000) / hydrationTarget) * 100), 100);
+        return { ...g, completed: pct >= 100, pct };
+      }
+      if (g.id === 3) {
+        const done = getExercisesForDate(today).length > 0;
+        return { ...g, completed: done, pct: done ? 100 : 0 };
+      }
       return g;
     }));
-  }, [todayMeals, exercises, today]);
+  }, [todayMeals, exercises, waterLogs, hydrationTarget, today]);
 
   const streak = useMemo(() => {
     let count = 0;
@@ -75,12 +100,7 @@ export default function DashboardPage() {
     return count;
   }, [meals, exercises]);
 
-  const totalCalories = useMemo(() => {
-    return todayMeals.reduce((sum, m) => {
-      const food = allFoods.find((f) => f.id === m.foodId);
-      return sum + (food ? food.nutrition.calories * m.quantity : 0);
-    }, 0);
-  }, [todayMeals]);
+  const totalCalories = useMemo(() => sumMealNutrition(todayMeals).calories, [todayMeals]);
 
   const weeklyWorkouts = useMemo(() => {
     const now = new Date();
@@ -96,6 +116,11 @@ export default function DashboardPage() {
     }
     return count;
   }, [exercises]);
+
+  const targetWorkouts = workoutPlan?.daysPerWeek || 5;
+  const streakPct = Math.min(Math.round((streak / 7) * 100), 100);
+  const activityPct = Math.min(Math.round((weeklyWorkouts / targetWorkouts) * 100), 100);
+  const sleepPct = Math.min(Math.round((todaySleep / 8) * 100), 100);
 
   const nutritionPct = useMemo(() => {
     if (!calculations) return 0;
@@ -196,16 +221,17 @@ export default function DashboardPage() {
                       <div key={i} className="flex-1 aspect-square relative">
                         <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
                           <circle className="stroke-surface-container-high" cx="18" cy="18" fill="none" r="14" strokeWidth="4" />
-                          <circle
-                            className={heatmapColors[i]}
-                            cx="18"
-                            cy="18"
-                            fill="none"
-                            r="14"
-                            strokeDasharray={`${val}, 100`}
-                            strokeLinecap="round"
-                            strokeWidth="4"
-                          />
+                      <circle
+                        className={heatmapColor(val)}
+                        cx="18"
+                        cy="18"
+                        fill="none"
+                        r="14"
+                        pathLength={100}
+                        strokeDasharray={`${val} ${100 - val}`}
+                        strokeLinecap="round"
+                        strokeWidth="4"
+                      />
                         </svg>
                       </div>
                     ))}
@@ -228,14 +254,14 @@ export default function DashboardPage() {
                         r="40"
                         stroke="#2170e4"
                         strokeDasharray="251"
-                        strokeDashoffset={251 - (251 * Math.min(nutritionPct, 100)) / 100}
+                        strokeDashoffset={251 - (251 * streakPct) / 100}
                         strokeLinecap="round"
                         strokeWidth="8"
                       />
                     </svg>
                     <div className="absolute flex flex-col items-center">
-                      <span className="text-headline-md font-bold text-secondary">{nutritionPct}%</span>
-                      <span className="text-[10px] text-outline uppercase">Goal</span>
+                      <span className="text-headline-md font-bold text-secondary">{streak}</span>
+                      <span className="text-[10px] text-outline uppercase">Streak</span>
                     </div>
                   </div>
                 </div>
@@ -250,6 +276,7 @@ export default function DashboardPage() {
                   <li
                     key={goal.id}
                     onClick={() => {
+                      manualGoals.current.add(goal.id);
                       setGoals((prev) =>
                         prev.map((g) =>
                           g.id === goal.id
@@ -364,18 +391,18 @@ export default function DashboardPage() {
                         r="45"
                         stroke="#006c49"
                         strokeDasharray="283"
-                        strokeDashoffset={283 - (283 * nutritionPct) / 100}
+                        strokeDashoffset={283 - (283 * activityPct) / 100}
                         strokeLinecap="round"
                         strokeWidth="10"
                       />
                     </svg>
                     <div className="absolute flex flex-col items-center">
-                      <span className="text-headline-md font-bold text-on-background">{nutritionPct}%</span>
-                      <span className="text-[10px] uppercase text-on-surface-variant">Activity</span>
+                      <span className="text-headline-md font-bold text-on-background">{activityPct}%</span>
+                      <span className="text-[8px] uppercase text-on-surface-variant">Activity</span>
                     </div>
                   </div>
 
-                  {/* Steps Ring */}
+                  {/* Nutrition Ring */}
                   <div className="relative w-20 h-20 flex items-center justify-center">
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                       <circle cx="50" cy="50" fill="none" r="45" stroke="#e5eeff" strokeWidth="8" />
@@ -387,14 +414,14 @@ export default function DashboardPage() {
                         r="45"
                         stroke="#2170e4"
                         strokeDasharray="283"
-                        strokeDashoffset="283"
+                        strokeDashoffset={283 - (283 * nutritionPct) / 100}
                         strokeLinecap="round"
                         strokeWidth="10"
                       />
                     </svg>
                     <div className="absolute flex flex-col items-center">
-                      <span className="text-label-md font-bold text-on-background">--</span>
-                      <span className="text-[8px] uppercase text-on-surface-variant">Steps</span>
+                      <span className="text-label-md font-bold text-on-background">{nutritionPct}%</span>
+                      <span className="text-[8px] uppercase text-on-surface-variant">Nutrition</span>
                     </div>
                   </div>
 
@@ -410,13 +437,13 @@ export default function DashboardPage() {
                         r="45"
                         stroke="#855300"
                         strokeDasharray="283"
-                        strokeDashoffset="283"
+                        strokeDashoffset={283 - (283 * sleepPct) / 100}
                         strokeLinecap="round"
                         strokeWidth="10"
                       />
                     </svg>
                     <div className="absolute flex flex-col items-center">
-                      <span className="text-label-md font-bold text-on-background">--</span>
+                      <span className="text-label-md font-bold text-on-background">{todaySleep ? `${todaySleep}h` : '--'}</span>
                       <span className="text-[8px] uppercase text-on-surface-variant">Sleep</span>
                     </div>
                   </div>
@@ -426,12 +453,12 @@ export default function DashboardPage() {
                 <div className="flex flex-col gap-2">
                   <div className="flex justify-between items-center">
                     <span className="text-label-md text-on-surface-variant">Workouts</span>
-                    <span className="text-label-md font-bold">{weeklyWorkouts}/5</span>
+                    <span className="text-label-md font-bold">{weeklyWorkouts}/{targetWorkouts}</span>
                   </div>
                   <div className="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
                     <div
                       className="h-full bg-primary transition-all duration-1000"
-                      style={{ width: `${Math.min((weeklyWorkouts / 5) * 100, 100)}%` }}
+                      style={{ width: `${Math.min((weeklyWorkouts / targetWorkouts) * 100, 100)}%` }}
                     />
                   </div>
                   <div className="flex justify-between items-center mt-1">

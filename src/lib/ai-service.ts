@@ -1,25 +1,9 @@
 import { allFoods } from './food-database';
 import { FoodItem } from './types';
 
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
 
-const FREE_MODELS = [
-  'nvidia/nemotron-3-super-120b-a12b:free',
-  'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
-  'nvidia/nemotron-3.5-content-safety:free',
-];
-
 const GEMINI_MODEL = 'gemini-2.5-flash-lite';
-
-const VISION_MODEL = 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free';
-
-function getApiKey(): string | null {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('openrouter_api_key');
-  }
-  return null;
-}
 
 function getGeminiKey(): string | null {
   if (typeof window !== 'undefined') {
@@ -28,20 +12,16 @@ function getGeminiKey(): string | null {
   return null;
 }
 
-function getModel(): string {
-  return FREE_MODELS[0];
-}
-
-function getVisionModel(): string {
-  return VISION_MODEL;
-}
-
 export function getCurrentModel(): string {
-  return getModel();
+  return GEMINI_MODEL;
 }
 
 export function isApiKeySet(): boolean {
-  return !!getApiKey() || !!getGeminiKey();
+  return !!getGeminiKey();
+}
+
+export function hasGeminiKey(): boolean {
+  return !!getGeminiKey();
 }
 
 // ─── Gemini API Call ─────────────────────────────────────────────────────────
@@ -69,47 +49,9 @@ async function callGemini(
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
     const message = err?.error?.message || err?.message || `Gemini API error: ${response.status}`;
-    throw new Error(message);
-  }
-
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content || '';
-}
-
-// ─── OpenRouter API Call ─────────────────────────────────────────────────────
-
-async function callOpenRouter(
-  messages: Array<{ role: string; content: any }>,
-  maxTokens = 1024,
-  model?: string
-): Promise<string> {
-  const key = getApiKey();
-  if (!key) throw new Error('API key not configured.');
-
-  const useModel = model || getModel();
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`Using model: ${useModel}`);
-  }
-
-  const response = await fetch(OPENROUTER_API_URL, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${key}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : '',
-      'X-Title': 'Gym at Home',
-    },
-    body: JSON.stringify({
-      model: useModel,
-      messages,
-      max_tokens: maxTokens,
-      temperature: 0.7,
-    }),
-  });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    const message = err?.error?.message || err?.message || JSON.stringify(err) || `API error: ${response.status}`;
+    if (response.status === 429) {
+      throw new Error('V is resting right now. Try again in a minute.');
+    }
     throw new Error(message);
   }
 
@@ -121,21 +63,21 @@ async function callOpenRouter(
 
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   (window as any).__setGymAtHomeApiKey = (key: string) => {
-    localStorage.setItem('openrouter_api_key', key);
-    console.log('✅ Gym at Home API key saved');
+    localStorage.setItem('gemini_api_key', key);
+    console.log('✅ Gym at Home Gemini key saved');
   };
   (window as any).__clearGymAtHomeApiKey = () => {
-    localStorage.removeItem('openrouter_api_key');
-    console.log('✅ Gym at Home API key removed');
+    localStorage.removeItem('gemini_api_key');
+    console.log('✅ Gym at Home Gemini key removed');
   };
   (window as any).__getGymAtHomeApiKey = () => {
-    const key = localStorage.getItem('openrouter_api_key');
-    console.log(key ? `API key: ${key.substring(0, 10)}...` : 'No API key set');
+    const key = localStorage.getItem('gemini_api_key');
+    console.log(key ? `Gemini key: ${key.substring(0, 10)}...` : 'No API key set');
     return key;
   };
 }
 
-// ─── Food Recognition (Vision + Text) ───────────────────────────────────────
+// ─── Food Recognition (Gemini Vision) ────────────────────────────────────────
 
 export interface FoodSuggestion {
   food: FoodItem;
@@ -155,9 +97,9 @@ If no food visible, return empty array [].`;
     { type: 'image_url', image_url: { url: base64Image } },
   ];
 
-  const response = await callOpenRouter([
+  const response = await callGemini([
     { role: 'user', content },
-  ], 1024, getVisionModel());
+  ], 1024);
 
   let detected: Array<{ name: string; confidence: number; reason: string }>;
   try {
@@ -240,9 +182,9 @@ If no meal plan visible, return empty array [].`;
     { type: 'image_url', image_url: { url: base64Image } },
   ];
 
-  const response = await callOpenRouter([
+  const response = await callGemini([
     { role: 'user', content },
-  ], 2048, getVisionModel());
+  ], 2048);
 
   let detected: DayMealPlan[];
   try {
@@ -258,18 +200,92 @@ If no meal plan visible, return empty array [].`;
 
 // ─── AI Chatbot ──────────────────────────────────────────────────────────────
 
+export interface ChatContext {
+  username?: string;
+  profile?: {
+    gender?: string | null;
+    bmi?: number | null;
+    bmr?: number | null;
+    tdee?: number | null;
+    weight?: number | null;
+    height?: number | null;
+    age?: number | null;
+    activityLevel?: string;
+    targetCalories?: number;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+    hydration?: number;
+    healthProblems?: string[];
+  } | null;
+  planTier?: string;
+  recentMeals?: string;
+  healthGoal?: string;
+  dailyCalories?: number;
+  dailyProtein?: number;
+  dailyCarbs?: number;
+  dailyFat?: number;
+  dailyWater?: number;
+  waterGoal?: number;
+  sleepHours?: number;
+  burnedCalories?: number;
+  todayWorkout?: string;
+  loggedWorkout?: string;
+  allergies?: string[];
+}
+
+export interface ChatHistoryMessage {
+  role: string;
+  content: string;
+}
+
 export async function getChatResponse(
   userMessage: string,
-  context?: {
-    profile?: any;
-    recentMeals?: string;
-    healthGoal?: string;
-    dailyCalories?: number;
-    dailyProtein?: number;
-    dailyWater?: number;
-  },
-  isPaidUser?: boolean
+  context?: ChatContext,
+  isPaidUser?: boolean,
+  history?: ChatHistoryMessage[]
 ): Promise<string> {
+  const p = context?.profile;
+  const goalLabels: Record<string, string> = {
+    lose: 'fat loss / weight loss',
+    maintain: 'maintain weight / general fitness',
+    gain: 'muscle gain',
+  };
+  const goalText = goalLabels[context?.healthGoal || ''] || context?.healthGoal || 'general fitness';
+
+  const profileBlock = p
+    ? `USER PROFILE (personalize every answer with these real numbers):
+- Name: ${context?.username || 'User'} (address them by name occasionally)
+- Gender: ${p.gender || 'not set'}
+- Age: ${p.age || 'N/A'} | Height: ${p.height || 'N/A'} cm | Weight: ${p.weight || 'N/A'} kg
+- BMI: ${p.bmi || 'N/A'} | BMR: ${p.bmr || 'N/A'} kcal | TDEE: ${p.tdee || 'N/A'} kcal
+- Goal: ${goalText}
+- Activity level: ${p.activityLevel || 'moderate'}
+- Daily targets: ${p.targetCalories || 'N/A'} kcal | protein ${p.protein || 'N/A'}g | carbs ${p.carbs || 'N/A'}g | fat ${p.fat || 'N/A'}g | water ${p.hydration || 'N/A'}L${context?.waterGoal && context.waterGoal !== p.hydration ? ` (hydration goal: ${context.waterGoal}L)` : ''}`
+    : `USER PROFILE: Not set up yet. If they ask for personal numbers, ask them to complete their profile first.`;
+
+  const conditionsBlock = p?.healthProblems?.length
+    ? `\nHealth conditions: ${p.healthProblems.join(', ')} — factor these into all exercise/diet advice (see HEALTH CONDITIONS above) and add a medical disclaimer when relevant.`
+    : '';
+  const allergiesBlock = context?.allergies?.length
+    ? `\nAllergies: ${context.allergies.join(', ')} — NEVER recommend foods containing these.`
+    : '';
+
+  const todayBlock = `
+TODAY'S REAL DATA (from their app logs — use these, don't invent):
+- Calories eaten: ${context?.dailyCalories ?? 'not logged'} kcal / target ${p?.targetCalories || 'N/A'} kcal
+- Macros eaten: protein ${context?.dailyProtein ?? '—'}g, carbs ${context?.dailyCarbs ?? '—'}g, fat ${context?.dailyFat ?? '—'}g
+- Water: ${context?.dailyWater ?? '0'}L / goal ${context?.waterGoal || p?.hydration || 'N/A'}L
+- Sleep last night: ${context?.sleepHours ? `${context.sleepHours}h` : 'not logged'}
+- Calories burned (exercise): ${context?.burnedCalories ?? '0'} kcal
+- Planned workout today: ${context?.todayWorkout || 'no plan for today'}
+- Logged exercises today: ${context?.loggedWorkout || 'none yet'}
+- Meals logged today: ${context?.recentMeals || 'none yet'}`;
+
+  const planNote = isPaidUser
+    ? `\nPlan: ${context?.planTier || 'pro'} (paid user — full access, give thorough answers).`
+    : `\nPlan: ${context?.planTier || 'free'} (free user — keep responses concise and stay within the 2-4 sentence rule).`;
+
   const systemPrompt = `You are V, a certified AI health & fitness assistant for "Gym at Home". You provide evidence-based advice from WHO, CDC, ACSM, AHA, USDA, ISSN, and Harvard T.H. Chan School of Public Health.
 
 CORE KNOWLEDGE — CITE THESE GUIDELINES:
@@ -328,37 +344,32 @@ RULES:
 1. Be concise (2-4 sentences max per response)
 2. Use bullet points and emojis for readability
 3. Always cite the source when giving specific numbers
-4. Personalize advice using the user's profile data below
+4. Personalize advice using the user's profile and today's real logged data below
 5. Never diagnose or replace medical advice
 6. If unsure, say "I recommend consulting a healthcare professional"
 7. Use metric units (kg, cm, kcal) as default
 8. Be encouraging and supportive tone
+9. Remember the recent conversation history — maintain context across turns
+10. When suggesting meals, respect their allergies and health conditions
+11. Greet them by name if this is the start of a conversation${profileBlock}${conditionsBlock}${allergiesBlock}${todayBlock}${planNote}`;
 
-${context?.profile ? `USER PROFILE:
-- BMI: ${context.profile.bmi || 'N/A'}
-- Weight: ${context.profile.weight || 'N/A'} kg
-- Height: ${context.profile.height || 'N/A'} cm
-- Age: ${context.profile.age || 'N/A'}
-- Goal: ${context.healthGoal || 'general fitness'}
-- Activity level: ${context.profile.activityLevel || 'moderate'}` : ''}
-
-${context?.dailyCalories ? `Today's intake: ~${context.dailyCalories} kcal (target: ${context.profile?.targetCalories || 'N/A'} kcal)` : ''}
-${context?.dailyProtein ? `Today's protein: ~${context.dailyProtein}g` : ''}
-${context?.dailyWater ? `Today's water: ~${context.dailyWater}L` : ''}
-${context?.recentMeals ? `Recent meals: ${context.recentMeals}` : ''}`;
-
-  const messages = [
+  const messages: Array<{ role: string; content: string }> = [
     { role: 'system', content: systemPrompt },
-    { role: 'user', content: userMessage },
   ];
 
-  if (isPaidUser && getApiKey()) {
-    return await callOpenRouter(messages, 768);
+  if (history?.length) {
+    for (const h of history) {
+      if (h.role === 'user' || h.role === 'assistant') {
+        messages.push({ role: h.role, content: h.content });
+      }
+    }
   }
+
+  messages.push({ role: 'user', content: userMessage });
 
   if (getGeminiKey()) {
     return await callGemini(messages, 768);
   }
 
-  throw new Error('No API key configured. Add a Gemini or OpenRouter key in Dev Settings.');
+  throw new Error('No API key configured. Add a Gemini key in Dev Settings.');
 }

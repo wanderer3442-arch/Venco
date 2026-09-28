@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { Send, X, MessageCircle, Bot, User, Sparkles, Minimize2 } from 'lucide-react';
-import { getChatResponse } from '@/lib/ai-service';
+import { getChatResponse, hasGeminiKey } from '@/lib/ai-service';
 import { findResponse, getFollowUps } from '@/lib/chatbot-responses';
 import { sumMealNutrition, estimateExerciseCalories } from '@/lib/calculations';
 import { PLAN_DAY_NAMES } from '@/lib/exercise-planner';
@@ -46,11 +46,6 @@ function incrementDailyCount(): number {
   const current = getDailyCount();
   localStorage.setItem(key, String(current + 1));
   return current + 1;
-}
-
-function hasGeminiKey(): boolean {
-  if (typeof window === 'undefined') return false;
-  return !!localStorage.getItem('gemini_api_key');
 }
 
 export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {

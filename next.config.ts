@@ -33,7 +33,7 @@ const securityHeaders = [
     //   - Styles: self + unsafe-inline (needed by Tailwind/Next.js)
     //   - Images: self + data URIs (for base64 food photos) + blob: (for generated content)
     //   - Fonts: self + Google Fonts
-      //   - Connect: self + Gemini API (for AI features)
+      //   - Connect: self + Gemini API (direct dev key) + Cloudflare Worker AI proxy
     //   - Frames: none
     //   - Objects: none
     key: "Content-Security-Policy",
@@ -43,7 +43,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob:",
-      "connect-src 'self' https://generativelanguage.googleapis.com https://formspree.io",
+      "connect-src 'self' https://generativelanguage.googleapis.com https://*.workers.dev https://formspree.io",
       "frame-src 'none'",
       "object-src 'none'",
       "base-uri 'self'",

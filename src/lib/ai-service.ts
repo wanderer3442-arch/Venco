@@ -5,6 +5,9 @@ const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/
 
 const GEMINI_MODEL = 'gemini-2.5-flash-lite';
 
+// Cloudflare Worker proxy — key lives server-side, never in the app.
+const AI_PROXY_URL = (process.env.NEXT_PUBLIC_AI_PROXY_URL || '').trim().replace(/\/+$/, '');
+
 function getGeminiKey(): string | null {
   if (typeof window !== 'undefined') {
     return localStorage.getItem('gemini_api_key');
@@ -17,11 +20,11 @@ export function getCurrentModel(): string {
 }
 
 export function isApiKeySet(): boolean {
-  return !!getGeminiKey();
+  return !!getGeminiKey() || !!AI_PROXY_URL;
 }
 
 export function hasGeminiKey(): boolean {
-  return !!getGeminiKey();
+  return !!getGeminiKey() || !!AI_PROXY_URL;
 }
 
 // ─── Gemini API Call ─────────────────────────────────────────────────────────
@@ -30,20 +33,28 @@ async function callGemini(
   messages: Array<{ role: string; content: any }>,
   maxTokens = 1024
 ): Promise<string> {
-  const key = getGeminiKey();
-  if (!key) throw new Error('Gemini API key not configured.');
+  const payload = {
+    model: GEMINI_MODEL,
+    messages,
+    max_tokens: maxTokens,
+    temperature: 0.7,
+  };
 
-  const response = await fetch(`${GEMINI_API_URL}?key=${key}`, {
+  let url: string;
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+
+  if (AI_PROXY_URL) {
+    url = AI_PROXY_URL;
+  } else {
+    const key = getGeminiKey();
+    if (!key) throw new Error('Gemini API key not configured.');
+    url = `${GEMINI_API_URL}?key=${key}`;
+  }
+
+  const response = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: GEMINI_MODEL,
-      messages,
-      max_tokens: maxTokens,
-      temperature: 0.7,
-    }),
+    headers,
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
@@ -361,9 +372,9 @@ RULES:
 
   messages.push({ role: 'user', content: userMessage });
 
-  if (getGeminiKey()) {
+  if (hasGeminiKey()) {
     return await callGemini(messages, 768);
   }
 
-  throw new Error('No API key configured. Add a Gemini key in Dev Settings.');
+  throw new Error('AI not configured. Set a proxy URL or add a Gemini key in Dev Settings.');
 }

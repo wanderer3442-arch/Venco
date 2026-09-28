@@ -46,3 +46,10 @@ mess.jpeg
 
 # dev server log
 /dev-server.log
+
+# release signing (never commit keys or passwords)
+android/keystore.properties
+*.jks
+*.keystore
+*.aab
+*.apk

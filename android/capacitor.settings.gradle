@@ -7,6 +7,3 @@ project(':capacitor-community-sqlite').projectDir = new File('../node_modules/@c
 
 include ':capacitor-app'
 project(':capacitor-app').projectDir = new File('../node_modules/@capacitor/app/android')
-
-include ':capacitor-billing'
-project(':capacitor-billing').projectDir = new File('../node_modules/capacitor-billing/android')

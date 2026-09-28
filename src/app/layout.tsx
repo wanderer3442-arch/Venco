@@ -3,7 +3,6 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { StoreProvider } from "@/lib/store-context";
-import { SubscriptionProvider } from "@/lib/subscription-context";
 import { SidebarProvider } from "@/lib/sidebar-context";
 import DatabaseInit from "@/components/DatabaseInit";
 import BackButtonHandler from "@/components/BackButtonHandler";
@@ -34,14 +33,12 @@ export default function RootLayout({
       <body className="min-h-full bg-surface text-on-surface antialiased">
         <DatabaseInit>
           <AuthProvider>
-            <SubscriptionProvider>
-              <StoreProvider>
-                <SidebarProvider>
-                  {children}
-                  <BackButtonHandler />
-                </SidebarProvider>
-              </StoreProvider>
-            </SubscriptionProvider>
+            <StoreProvider>
+              <SidebarProvider>
+                {children}
+                <BackButtonHandler />
+              </SidebarProvider>
+            </StoreProvider>
           </AuthProvider>
         </DatabaseInit>
       </body>

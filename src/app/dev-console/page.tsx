@@ -12,7 +12,6 @@ import {
   HardDrive,
   RefreshCw,
   Sparkles,
-  CreditCard,
   MessageSquare,
   Lock,
 } from 'lucide-react';
@@ -33,7 +32,6 @@ interface UserRow {
   waterLogs: number;
   sleepLogs: number;
   lastActivity: string | null;
-  plan: string;
   role: string;
   loggedIn: boolean;
 }
@@ -78,7 +76,6 @@ export default function DevConsolePage() {
   const [session, setSession] = useState<{
     user: string | null;
     role: string;
-    plan: string;
     chatToday: number;
     gemini: boolean;
     formspree: boolean;
@@ -88,7 +85,6 @@ export default function DevConsolePage() {
   }>({
     user: null,
     role: '—',
-    plan: 'unknown',
     chatToday: 0,
     gemini: false,
     formspree: false,
@@ -127,26 +123,6 @@ export default function DevConsolePage() {
       });
     }
 
-    const subRaw = localStorage.getItem('gymathome_subscription');
-    const sub = parseJSON<{ plan?: string; expiresAt?: string | null }>(subRaw);
-    let plan = sub?.plan ?? 'free';
-    if (sub?.expiresAt && new Date(sub.expiresAt) < new Date() && plan !== 'free') {
-      foundChecks.push({
-        label: 'Subscription expiry',
-        status: 'warn',
-        detail: `plan "${plan}" expired ${sub.expiresAt} — should downgrade to free`,
-      });
-      plan = 'expired';
-    } else if (sub?.plan && sub.plan !== 'free') {
-      foundChecks.push({
-        label: 'Subscription',
-        status: 'ok',
-        detail: `${sub.plan}${sub.expiresAt ? ` · expires ${sub.expiresAt}` : ''}`,
-      });
-    } else {
-      foundChecks.push({ label: 'Subscription', status: 'ok', detail: 'free plan' });
-    }
-
     const chatKey = `gymathome_chat_count_${todayKey()}`;
     const chatToday = Number(localStorage.getItem(chatKey) || '0');
 
@@ -176,7 +152,6 @@ export default function DevConsolePage() {
       const habits = Array.isArray(store?.habits) ? store.habits.length : 0;
       const waterLogs = Array.isArray(store?.waterLogs) ? store.waterLogs.length : 0;
       const sleepLogs = Array.isArray(store?.sleepLogs) ? store.sleepLogs.length : 0;
-      const userPlan = (store?.subscription as { plan?: string } | undefined)?.plan ?? plan;
       let lastActivity: string | null = null;
       const candidates: string[] = [];
       for (const list of [store?.meals, store?.exercises, store?.waterLogs, store?.sleepLogs]) {
@@ -210,7 +185,6 @@ export default function DevConsolePage() {
         waterLogs,
         sleepLogs,
         lastActivity,
-        plan: userPlan,
         role: u.role ?? 'user',
         loggedIn: !!sessionUserId && u.id === sessionUserId,
       };
@@ -248,7 +222,6 @@ export default function DevConsolePage() {
     setSession({
       user: sessionUser,
       role: sessionRole,
-      plan,
       chatToday,
       gemini,
       formspree: false,
@@ -381,13 +354,6 @@ export default function DevConsolePage() {
           </div>
           <div className="bg-surface rounded-xl border border-outline-variant p-4">
             <div className="flex items-center gap-2 text-on-surface-variant mb-1">
-              <CreditCard className="w-4 h-4" />
-              <span className="text-label-md">Your plan</span>
-            </div>
-            <div className="text-stat-value text-2xl font-bold text-on-surface capitalize">{session.plan}</div>
-          </div>
-          <div className="bg-surface rounded-xl border border-outline-variant p-4">
-            <div className="flex items-center gap-2 text-on-surface-variant mb-1">
               <MessageSquare className="w-4 h-4" />
               <span className="text-label-md">Chats today</span>
             </div>
@@ -444,7 +410,6 @@ export default function DevConsolePage() {
                     <th className="py-2 pr-3 font-medium">User</th>
                     <th className="py-2 pr-3 font-medium">Email</th>
                     <th className="py-2 pr-3 font-medium">Joined</th>
-                    <th className="py-2 pr-3 font-medium">Plan</th>
                     <th className="py-2 pr-3 font-medium">Meals</th>
                     <th className="py-2 pr-3 font-medium">Exercises</th>
                     <th className="py-2 pr-3 font-medium">Last activity</th>
@@ -480,7 +445,6 @@ export default function DevConsolePage() {
                       <td className="py-2.5 pr-3 text-label-md text-on-surface-variant">
                         {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}
                       </td>
-                      <td className="py-2.5 pr-3 text-label-md capitalize text-on-surface">{u.plan}</td>
                       <td className="py-2.5 pr-3 text-label-md text-on-surface">{u.meals}</td>
                       <td className="py-2.5 pr-3 text-label-md text-on-surface">{u.exercises}</td>
                       <td className="py-2.5 pr-3 text-label-md text-on-surface-variant">

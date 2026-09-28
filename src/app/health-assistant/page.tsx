@@ -15,14 +15,12 @@ import {
   Sparkles,
   Plus,
   Leaf,
-  Lock,
 } from 'lucide-react';
 import Link from 'next/link';
 import { healthConditions, searchHealthConditions } from '@/lib/health-database';
 import { allFoods } from '@/lib/food-database';
 import { useStore } from '@/lib/store-context';
 import { HealthCondition } from '@/lib/types';
-import { useSubscription } from '@/lib/subscription-context';
 
 const commonProblems = [
   'Diabetes',
@@ -39,12 +37,9 @@ const commonProblems = [
 
 export default function HealthAssistantPage() {
   const { profile, meals } = useStore();
-  const { hasFeature } = useSubscription();
   const [query, setQuery] = useState('');
   const [selectedCondition, setSelectedCondition] = useState<HealthCondition | null>(null);
   const [saved, setSaved] = useState(false);
-
-  const hasHealthAccess = hasFeature('health_conditions');
 
   const searchResults = useMemo(() => {
     if (query.length < 2) return [];
@@ -114,40 +109,6 @@ export default function HealthAssistantPage() {
 
     return { goodFoods, badFoods, newFoods };
   }, [selectedCondition, userFoods]);
-
-  if (!hasHealthAccess) {
-    return (
-      <DashboardLayout title="Health Assistant" subtitle="Get personalized guidance for your health condition">
-        <div className="max-w-5xl mx-auto space-y-6 pb-8">
-          <div className="bg-surface rounded-2xl border border-outline-variant p-8 text-center">
-            <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Lock className="w-8 h-8 text-primary" />
-            </div>
-            <h2 className="text-headline-lg font-bold text-on-surface mb-2">
-              Health Conditions Feature
-            </h2>
-            <p className="text-body-lg text-on-surface-variant mb-6 max-w-md mx-auto">
-              Unlock personalized health condition analysis, food recommendations, and tailored meal plans with a Pro subscription.
-            </p>
-            <div className="flex items-center justify-center gap-4">
-              <Link
-                href="/choose-plan"
-                className="px-6 py-3 bg-primary text-on-primary rounded-xl font-medium hover:bg-primary/90 transition-colors"
-              >
-                Upgrade to Pro
-              </Link>
-              <Link
-                href="/dashboard"
-                className="px-6 py-3 bg-surface-container text-on-surface rounded-xl font-medium hover:bg-surface-container-high transition-colors"
-              >
-                Back to Dashboard
-              </Link>
-            </div>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
 
   return (
     <DashboardLayout title="Health Assistant" subtitle="Get personalized guidance for your health condition">

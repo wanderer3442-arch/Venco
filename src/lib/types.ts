@@ -13,15 +13,6 @@ export interface AuthState {
   isAuthenticated: boolean;
 }
 
-// ─── Subscription ────────────────────────────────────────────────────────────
-
-export type SubscriptionPlan = 'free' | 'pro' | 'premium';
-
-export interface Subscription {
-  plan: SubscriptionPlan;
-  expiresAt: string | null;
-}
-
 // ─── Profile ─────────────────────────────────────────────────────────────────
 
 export type Gender = 'male' | 'female' | 'other';

@@ -11,7 +11,6 @@ import {
   Heart,
   Download,
   User,
-  CreditCard,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -31,7 +30,6 @@ const navItems = [
   { href: '/health-assistant', label: 'Health', icon: Heart },
   { href: '/export-reports', label: 'Download', icon: Download },
   { href: '/profile', label: 'Profile', icon: User },
-  { href: '/choose-plan', label: 'Choose Plan', icon: CreditCard },
   { href: '/report-problem', label: 'Report a Problem', icon: MessageSquareWarning },
 ];
 

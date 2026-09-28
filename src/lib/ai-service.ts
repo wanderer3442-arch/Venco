@@ -218,7 +218,6 @@ export interface ChatContext {
     hydration?: number;
     healthProblems?: string[];
   } | null;
-  planTier?: string;
   recentMeals?: string;
   healthGoal?: string;
   dailyCalories?: number;
@@ -242,7 +241,6 @@ export interface ChatHistoryMessage {
 export async function getChatResponse(
   userMessage: string,
   context?: ChatContext,
-  isPaidUser?: boolean,
   history?: ChatHistoryMessage[]
 ): Promise<string> {
   const p = context?.profile;
@@ -281,10 +279,6 @@ TODAY'S REAL DATA (from their app logs — use these, don't invent):
 - Planned workout today: ${context?.todayWorkout || 'no plan for today'}
 - Logged exercises today: ${context?.loggedWorkout || 'none yet'}
 - Meals logged today: ${context?.recentMeals || 'none yet'}`;
-
-  const planNote = isPaidUser
-    ? `\nPlan: ${context?.planTier || 'pro'} (paid user — full access, give thorough answers).`
-    : `\nPlan: ${context?.planTier || 'free'} (free user — keep responses concise and stay within the 2-4 sentence rule).`;
 
   const systemPrompt = `You are V, a certified AI health & fitness assistant for "Gym at Home". You provide evidence-based advice from WHO, CDC, ACSM, AHA, USDA, ISSN, and Harvard T.H. Chan School of Public Health.
 
@@ -351,7 +345,7 @@ RULES:
 8. Be encouraging and supportive tone
 9. Remember the recent conversation history — maintain context across turns
 10. When suggesting meals, respect their allergies and health conditions
-11. Greet them by name if this is the start of a conversation${profileBlock}${conditionsBlock}${allergiesBlock}${todayBlock}${planNote}`;
+11. Greet them by name if this is the start of a conversation${profileBlock}${conditionsBlock}${allergiesBlock}${todayBlock}`;
 
   const messages: Array<{ role: string; content: string }> = [
     { role: 'system', content: systemPrompt },

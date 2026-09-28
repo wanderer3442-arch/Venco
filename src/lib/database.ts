@@ -26,19 +26,6 @@ export async function initDatabase(): Promise<void> {
     }
 
     await db.execute(`
-      CREATE TABLE IF NOT EXISTS subscriptions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        userId TEXT NOT NULL,
-        plan TEXT NOT NULL DEFAULT 'free',
-        status TEXT NOT NULL DEFAULT 'active',
-        source TEXT NOT NULL DEFAULT 'local',
-        expiresAt TEXT,
-        paymentId TEXT,
-        createdAt TEXT NOT NULL DEFAULT (datetime('now'))
-      );
-    `);
-
-    await db.execute(`
       CREATE TABLE IF NOT EXISTS user_profiles (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         userId TEXT NOT NULL UNIQUE,
@@ -56,31 +43,6 @@ export async function initDatabase(): Promise<void> {
 
 export function isDbReady(): boolean {
   return useNativeDb;
-}
-
-export async function getSubscription(userId: string) {
-  if (!db) return null;
-  const result = await db.query(
-    `SELECT * FROM subscriptions WHERE userId = ? ORDER BY createdAt DESC LIMIT 1`,
-    [userId]
-  );
-  return result.values?.[0] || null;
-}
-
-export async function setSubscription(userId: string, plan: string, source: string = 'local', expiresAt: string | null = null) {
-  if (!db) return;
-  await db.run(
-    `INSERT INTO subscriptions (userId, plan, status, source, expiresAt) VALUES (?, ?, 'active', ?, ?)`,
-    [userId, plan, source, expiresAt]
-  );
-}
-
-export async function expireSubscription(userId: string) {
-  if (!db) return;
-  await db.run(
-    `UPDATE subscriptions SET status = 'expired' WHERE userId = ? AND status = 'active'`,
-    [userId]
-  );
 }
 
 export async function saveUserProfile(userId: string, data: object) {

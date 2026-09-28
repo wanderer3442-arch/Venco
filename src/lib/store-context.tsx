@@ -9,7 +9,6 @@ import {
   Habit,
   WorkoutPlan,
   BodyMetric,
-  Subscription,
   WeeklyFoodPreference,
   WaterLog,
   SleepLog,
@@ -45,9 +44,6 @@ interface StoreContextType {
 
   bodyMetrics: BodyMetric[];
   addBodyMetric: (metric: BodyMetric) => void;
-
-  subscription: Subscription;
-  setSubscription: (sub: Subscription) => void;
 
   foodPreferences: WeeklyFoodPreference;
   setFoodPreferences: (prefs: WeeklyFoodPreference) => void;
@@ -91,7 +87,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan | null>(null);
   const [bodyMetrics, setBodyMetrics] = useState<BodyMetric[]>([]);
-  const [subscription, setSubscription] = useState<Subscription>({ plan: 'free', expiresAt: null });
   const [foodPreferences, setFoodPreferences] = useState<WeeklyFoodPreference>({
     monday: { breakfast: [], lunch: [], dinner: [] },
     tuesday: { breakfast: [], lunch: [], dinner: [] },
@@ -118,7 +113,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setHabits([]);
       setWorkoutPlan(null);
       setBodyMetrics([]);
-      setSubscription({ plan: 'free', expiresAt: null });
       setFoodPreferences({
         monday: { breakfast: [], lunch: [], dinner: [] },
         tuesday: { breakfast: [], lunch: [], dinner: [] },
@@ -148,7 +142,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (parsed.habits) setHabits(parsed.habits);
         if (parsed.workoutPlan) setWorkoutPlan(parsed.workoutPlan);
         if (parsed.bodyMetrics) setBodyMetrics(parsed.bodyMetrics);
-        if (parsed.subscription) setSubscription(parsed.subscription);
         if (parsed.foodPreferences) setFoodPreferences(parsed.foodPreferences);
         if (parsed.waterLogs) setWaterLogs(parsed.waterLogs);
         if (parsed.sleepLogs) setSleepLogs(parsed.sleepLogs);
@@ -173,7 +166,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setHabits([]);
       setWorkoutPlan(null);
       setBodyMetrics([]);
-      setSubscription({ plan: 'free', expiresAt: null });
       setFoodPreferences({
         monday: { breakfast: [], lunch: [], dinner: [] },
         tuesday: { breakfast: [], lunch: [], dinner: [] },
@@ -204,7 +196,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         habits,
         workoutPlan,
         bodyMetrics,
-        subscription,
         foodPreferences,
         waterLogs,
         sleepLogs,
@@ -213,7 +204,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         isProfileSet,
       })
     );
-  }, [user?.id, profile, meals, exercises, habits, workoutPlan, bodyMetrics, subscription, foodPreferences, waterLogs, sleepLogs, badges, theme, isProfileSet]);
+  }, [user?.id, profile, meals, exercises, habits, workoutPlan, bodyMetrics, foodPreferences, waterLogs, sleepLogs, badges, theme, isProfileSet]);
 
   const recalculate = () => {
     const calc = calculateAll(profile);
@@ -430,8 +421,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setWorkoutPlan,
         bodyMetrics,
         addBodyMetric,
-        subscription,
-        setSubscription,
         foodPreferences,
         setFoodPreferences,
         waterLogs,

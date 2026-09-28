@@ -38,7 +38,6 @@ export default function ProfilePage() {
     bodyMetrics,
     getMealsForDate,
     getExercisesForDate,
-    subscription,
     badges,
     checkBadges,
     isProfileSet,
@@ -140,9 +139,6 @@ export default function ProfilePage() {
               ) : (
                 <h2 className="text-headline-md font-semibold text-on-surface">{user?.username || 'User'}</h2>
               )}
-              <span className="inline-block mt-2 px-3 py-1 bg-primary/10 text-primary text-label-md rounded-full font-bold">
-                {subscription.plan === 'free' ? 'Free' : subscription.plan === 'pro' ? 'Pro' : 'Premium'} Member
-              </span>
               <p className="text-sm text-on-surface-variant mt-2">
                 Member since {memberSince}
               </p>

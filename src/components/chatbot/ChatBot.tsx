@@ -6,7 +6,6 @@ import { getChatResponse } from '@/lib/ai-service';
 import { findResponse, getFollowUps } from '@/lib/chatbot-responses';
 import { sumMealNutrition, estimateExerciseCalories } from '@/lib/calculations';
 import { PLAN_DAY_NAMES } from '@/lib/exercise-planner';
-import { useSubscription } from '@/lib/subscription-context';
 import { useStore } from '@/lib/store-context';
 import { useAuth } from '@/lib/auth-context';
 import { useBackHandler } from '@/lib/back-handler';
@@ -69,12 +68,10 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
   const [isTyping, setIsTyping] = useState(false);
   const [dailyCount, setDailyCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { isPro, isPremium } = useSubscription();
-  const isPaid = isPro || isPremium;
   const { user } = useAuth();
   const {
     profile, meals, calculations, workoutPlan,
-    foodPreferences, subscription,
+    foodPreferences,
     getExercisesForDate, getWaterForDate, getSleepForDate,
   } = useStore();
 
@@ -127,7 +124,6 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
             healthProblems: profile.healthProblems?.length ? profile.healthProblems : undefined,
           }
         : null,
-      planTier: subscription.plan,
       recentMeals: todayMeals.map(m => m.foodName).join(', ') || undefined,
       healthGoal: profile?.goal || undefined,
       dailyCalories: nutrition.calories || undefined,
@@ -143,7 +139,7 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
       allergies: foodPreferences.allergies?.length ? foodPreferences.allergies : undefined,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, meals, calculations, workoutPlan, foodPreferences, subscription, user?.id]);
+  }, [profile, meals, calculations, workoutPlan, foodPreferences, user?.id]);
 
   useEffect(() => {
     setDailyCount(getDailyCount());
@@ -164,13 +160,13 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
     if (!sendText) return;
 
     const currentCount = getDailyCount();
-    if (!isPaid && currentCount >= FREE_DAILY_LIMIT) {
+    if (currentCount >= FREE_DAILY_LIMIT) {
       const limitMessage: Message = {
         id: messages.length + 1,
         role: 'assistant',
-        content: `You've reached the daily limit of ${FREE_DAILY_LIMIT} messages for free users. Upgrade to Pro for unlimited messages, or try again tomorrow.`,
+        content: `You've reached today's limit of ${FREE_DAILY_LIMIT} messages. Try again tomorrow!`,
         timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
-        followUps: ['Upgrade to Pro'],
+        followUps: ['Workout tips', 'Health tips'],
       };
       setMessages(prev => [...prev, limitMessage]);
       return;
@@ -197,11 +193,11 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
       let response: string;
       let followUps: string[] = [];
 
-      if (isPaid && hasGeminiKey()) {
+      if (hasGeminiKey()) {
         const history: ChatHistoryMessage[] = messages
           .slice(-6)
           .map(m => ({ role: m.role, content: m.content }));
-        response = await getChatResponse(sendText, chatContext, isPaid, history);
+        response = await getChatResponse(sendText, chatContext, history);
         followUps = getFollowUps(sendText);
       } else {
         response = findResponse(sendText);
@@ -254,7 +250,7 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
             <div>
               <h3 className="text-sm font-semibold text-on-surface">V</h3>
               <p className="text-[10px] text-on-surface-variant">
-                {isPaid && hasGeminiKey() ? 'Gemini AI • Online' : `Free • ${dailyCount}/${FREE_DAILY_LIMIT} messages today`}
+                {hasGeminiKey() ? 'Gemini AI • Online' : 'Offline'} · {dailyCount}/{FREE_DAILY_LIMIT} today
               </p>
             </div>
           </div>
@@ -404,7 +400,7 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
                 <div>
                   <h3 className="text-sm font-semibold text-on-primary">V</h3>
                   <p className="text-[10px] text-on-primary/80">
-                    {isPaid && hasGeminiKey() ? 'Gemini AI • Online' : `Free • ${dailyCount}/${FREE_DAILY_LIMIT} messages`}
+                    {hasGeminiKey() ? 'Gemini AI • Online' : 'Offline'} · {dailyCount}/{FREE_DAILY_LIMIT} today
                   </p>
                 </div>
               </div>

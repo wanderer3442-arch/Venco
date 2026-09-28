@@ -11,7 +11,6 @@ import {
   TrendingUp,
   Dumbbell,
   Utensils,
-  Lock,
   Heart,
   Droplets,
   Flame,
@@ -24,8 +23,6 @@ import { useAuth } from '@/lib/auth-context';
 import { useStore } from '@/lib/store-context';
 import { allFoods } from '@/lib/food-database';
 import jsPDF from 'jspdf';
-import { useSubscription } from '@/lib/subscription-context';
-import Link from 'next/link';
 
 const timePeriods = ['Last 7 Days', 'Last 30 Days', 'Last 3 Months', 'Year to Date'];
 
@@ -50,7 +47,6 @@ const dayLabels: Record<string, string> = {
 export default function ExportReportsPage() {
   const { user } = useAuth();
   const { profile, meals, exercises: exerciseLogs, bodyMetrics, calculations, workoutPlan, habits, sleepLogs } = useStore();
-  const { hasFeature } = useSubscription();
   const [timePeriod, setTimePeriod] = useState('Last 30 Days');
   const [showDropdown, setShowDropdown] = useState(false);
   const [checkedSections, setCheckedSections] = useState<Record<string, boolean>>({
@@ -66,7 +62,6 @@ export default function ExportReportsPage() {
   const [includeNotes, setIncludeNotes] = useState(true);
   const [reportId, setReportId] = useState('');
   const [reportDate, setReportDate] = useState('');
-  const hasDownloadAccess = hasFeature('download_reports');
 
   useEffect(() => {
     setReportId(Date.now().toString(36).toUpperCase().slice(-6));
@@ -587,40 +582,6 @@ export default function ExportReportsPage() {
       setGenerating(false);
     }, 600);
   };
-
-  if (!hasDownloadAccess) {
-    return (
-      <DashboardLayout title="Download Hub" subtitle="Export your personalized fitness and nutrition protocol">
-        <div className="max-w-7xl mx-auto pb-8">
-          <div className="bg-surface rounded-2xl border border-outline-variant p-8 text-center">
-            <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Lock className="w-8 h-8 text-primary" />
-            </div>
-            <h2 className="text-headline-lg font-bold text-on-surface mb-2">
-              Download Reports Feature
-            </h2>
-            <p className="text-body-lg text-on-surface-variant mb-6 max-w-md mx-auto">
-              Export detailed health reports, meal plans, and exercise protocols with a Pro subscription.
-            </p>
-            <div className="flex items-center justify-center gap-4">
-              <Link
-                href="/choose-plan"
-                className="px-6 py-3 bg-primary text-on-primary rounded-xl font-medium hover:bg-primary/90 transition-colors"
-              >
-                Upgrade to Pro
-              </Link>
-              <Link
-                href="/dashboard"
-                className="px-6 py-3 bg-surface-container text-on-surface rounded-xl font-medium hover:bg-surface-container-high transition-colors"
-              >
-                Back to Dashboard
-              </Link>
-            </div>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
 
   return (
     <DashboardLayout title="Download Hub" subtitle="Export your personalized fitness and nutrition protocol">

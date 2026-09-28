@@ -62,10 +62,7 @@ export default function ExercisePlanPage() {
   const [addWeight, setAddWeight] = useState('');
   const [editKey, setEditKey] = useState<string | null>(null);
   const [editVal, setEditVal] = useState('');
-  const [expandedDay, setExpandedDay] = useState<string>(() => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return days[new Date().getDay()];
-  });
+  const [selectedDay, setSelectedDay] = useState<string>('');
   const [daysPerWeek, setDaysPerWeek] = useState(3);
   const [showSplitModal, setShowSplitModal] = useState(false);
   const [draftSplit, setDraftSplit] = useState<string[][]>(() => getDefaultSplit(3));
@@ -91,6 +88,15 @@ export default function ExercisePlanPage() {
       exercises,
     }));
   }, [plan]);
+
+  const todayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date().getDay()];
+
+  const selectedDayName = useMemo(() => {
+    if (selectedDay && planDays.some((d) => d.day === selectedDay)) return selectedDay;
+    return planDays.find((d) => d.day === todayName)?.day ?? planDays[0]?.day ?? '';
+  }, [planDays, selectedDay, todayName]);
+
+  const selectedPlan = planDays.find((d) => d.day === selectedDayName);
 
   const openSplitEditor = () => {
     setDraftSplit(plan?.split && plan.split.length > 0 ? plan.split.map((d) => [...d]) : getDefaultSplit(daysPerWeek));
@@ -182,7 +188,7 @@ export default function ExercisePlanPage() {
     });
     setWorkoutPlan(newPlan);
     setShowSplitModal(false);
-    setExpandedDay('Monday');
+    setSelectedDay('');
   };
 
   const addExerciseToDay = (day: string, exerciseId: string) => {
@@ -450,155 +456,188 @@ export default function ExercisePlanPage() {
           <div className="grid grid-cols-12 gap-6">
             {/* Main Schedule */}
             <div className="col-span-12 lg:col-span-8 flex flex-col gap-4">
-              {planDays.map((dayPlan) => {
-                const isExpanded = expandedDay === dayPlan.day;
-                return (
-                  <div
-                    key={dayPlan.day}
-                    className={`bg-surface rounded-xl border border-outline-variant shadow-[0_4px_15px_-3px_rgba(15,23,42,0.04)] overflow-hidden transition-all ${
-                      isExpanded ? 'p-4' : 'p-0'
-                    }`}
-                  >
-                    {/* Day Header - Always visible */}
-                    <button
-                      onClick={() => setExpandedDay(isExpanded ? '' : dayPlan.day)}
-                      className={`w-full flex justify-between items-center transition-colors ${
-                        isExpanded ? 'pb-3 mb-4 border-b border-outline-variant/50' : 'p-4 hover:bg-surface-container-low'
-                      }`}
-                    >
-                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 min-w-0">
-                        <div className={`w-3 h-3 rounded-full shrink-0 ${isExpanded ? 'bg-primary' : 'bg-surface-container-high'}`} />
-                        <h3 className="text-lg sm:text-headline-md font-semibold text-on-surface">{dayPlan.day}</h3>
-                        <span className="bg-tertiary-container/20 text-tertiary-container px-2 py-0.5 rounded-full text-label-md text-xs">
-                          {dayPlan.label}
+              {/* Day selector */}
+              <div className="bg-surface rounded-xl border border-outline-variant shadow-[0_4px_15px_-3px_rgba(15,23,42,0.04)] p-3">
+                <div className="flex items-center justify-between px-1 mb-2">
+                  <span className="text-label-md text-on-surface-variant">Training days</span>
+                  {planDays.some((d) => d.day === todayName) && (
+                    <span className="text-label-md font-semibold text-primary flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />
+                      Today
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {planDays.map((d) => {
+                    const active = d.day === selectedDayName;
+                    return (
+                      <button
+                        key={d.day}
+                        onClick={() => setSelectedDay(d.day)}
+                        className={`shrink-0 min-h-[40px] px-3 py-2 rounded-lg text-left transition-all border ${
+                          active
+                            ? 'bg-primary text-on-primary border-primary shadow-sm'
+                            : 'bg-surface-container-low text-on-surface border-outline-variant/50 hover:bg-surface-container'
+                        }`}
+                      >
+                        <span className="flex items-center gap-1.5 text-label-md font-semibold leading-tight">
+                          {d.day}
+                          {d.day === todayName && !active && <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />}
                         </span>
-                        <span className="text-xs text-on-surface-variant">
-                          {dayPlan.exercises.length} exercises
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0 ml-2">
-                        {isExpanded && (
-                          <span
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (!plan) return;
-                              setWorkoutPlan({
-                                ...plan,
-                                exercises: plan.exercises.filter((e) => e.day !== dayPlan.day),
-                              });
-                            }}
-                            className="text-on-surface-variant hover:text-error transition-colors p-1"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </span>
-                        )}
-                        <svg
-                          className={`w-5 h-5 text-on-surface-variant transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
+                        <span
+                          className={`block text-[10px] leading-tight truncate max-w-[100px] ${
+                            active ? 'text-on-primary/80' : 'text-on-surface-variant'
+                          }`}
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </div>
-                    </button>
+                          {d.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
-                    {/* Exercise List - Only when expanded */}
-                    {isExpanded && (
-                      <div className="flex flex-col gap-2">
-                        {dayPlan.exercises.map((exercise) => {
-                          const dbEx = exercises.find((e) => e.id === exercise.exerciseId);
-                          const isDone = todayLogs.some((e) => e.exerciseId === exercise.exerciseId);
-                          const rowKey = `${dayPlan.day}:${exercise.exerciseId}`;
-                          const editingField = editKey?.startsWith(rowKey) ? editKey.slice(rowKey.length + 1) : null;
-                          const renderStat = (field: 'sets' | 'reps' | 'weight', value: number | undefined, label: string) => {
-                            const key = `${rowKey}:${field}`;
-                            if (editKey === key) {
-                              return (
-                                <div className="text-center">
-                                  <input
-                                    type="number"
-                                    step={field === 'weight' ? 0.5 : 1}
-                                    min={field === 'weight' ? 0 : 1}
-                                    value={editVal}
-                                    onChange={(e) => setEditVal(e.target.value)}
-                                    onBlur={() => commitEdit(dayPlan.day, exercise.exerciseId, field)}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') commitEdit(dayPlan.day, exercise.exerciseId, field);
-                                      if (e.key === 'Escape') setEditKey(null);
-                                    }}
-                                    autoFocus
-                                    className="w-14 h-8 text-center text-lg font-bold text-on-surface bg-surface-container rounded border border-primary outline-none"
-                                  />
-                                  <div className="text-label-md text-on-surface-variant text-xs">{label}</div>
-                                </div>
-                              );
-                            }
+              {/* Selected day */}
+              {selectedPlan && (
+                <div className="bg-surface rounded-xl border border-outline-variant shadow-[0_4px_15px_-3px_rgba(15,23,42,0.04)] p-4">
+                  <div className="flex justify-between items-center pb-3 mb-4 border-b border-outline-variant/50">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 min-w-0">
+                      <div className="w-3 h-3 rounded-full shrink-0 bg-primary" />
+                      <h3 className="text-lg sm:text-headline-md font-semibold text-on-surface">
+                        {selectedPlan.day}
+                      </h3>
+                      {selectedPlan.day === todayName && (
+                        <span className="bg-primary text-on-primary px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                          Today
+                        </span>
+                      )}
+                      <span className="bg-tertiary-container/20 text-tertiary-container px-2 py-0.5 rounded-full text-label-md text-xs">
+                        {selectedPlan.label}
+                      </span>
+                      <span className="text-xs text-on-surface-variant">
+                        {selectedPlan.exercises.length} exercises
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (!plan) return;
+                        setWorkoutPlan({
+                          ...plan,
+                          exercises: plan.exercises.filter((e) => e.day !== selectedPlan.day),
+                        });
+                      }}
+                      className="text-on-surface-variant hover:text-error transition-colors p-1 shrink-0"
+                      title="Clear this day"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {selectedPlan.exercises.length === 0 ? (
+                    <div className="py-8 text-center">
+                      <p className="text-body-md text-on-surface-variant mb-4">No exercises on this day yet.</p>
+                      <button
+                        onClick={() => setShowAddModal(true)}
+                        className="px-4 py-2 rounded-lg bg-secondary text-on-secondary text-label-md font-medium hover:bg-secondary/90 transition-colors shadow-sm inline-flex items-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add Exercise
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      {selectedPlan.exercises.map((exercise) => {
+                        const dbEx = exercises.find((e) => e.id === exercise.exerciseId);
+                        const isDone = todayLogs.some((e) => e.exerciseId === exercise.exerciseId);
+                        const rowKey = `${selectedPlan.day}:${exercise.exerciseId}`;
+                        const editingField = editKey?.startsWith(rowKey) ? editKey.slice(rowKey.length + 1) : null;
+                        const renderStat = (field: 'sets' | 'reps' | 'weight', value: number | undefined, label: string) => {
+                          const key = `${rowKey}:${field}`;
+                          if (editKey === key) {
                             return (
-                              <button
-                                onClick={() => startEdit(key, value)}
-                                className="text-center min-w-[44px] rounded hover:bg-surface-container px-1"
-                                title={`Edit ${label.toLowerCase()}`}
-                              >
-                                <div className="text-stat-value text-xl sm:text-2xl text-on-surface font-bold">
-                                  {field === 'weight' ? (value !== undefined ? value : 'BW') : value}
-                                </div>
-                                <div className="text-label-md text-on-surface-variant text-xs">
-                                  {field === 'weight' ? 'kg' : label}
-                                </div>
-                              </button>
-                            );
-                          };
-                          return (
-                            <div
-                              key={exercise.exerciseId}
-                              className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg hover:bg-surface-container-lowest border transition-all gap-3 group/item ${
-                                isDone ? 'border-primary/40 bg-primary/5' : 'border-transparent hover:border-outline-variant'
-                              }`}
-                            >
-                              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                                <button
-                                  onClick={() => toggleDone(exercise)}
-                                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shrink-0 transition-all ${
-                                    isDone
-                                      ? 'bg-primary text-on-primary'
-                                      : 'bg-surface-container text-outline hover:bg-primary/10 hover:text-primary'
-                                  }`}
-                                  title={isDone ? 'Logged today — tap to undo' : 'Mark as done'}
-                                >
-                                  <Check className="w-4 h-4 sm:w-5 sm:h-5" />
-                                </button>
-                                <div className="min-w-0">
-                                  <h4 className={`text-body-md font-semibold truncate ${isDone ? 'text-on-surface' : 'text-on-surface'}`}>
-                                    {exercise.exerciseName}
-                                  </h4>
-                                  <p className="text-xs text-on-surface-variant truncate">
-                                    {dbEx ? `${muscleLabels[dbEx.muscleGroup]} · ${dbEx.category}` : exercise.day}
-                                    {isDone && <span className="text-primary font-semibold"> · Done today</span>}
-                                  </p>
-                                </div>
+                              <div className="text-center">
+                                <input
+                                  type="number"
+                                  step={field === 'weight' ? 0.5 : 1}
+                                  min={field === 'weight' ? 0 : 1}
+                                  value={editVal}
+                                  onChange={(e) => setEditVal(e.target.value)}
+                                  onBlur={() => commitEdit(selectedPlan.day, exercise.exerciseId, field)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') commitEdit(selectedPlan.day, exercise.exerciseId, field);
+                                    if (e.key === 'Escape') setEditKey(null);
+                                  }}
+                                  autoFocus
+                                  className="w-14 h-8 text-center text-lg font-bold text-on-surface bg-surface-container rounded border border-primary outline-none"
+                                />
+                                <div className="text-label-md text-on-surface-variant text-xs">{label}</div>
                               </div>
-                              <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 pt-2 sm:pt-0 border-t sm:border-t-0 border-outline-variant/30">
-                                {renderStat('sets', exercise.sets, 'Sets')}
-                                {renderStat('reps', exercise.reps, 'Reps')}
-                                {renderStat('weight', exercise.weight, 'Weight')}
-                                <div className="flex gap-1 opacity-80 sm:opacity-60 group-hover/item:opacity-100 transition-opacity">
-                                  <button
-                                    onClick={() => removeExerciseFromDay(dayPlan.day, exercise.exerciseId)}
-                                    className="p-1 text-on-surface-variant hover:text-error"
-                                  >
-                                    <Trash2 className="w-5 h-5" />
-                                  </button>
-                                </div>
+                            );
+                          }
+                          return (
+                            <button
+                              onClick={() => startEdit(key, value)}
+                              className="text-center min-w-[44px] rounded hover:bg-surface-container px-1"
+                              title={`Edit ${label.toLowerCase()}`}
+                            >
+                              <div className="text-stat-value text-xl sm:text-2xl text-on-surface font-bold">
+                                {field === 'weight' ? (value !== undefined ? value : 'BW') : value}
+                              </div>
+                              <div className="text-label-md text-on-surface-variant text-xs">
+                                {field === 'weight' ? 'kg' : label}
+                              </div>
+                            </button>
+                          );
+                        };
+                        return (
+                          <div
+                            key={exercise.exerciseId}
+                            className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg hover:bg-surface-container-lowest border transition-all gap-3 group/item ${
+                              isDone ? 'border-primary/40 bg-primary/5' : 'border-transparent hover:border-outline-variant'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                              <button
+                                onClick={() => toggleDone(exercise)}
+                                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shrink-0 transition-all ${
+                                  isDone
+                                    ? 'bg-primary text-on-primary'
+                                    : 'bg-surface-container text-outline hover:bg-primary/10 hover:text-primary'
+                                }`}
+                                title={isDone ? 'Logged today — tap to undo' : 'Mark as done'}
+                              >
+                                <Check className="w-4 h-4 sm:w-5 sm:h-5" />
+                              </button>
+                              <div className="min-w-0">
+                                <h4 className="text-body-md font-semibold truncate text-on-surface">
+                                  {exercise.exerciseName}
+                                </h4>
+                                <p className="text-xs text-on-surface-variant truncate">
+                                  {dbEx ? `${muscleLabels[dbEx.muscleGroup]} · ${dbEx.category}` : exercise.day}
+                                  {isDone && <span className="text-primary font-semibold"> · Done today</span>}
+                                </p>
                               </div>
                             </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                            <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 pt-2 sm:pt-0 border-t sm:border-t-0 border-outline-variant/30">
+                              {renderStat('sets', exercise.sets, 'Sets')}
+                              {renderStat('reps', exercise.reps, 'Reps')}
+                              {renderStat('weight', exercise.weight, 'Weight')}
+                              <div className="flex gap-1 opacity-80 sm:opacity-60 group-hover/item:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => removeExerciseFromDay(selectedPlan.day, exercise.exerciseId)}
+                                  className="p-1 text-on-surface-variant hover:text-error"
+                                >
+                                  <Trash2 className="w-5 h-5" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Right Sidebar */}
@@ -670,8 +709,8 @@ export default function ExercisePlanPage() {
                     <button
                       key={ex.id}
                       onClick={() => {
-                        if (!plan || planDays.length === 0) return;
-                        addExerciseToDay(planDays[0].day, ex.id);
+                        if (!plan || !selectedDayName) return;
+                        addExerciseToDay(selectedDayName, ex.id);
                       }}
                       className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-surface-container-low transition-colors text-left"
                     >
@@ -810,7 +849,7 @@ export default function ExercisePlanPage() {
                   </div>
                   <div>
                     <h3 className="text-headline-md font-semibold text-on-surface">Add Exercise</h3>
-                    <p className="text-label-md text-on-surface-variant">Adds to {planDays[0]?.day || 'first day'}</p>
+                    <p className="text-label-md text-on-surface-variant">Adds to {selectedDayName || 'selected day'}</p>
                   </div>
                 </div>
                 <button onClick={() => setShowAddModal(false)} className="p-2 rounded-lg hover:bg-surface-container transition-colors text-on-surface-variant">
@@ -847,8 +886,8 @@ export default function ExercisePlanPage() {
                     <button
                       key={ex.id}
                       onClick={() => {
-                        if (planDays.length > 0) {
-                          addExerciseToDay(planDays[0].day, ex.id);
+                        if (selectedDayName) {
+                          addExerciseToDay(selectedDayName, ex.id);
                         }
                       }}
                       className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-surface-container-low transition-colors text-left border border-outline-variant/30"

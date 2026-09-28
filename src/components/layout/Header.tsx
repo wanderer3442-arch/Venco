@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronDown, User, Settings, LogOut, Sun, Moon, Menu } from 'lucide-react';
+import { ChevronDown, User, LogOut, Sun, Moon, Menu } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
@@ -93,13 +93,6 @@ export default function Header({ title, subtitle }: HeaderProps) {
                 >
                   <User className="w-4 h-4 text-on-surface-variant" />
                   Profile
-                </button>
-                <button
-                  onClick={() => { setShowProfile(false); router.push('/choose-plan'); }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-surface-container-low text-on-surface text-sm transition-colors"
-                >
-                  <Settings className="w-4 h-4 text-on-surface-variant" />
-                  Subscription
                 </button>
                 <div className="border-t border-outline-variant/30 my-1" />
                 <button

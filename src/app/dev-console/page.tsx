@@ -17,9 +17,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 
-const DEV_PASSPHRASE = 'venco-dev-2026';
-const UNLOCK_KEY = 'gymathome_dev_unlock';
-
 interface UserRow {
   id: string;
   username: string;
@@ -65,10 +62,8 @@ function todayKey(): string {
 }
 
 export default function DevConsolePage() {
-  const { user, promoteToAdmin } = useAuth();
+  const { user } = useAuth();
   const [access, setAccess] = useState<'loading' | 'granted' | 'locked'>('loading');
-  const [passphrase, setPassphrase] = useState('');
-  const [passError, setPassError] = useState(false);
   const [users, setUsers] = useState<UserRow[]>([]);
   const [checks, setChecks] = useState<Check[]>([]);
   const [storage, setStorage] = useState<{ key: string; bytes: number }[]>([]);
@@ -78,7 +73,6 @@ export default function DevConsolePage() {
     role: string;
     chatToday: number;
     gemini: boolean;
-    formspree: boolean;
     theme: string;
     sessionExpires: string | null;
     sessionValid: boolean;
@@ -87,7 +81,6 @@ export default function DevConsolePage() {
     role: '—',
     chatToday: 0,
     gemini: false,
-    formspree: false,
     theme: 'light',
     sessionExpires: null,
     sessionValid: false,
@@ -125,12 +118,6 @@ export default function DevConsolePage() {
 
     const chatKey = `gymathome_chat_count_${todayKey()}`;
     const chatToday = Number(localStorage.getItem(chatKey) || '0');
-
-    foundChecks.push({
-      label: 'Feedback form (Formspree)',
-      status: 'warn',
-      detail: 'endpoint still YOUR_FORM_ID — reports will fail until configured',
-    });
 
     const usersRaw = localStorage.getItem('gymathome_users');
     const userAccounts = parseJSON<
@@ -224,7 +211,6 @@ export default function DevConsolePage() {
       role: sessionRole,
       chatToday,
       gemini,
-      formspree: false,
       theme,
       sessionExpires,
       sessionValid,
@@ -233,27 +219,14 @@ export default function DevConsolePage() {
 
   useEffect(() => {
     const isDev = process.env.NODE_ENV === 'development';
-    const unlocked = localStorage.getItem(UNLOCK_KEY) === '1';
     const isAdmin = user?.role === 'admin';
-    if (isDev || unlocked || isAdmin) {
+    if (isDev || isAdmin) {
       setAccess('granted');
       load();
     } else {
       setAccess('locked');
     }
   }, [load, user]);
-
-  const handleUnlock = () => {
-    if (passphrase.trim() === DEV_PASSPHRASE) {
-      localStorage.setItem(UNLOCK_KEY, '1');
-      if (user) promoteToAdmin();
-      setPassError(false);
-      setAccess('granted');
-      load();
-    } else {
-      setPassError(true);
-    }
-  };
 
   if (access === 'loading') {
     return (
@@ -272,29 +245,8 @@ export default function DevConsolePage() {
           </div>
           <h1 className="text-headline-md font-bold text-on-surface mb-1">Developer Access</h1>
           <p className="text-sm text-on-surface-variant mb-5">
-            Enter the developer passphrase to open the console.
+            The developer console is not available in this build.
           </p>
-          <input
-            type="password"
-            value={passphrase}
-            onChange={(e) => {
-              setPassphrase(e.target.value);
-              setPassError(false);
-            }}
-            onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
-            placeholder="Passphrase"
-            className={`w-full h-11 px-4 rounded-xl border bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 ${
-              passError ? 'border-error' : 'border-outline-variant focus:border-primary'
-            }`}
-          />
-          {passError && <p className="text-xs text-error mt-2">Wrong passphrase</p>}
-          <button
-            onClick={handleUnlock}
-            className="w-full mt-4 py-3 bg-primary text-on-primary rounded-xl text-sm font-bold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
-          >
-            <Terminal className="w-4 h-4" />
-            Unlock Console
-          </button>
           <Link href="/login" className="block mt-4 text-xs text-on-surface-variant hover:text-on-surface">
             Back to app
           </Link>
@@ -544,7 +496,7 @@ export default function DevConsolePage() {
 
         <p className="text-xs text-on-surface-variant/60 text-center pb-6">
           Dev Console · shows data for this browser/device only · not linked from sidebar for regular users ·
-          dev builds open automatically, production builds need passphrase or admin account
+          dev builds open automatically, production builds require an admin account
         </p>
       </div>
     </div>

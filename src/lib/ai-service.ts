@@ -7,6 +7,7 @@ const GEMINI_MODEL = 'gemini-3.6-flash';
 
 // Cloudflare Worker proxy — key lives server-side, never in the app.
 const AI_PROXY_URL = (process.env.NEXT_PUBLIC_AI_PROXY_URL || '').trim().replace(/\/+$/, '');
+const APP_CLIENT_SECRET = (process.env.NEXT_PUBLIC_APP_CLIENT_SECRET || '').trim();
 
 function getGeminiKey(): string | null {
   if (typeof window !== 'undefined') {
@@ -45,6 +46,7 @@ async function callGemini(
 
   if (AI_PROXY_URL) {
     url = AI_PROXY_URL;
+    if (APP_CLIENT_SECRET) headers['X-App-Client'] = APP_CLIENT_SECRET;
   } else {
     const key = getGeminiKey();
     if (!key) throw new Error('Gemini API key not configured.');
@@ -59,7 +61,9 @@ async function callGemini(
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
-    const message = err?.error?.message || err?.message || `Gemini API error: ${response.status}`;
+    const raw =
+      typeof err?.error === 'string' ? err.error : err?.error?.message || err?.message;
+    const message = raw || `Gemini API error: ${response.status}`;
     if (response.status === 429) {
       throw new Error('V is resting right now. Try again in a minute.');
     }

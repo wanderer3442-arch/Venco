@@ -1,5 +1,6 @@
 export interface Env {
   GEMINI_API_KEY: string;
+  APP_CLIENT_SECRET: string;
 }
 
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
@@ -10,31 +11,97 @@ const RPM_LIMIT = 12;
 let windowStart = 0;
 let windowCount = 0;
 
-const CORS_HEADERS: Record<string, string> = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
+const MAX_BODY_BYTES = 128 * 1024;
+const MAX_MESSAGES = 60;
+const MAX_CONTENT_CHARS = 32000;
+const MAX_IMAGE_CHARS = 2_000_000;
+const ALLOWED_ROLES = new Set(['system', 'user', 'assistant']);
 
-function json(body: unknown, status: number): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
-  });
+// Origins allowed to call the proxy (Capacitor WebView + local dev).
+const ALLOWED_ORIGINS = new Set([
+  'https://localhost',
+  'http://localhost',
+  'capacitor://localhost',
+  'http://localhost:3000',
+  'https://localhost:3000',
+]);
+
+function corsHeaders(origin: string | null): Record<string, string> {
+  return {
+    'Access-Control-Allow-Origin': origin || '*',
+    'Access-Control-Allow-Headers': 'Content-Type, X-App-Client',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin',
+  };
+}
+
+interface ChatMessage {
+  role: string;
+  content: unknown;
+}
+
+function sanitizeMessages(raw: unknown): ChatMessage[] | null {
+  if (!Array.isArray(raw) || raw.length === 0) return null;
+  const out: ChatMessage[] = [];
+  for (const item of raw.slice(0, MAX_MESSAGES)) {
+    if (!item || typeof item !== 'object') continue;
+    const m = item as { role?: unknown; content?: unknown };
+    const role = typeof m.role === 'string' && ALLOWED_ROLES.has(m.role) ? m.role : 'user';
+    let content: unknown;
+    if (typeof m.content === 'string') {
+      content = m.content.slice(0, MAX_CONTENT_CHARS);
+    } else if (Array.isArray(m.content)) {
+      const parts: unknown[] = [];
+      for (const part of m.content) {
+        if (!part || typeof part !== 'object') continue;
+        const p = part as { type?: unknown; text?: unknown; image_url?: { url?: unknown } };
+        if (p.type === 'text') {
+          parts.push({ type: 'text', text: String(p.text ?? '').slice(0, MAX_CONTENT_CHARS) });
+        } else if (p.type === 'image_url') {
+          const url = String(p.image_url?.url ?? '');
+          if (url) parts.push({ type: 'image_url', image_url: { url: url.slice(0, MAX_IMAGE_CHARS) } });
+        }
+      }
+      if (parts.length === 0) continue;
+      content = parts;
+    } else {
+      continue;
+    }
+    out.push({ role, content });
+  }
+  return out.length > 0 ? out : null;
 }
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    const origin = request.headers.get('Origin');
+    const cors = corsHeaders(origin);
+
+    const json = (body: unknown, status: number): Response =>
+      new Response(JSON.stringify(body), {
+        status,
+        headers: { 'Content-Type': 'application/json', ...cors },
+      });
+
     if (request.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: CORS_HEADERS });
+      return new Response(null, { status: 204, headers: cors });
+    }
+
+    if (origin && !ALLOWED_ORIGINS.has(origin)) {
+      return json({ error: 'Forbidden' }, 403);
     }
 
     if (request.method !== 'POST') {
       return json({ error: 'Method not allowed' }, 405);
     }
 
+    const client = request.headers.get('X-App-Client');
+    if (!env.APP_CLIENT_SECRET || !client || client !== env.APP_CLIENT_SECRET) {
+      return json({ error: 'Forbidden' }, 403);
+    }
+
     if (!env.GEMINI_API_KEY) {
-      return json({ error: 'Server misconfigured: GEMINI_API_KEY missing' }, 500);
+      return json({ error: 'Server misconfigured' }, 500);
     }
 
     const now = Date.now();
@@ -47,35 +114,75 @@ export default {
       return json({ error: 'V is resting right now. Try again in a minute.' }, 429);
     }
 
-    const body = (await request.json().catch(() => null)) as {
-      model?: string;
-      messages?: unknown;
-      max_tokens?: number;
-      temperature?: number;
-    } | null;
+    const contentLength = Number(request.headers.get('content-length') || 0);
+    if (contentLength > MAX_BODY_BYTES) {
+      return json({ error: 'Request too large' }, 413);
+    }
 
-    if (!body || !Array.isArray(body.messages) || body.messages.length === 0) {
+    const text = await request.text();
+    if (text.length > MAX_BODY_BYTES) {
+      return json({ error: 'Request too large' }, 413);
+    }
+
+    let body: {
+      messages?: unknown;
+      max_tokens?: unknown;
+      temperature?: unknown;
+    } | null = null;
+    try {
+      body = JSON.parse(text);
+    } catch {
+      body = null;
+    }
+
+    const messages = body ? sanitizeMessages(body.messages) : null;
+    if (!messages) {
       return json({ error: 'Invalid request: messages required' }, 400);
     }
 
-    const upstream = await fetch(GEMINI_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${env.GEMINI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: DEFAULT_MODEL,
-        messages: body.messages,
-        max_tokens: typeof body.max_tokens === 'number' ? Math.min(Math.max(body.max_tokens, 1), 2048) : 768,
-        temperature: typeof body.temperature === 'number' ? body.temperature : 0.7,
-      }),
-    });
+    const maxTokens =
+      typeof body!.max_tokens === 'number'
+        ? Math.min(Math.max(Math.floor(body!.max_tokens), 1), 2048)
+        : 768;
+    const temperature =
+      typeof body!.temperature === 'number'
+        ? Math.min(Math.max(body!.temperature, 0), 2)
+        : 0.7;
+
+    let upstream: Response;
+    try {
+      upstream = await fetch(GEMINI_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${env.GEMINI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: DEFAULT_MODEL,
+          messages,
+          max_tokens: maxTokens,
+          temperature,
+        }),
+      });
+    } catch {
+      return json({ error: 'AI service unreachable. Try again shortly.' }, 502);
+    }
+
+    // Never relay upstream error bodies (they can leak key/config details).
+    if (!upstream.ok) {
+      if (upstream.status === 429) {
+        return json({ error: 'V is resting right now. Try again in a minute.' }, 429);
+      }
+      if (upstream.status === 400) {
+        return json({ error: 'AI rejected the request.' }, 400);
+      }
+      return json({ error: 'AI service unavailable. Try again shortly.' }, 502);
+    }
 
     const data = await upstream.text();
     return new Response(data, {
-      status: upstream.status,
-      headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
+      status: 200,
+      headers: { 'Content-Type': 'application/json', ...cors },
     });
   },
 } satisfies {

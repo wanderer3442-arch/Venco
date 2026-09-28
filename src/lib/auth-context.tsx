@@ -46,7 +46,6 @@ interface AuthContextType extends AuthState {
   login: (emailOrUsername: string, password: string) => Promise<{ success: boolean; error?: string; lockoutSeconds?: number }>;
   logout: () => void;
   updateUsername: (username: string) => void;
-  promoteToAdmin: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -329,23 +328,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     persistSession(updatedUser);
   };
 
-  const promoteToAdmin = () => {
-    if (!authState.user) return;
-
-    const users = getUsers();
-    const userIndex = users.findIndex(u => u.id === authState.user!.id);
-    if (userIndex !== -1) {
-      users[userIndex].role = 'admin';
-      saveUsers(users);
-    }
-
-    const updatedUser = { ...authState.user, role: 'admin' as const };
-    setAuthState({ user: updatedUser, isAuthenticated: true });
-    persistSession(updatedUser);
-  };
-
   return (
-    <AuthContext.Provider value={{ ...authState, signup, login, logout, updateUsername, promoteToAdmin }}>
+    <AuthContext.Provider value={{ ...authState, signup, login, logout, updateUsername }}>
       {children}
     </AuthContext.Provider>
   );

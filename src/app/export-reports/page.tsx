@@ -22,6 +22,7 @@ import {
 import { useAuth } from '@/lib/auth-context';
 import { useStore } from '@/lib/store-context';
 import { allFoods } from '@/lib/food-database';
+import { saveOrShareFile, textToBase64 } from '@/lib/file-export';
 import jsPDF from 'jspdf';
 
 const timePeriods = ['Last 7 Days', 'Last 30 Days', 'Last 3 Months', 'Year to Date'];
@@ -58,6 +59,7 @@ export default function ExportReportsPage() {
   });
   const [format, setFormat] = useState<'pdf' | 'csv'>('pdf');
   const [generating, setGenerating] = useState(false);
+  const [exportError, setExportError] = useState('');
   const [includeMacros, setIncludeMacros] = useState(true);
   const [includeNotes, setIncludeNotes] = useState(true);
   const [reportId, setReportId] = useState('');
@@ -139,7 +141,7 @@ export default function ExportReportsPage() {
     }));
   })() : [];
 
-  const generatePDF = () => {
+  const generatePDF = async () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -487,10 +489,12 @@ export default function ExportReportsPage() {
     doc.text('Confidential - For personal use only', pageWidth / 2, footerY, { align: 'center' });
     doc.text('Page 1 of 1', pageWidth - 15, footerY, { align: 'right' });
 
-    doc.save(`gym-at-home-plan-${user?.username || 'user'}-${new Date().toISOString().split('T')[0]}.pdf`);
+    const filename = `gym-at-home-plan-${user?.username || 'user'}-${new Date().toISOString().split('T')[0]}.pdf`;
+    const dataUri = doc.output('datauristring');
+    await saveOrShareFile(filename, 'application/pdf', dataUri.substring(dataUri.indexOf(',') + 1));
   };
 
-  const generateCSV = () => {
+  const generateCSV = async () => {
     const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
     const toRow = (arr: string[]) => arr.map(escape).join(',');
     const rows: string[] = [];
@@ -560,27 +564,24 @@ export default function ExportReportsPage() {
     }
 
     const csv = rows.join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `gym-at-home-plan-${user?.username || 'user'}-${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const filename = `gym-at-home-plan-${user?.username || 'user'}-${new Date().toISOString().split('T')[0]}.csv`;
+    await saveOrShareFile(filename, 'text/csv', textToBase64(csv));
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     setGenerating(true);
-    setTimeout(() => {
+    setExportError('');
+    try {
       if (format === 'csv') {
-        generateCSV();
+        await generateCSV();
       } else {
-        generatePDF();
+        await generatePDF();
       }
+    } catch {
+      setExportError('Could not save the file. Please try again.');
+    } finally {
       setGenerating(false);
-    }, 600);
+    }
   };
 
   return (
@@ -1039,6 +1040,9 @@ export default function ExportReportsPage() {
                   <p className="text-center text-xs text-on-surface-variant mt-3">
                     {format === 'pdf' ? 'PDF document' : 'CSV spreadsheet'}
                   </p>
+                  {exportError && (
+                    <p className="text-center text-xs text-error mt-2">{exportError}</p>
+                  )}
                 </div>
 
                 <button className="w-full border border-outline text-on-surface hover:bg-surface-container text-label-md py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-all active:scale-95">

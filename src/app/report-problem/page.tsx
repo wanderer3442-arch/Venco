@@ -1,15 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { Send, CheckCircle, MessageSquareWarning } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Send, CheckCircle, MessageSquareWarning, Mail } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
-const FORMSPREE_ENDPOINT = 'https://formspree.io/f/YOUR_FORM_ID';
+const SUPPORT_EMAIL = 'gymathome@gmail.com';
 
 const categories = [
   'Bug report',
   'Feature request',
-  'Payment issue',
   'AI chatbot issue',
   'Something else',
 ];
@@ -19,37 +18,30 @@ export default function ReportProblemPage() {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
-  const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
-  const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const cat = params.get('cat');
+    const sub = params.get('sub');
+    if (cat && categories.includes(cat)) setCategory(cat);
+    if (sub) setSubject(sub.slice(0, 120));
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSending(true);
-    setError('');
-    try {
-      const res = await fetch(FORMSPREE_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({
-          category,
-          subject,
-          message,
-          email,
-          page: 'Gym at Home app',
-          time: new Date().toISOString(),
-        }),
-      });
-      if (res.ok) {
-        setSent(true);
-      } else {
-        setError('Could not send right now. Please try again later.');
-      }
-    } catch {
-      setError('Could not send right now. Please try again later.');
-    } finally {
-      setSending(false);
-    }
+    const subjectLine = `[${category}] ${subject}`;
+    const body = [
+      message,
+      '',
+      '---',
+      'App: Gym at Home',
+      `Category: ${category}`,
+      `Sent: ${new Date().toISOString()}`,
+      `Reply to: ${email || 'not provided'}`,
+    ].join('\n');
+    window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subjectLine)}&body=${encodeURIComponent(body)}`;
+    setSent(true);
   };
 
   if (sent) {
@@ -59,9 +51,15 @@ export default function ReportProblemPage() {
           <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto">
             <CheckCircle className="w-8 h-8 text-success" />
           </div>
-          <h2 className="text-headline-lg font-bold text-on-surface">Thanks — report sent</h2>
+          <h2 className="text-headline-lg font-bold text-on-surface">Email draft opened</h2>
           <p className="text-body-md text-on-surface-variant">
-            We&apos;ll look into it. If you left an email, we may follow up.
+            Send it from your email app and we&apos;ll get back to you.
+          </p>
+          <p className="text-body-md text-on-surface-variant">
+            Or write to us directly:{' '}
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="text-primary font-medium underline underline-offset-2">
+              {SUPPORT_EMAIL}
+            </a>
           </p>
         </div>
       </DashboardLayout>
@@ -127,24 +125,22 @@ export default function ReportProblemPage() {
               className="w-full h-11 px-3 bg-surface-container rounded-xl border border-outline-variant text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary"
             />
           </div>
-
-          {error && <p className="text-sm text-error">{error}</p>}
         </div>
 
         <button
           type="submit"
-          disabled={sending}
-          className="w-full h-12 bg-primary text-on-primary rounded-xl text-label-md font-bold hover:bg-primary/90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+          className="w-full h-12 bg-primary text-on-primary rounded-xl text-label-md font-bold hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
         >
-          {sending ? (
-            <div className="w-5 h-5 border-2 border-on-primary/30 border-t-on-primary rounded-full animate-spin" />
-          ) : (
-            <>
-              Send report
-              <Send className="w-4 h-4" />
-            </>
-          )}
+          Open email to send
+          <Send className="w-4 h-4" />
         </button>
+
+        <p className="text-center text-body-md text-on-surface-variant flex items-center justify-center gap-1.5">
+          <Mail className="w-4 h-4" />
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="underline underline-offset-2">
+            {SUPPORT_EMAIL}
+          </a>
+        </p>
       </form>
     </DashboardLayout>
   );

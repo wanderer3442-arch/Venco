@@ -16,6 +16,7 @@ import {
   LogOut,
   MessageSquareWarning,
   Terminal,
+  ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useSidebar } from '@/lib/sidebar-context';
@@ -31,6 +32,7 @@ const navItems = [
   { href: '/export-reports', label: 'Download', icon: Download },
   { href: '/profile', label: 'Profile', icon: User },
   { href: '/report-problem', label: 'Report a Problem', icon: MessageSquareWarning },
+  { href: '/privacy', label: 'Privacy Policy', icon: ShieldCheck },
 ];
 
 export default function Sidebar() {

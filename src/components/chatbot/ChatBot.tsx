@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { Send, X, MessageCircle, Bot, User, Sparkles, Minimize2 } from 'lucide-react';
+import Link from 'next/link';
+import { Send, X, MessageCircle, Bot, User, Sparkles, Minimize2, Flag } from 'lucide-react';
 import { getChatResponse, hasGeminiKey } from '@/lib/ai-service';
 import { findResponse, getFollowUps } from '@/lib/chatbot-responses';
 import { sumMealNutrition, estimateExerciseCalories } from '@/lib/calculations';
@@ -27,6 +28,8 @@ interface ChatBotProps {
   mode?: 'floating' | 'inline';
   onClose?: () => void;
 }
+
+const AI_REPORT_HREF = `/report-problem?cat=${encodeURIComponent('AI chatbot issue')}&sub=${encodeURIComponent('Issue with an AI response')}`;
 
 const FREE_DAILY_LIMIT = 30;
 
@@ -275,7 +278,18 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
                 >
                   {msg.content}
                 </div>
-                <p className="text-xs text-on-surface-variant mt-1">{msg.timestamp}</p>
+                <div className="flex items-center gap-1 mt-1">
+                  <p className="text-xs text-on-surface-variant">{msg.timestamp}</p>
+                  {msg.role === 'assistant' && (
+                    <Link
+                      href={AI_REPORT_HREF}
+                      aria-label="Report this AI response"
+                      className="inline-flex items-center justify-center w-9 h-9 -my-1.5 text-on-surface-variant/50 hover:text-error transition-colors"
+                    >
+                      <Flag className="w-3.5 h-3.5" />
+                    </Link>
+                  )}
+                </div>
                 {msg.followUps && msg.followUps.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-2">
                     {msg.followUps.map((followUp, i) => (
@@ -427,7 +441,18 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
                   >
                     {msg.content}
                   </div>
-                  <p className="text-[10px] text-on-surface-variant mt-0.5">{msg.timestamp}</p>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <p className="text-[10px] text-on-surface-variant">{msg.timestamp}</p>
+                    {msg.role === 'assistant' && (
+                      <Link
+                        href={AI_REPORT_HREF}
+                        aria-label="Report this AI response"
+                        className="inline-flex items-center justify-center w-9 h-9 -my-2 text-on-surface-variant/50 hover:text-error transition-colors"
+                      >
+                        <Flag className="w-3.5 h-3.5" />
+                      </Link>
+                    )}
+                  </div>
                   {msg.followUps && msg.followUps.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1.5">
                       {msg.followUps.map((followUp, i) => (

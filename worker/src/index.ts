@@ -3,7 +3,7 @@ export interface Env {
 }
 
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
-const DEFAULT_MODEL = 'gemini-2.5-flash-lite';
+const DEFAULT_MODEL = 'gemini-3.6-flash';
 
 // Keep below Gemini free-tier 15 RPM. Window is per isolate (best-effort).
 const RPM_LIMIT = 12;
@@ -62,10 +62,10 @@ export default {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-goog-api-key': env.GEMINI_API_KEY,
+        Authorization: `Bearer ${env.GEMINI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: typeof body.model === 'string' && body.model ? body.model : DEFAULT_MODEL,
+        model: DEFAULT_MODEL,
         messages: body.messages,
         max_tokens: typeof body.max_tokens === 'number' ? Math.min(Math.max(body.max_tokens, 1), 2048) : 768,
         temperature: typeof body.temperature === 'number' ? body.temperature : 0.7,

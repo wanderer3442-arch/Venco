@@ -3,7 +3,7 @@ import { FoodItem } from './types';
 
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
 
-const GEMINI_MODEL = 'gemini-2.5-flash-lite';
+const GEMINI_MODEL = 'gemini-3.6-flash';
 
 // Cloudflare Worker proxy — key lives server-side, never in the app.
 const AI_PROXY_URL = (process.env.NEXT_PUBLIC_AI_PROXY_URL || '').trim().replace(/\/+$/, '');

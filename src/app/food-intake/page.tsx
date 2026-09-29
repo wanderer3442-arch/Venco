@@ -428,9 +428,9 @@ export default function FoodIntakePage() {
                 <div className={`flex items-center justify-between p-4 ${meal.bg} border-b border-outline-variant/20`}>
                   <div className="flex items-center gap-2">
                     <Icon className={`w-4 h-4 ${meal.color}`} />
-                    <h4 className="text-body-md font-bold text-on-surface capitalize">{meal.id}</h4>
+                    <h4 className="text-body-md font-bold text-gray-900 capitalize">{meal.id}</h4>
                   </div>
-                  <span className="text-sm font-semibold text-on-surface-variant">
+                  <span className="text-sm font-semibold text-gray-600">
                     {entries.reduce((sum, s) => sum + s.calories * (s.quantity || 1), 0)} kcal
                   </span>
                 </div>
@@ -466,9 +466,9 @@ export default function FoodIntakePage() {
               return (
                 <div key={meal.id} className={`${meal.bg} rounded-lg p-3 text-center`}>
                   <Icon className={`w-5 h-5 ${meal.color} mx-auto mb-1`} />
-                  <p className="text-xs text-on-surface-variant capitalize">{meal.id}</p>
-                  <p className="text-body-lg font-bold text-on-surface">{cals}</p>
-                  <p className="text-xs text-on-surface-variant">kcal</p>
+                  <p className="text-xs text-gray-600 capitalize">{meal.id}</p>
+                  <p className="text-body-lg font-bold text-gray-900">{cals}</p>
+                  <p className="text-xs text-gray-600">kcal</p>
                 </div>
               );
             })}

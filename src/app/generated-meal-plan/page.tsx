@@ -338,8 +338,8 @@ export default function GeneratedMealPlanPage() {
               <div className="space-y-3">
                 {recommendations.eatMore.map((rec, i) => (
                   <div key={i} className="p-3 bg-green-50 rounded-lg border border-green-200">
-                    <p className="text-sm font-bold text-on-surface">{rec.name}</p>
-                    <p className="text-xs text-on-surface-variant">{rec.reason}</p>
+                    <p className="text-sm font-bold text-gray-900">{rec.name}</p>
+                    <p className="text-xs text-gray-600">{rec.reason}</p>
                     <p className="text-xs text-green-600 mt-1">{rec.benefit}</p>
                   </div>
                 ))}
@@ -359,8 +359,8 @@ export default function GeneratedMealPlanPage() {
               <div className="space-y-3">
                 {recommendations.eatLess.map((rec, i) => (
                   <div key={i} className="p-3 bg-amber-50 rounded-lg border border-amber-200">
-                    <p className="text-sm font-bold text-on-surface">{rec.name}</p>
-                    <p className="text-xs text-on-surface-variant">{rec.reason}</p>
+                    <p className="text-sm font-bold text-gray-900">{rec.name}</p>
+                    <p className="text-xs text-gray-600">{rec.reason}</p>
                     <p className="text-xs text-amber-600 mt-1">{rec.impact}</p>
                   </div>
                 ))}
@@ -385,8 +385,8 @@ export default function GeneratedMealPlanPage() {
                     <AlertTriangle className="w-4 h-4 text-red-600" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-on-surface">{item.name}</p>
-                    <p className="text-xs text-on-surface-variant">{item.reason}</p>
+                    <p className="text-sm font-bold text-gray-900">{item.name}</p>
+                    <p className="text-xs text-gray-600">{item.reason}</p>
                   </div>
                 </div>
               ))}

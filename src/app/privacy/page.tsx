@@ -57,8 +57,8 @@ export default function PrivacyPage() {
           </div>
           <p className="text-body-md text-on-surface-variant leading-relaxed">
             Questions about privacy or your data? Email{' '}
-            <a href="mailto:gymathome@gmail.com" className="text-primary font-medium underline underline-offset-2">
-              gymathome@gmail.com
+            <a href="mailto:gymathome.app@gmail.com" className="text-primary font-medium underline underline-offset-2">
+              gymathome.app@gmail.com
             </a>
             .
           </p>

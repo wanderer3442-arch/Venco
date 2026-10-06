@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Send, CheckCircle, MessageSquareWarning, Mail } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
-const SUPPORT_EMAIL = 'gymathome@gmail.com';
+const SUPPORT_EMAIL = 'gymathome.app@gmail.com';
 
 const categories = [
   'Bug report',
@@ -19,6 +19,8 @@ export default function ReportProblemPage() {
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
+  const [links, setLinks] = useState<{ gmail: string; mailto: string; text: string } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -40,8 +42,30 @@ export default function ReportProblemPage() {
       `Sent: ${new Date().toISOString()}`,
       `Reply to: ${email || 'not provided'}`,
     ].join('\n');
-    window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subjectLine)}&body=${encodeURIComponent(body)}`;
+    const mailto = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subjectLine)}&body=${encodeURIComponent(body)}`;
+    const gmail = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(SUPPORT_EMAIL)}&su=${encodeURIComponent(subjectLine)}&body=${encodeURIComponent(body)}`;
+    setLinks({ gmail, mailto, text: `${subjectLine}\n\n${body}` });
+
+    // Desktop often has no default mail client (mailto: silently fails) — open
+    // a Gmail compose tab instead. Mobile gets the native email app.
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.location.href = mailto;
+    } else {
+      window.open(gmail, '_blank', 'noopener,noreferrer');
+    }
     setSent(true);
+  };
+
+  const handleCopy = async () => {
+    if (!links) return;
+    try {
+      await navigator.clipboard.writeText(links.text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard unavailable */
+    }
   };
 
   if (sent) {
@@ -51,10 +75,35 @@ export default function ReportProblemPage() {
           <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto">
             <CheckCircle className="w-8 h-8 text-success" />
           </div>
-          <h2 className="text-headline-lg font-bold text-on-surface">Email draft opened</h2>
+          <h2 className="text-headline-lg font-bold text-on-surface">Report ready to send</h2>
           <p className="text-body-md text-on-surface-variant">
-            Send it from your email app and we&apos;ll get back to you.
+            Finish sending it in the draft we opened — or pick another way below.
           </p>
+          <div className="flex flex-col gap-3 pt-1">
+            <a
+              href={links?.gmail}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full h-12 bg-primary text-on-primary rounded-xl text-label-md font-bold hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
+            >
+              Open Gmail draft
+              <Send className="w-4 h-4" />
+            </a>
+            <a
+              href={links?.mailto}
+              className="w-full h-12 bg-surface-container border border-outline-variant text-on-surface rounded-xl text-label-md font-semibold hover:border-primary transition-all flex items-center justify-center gap-2"
+            >
+              <Mail className="w-4 h-4" />
+              Open in email app
+            </a>
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="w-full h-12 bg-surface-container border border-outline-variant text-on-surface rounded-xl text-label-md font-semibold hover:border-primary transition-all flex items-center justify-center gap-2"
+            >
+              {copied ? 'Copied!' : 'Copy report text'}
+            </button>
+          </div>
           <p className="text-body-md text-on-surface-variant">
             Or write to us directly:{' '}
             <a href={`mailto:${SUPPORT_EMAIL}`} className="text-primary font-medium underline underline-offset-2">

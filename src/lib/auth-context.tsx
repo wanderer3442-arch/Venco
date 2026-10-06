@@ -18,6 +18,7 @@ const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 // Accounts matching these get role: 'admin' automatically (Dev Console access).
 // Comparison is case-insensitive. Password is never stored here.
 const DEVELOPER_EMAILS = new Set<string>([
+  'gymathome.app@gmail.com',
   'gymathome@gmail.com',
 ]);
 const DEVELOPER_USERNAMES = new Set<string>([

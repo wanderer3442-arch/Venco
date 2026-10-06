@@ -311,13 +311,6 @@ export default function ExercisePlanPage() {
           </div>
           <div className="flex gap-3 flex-wrap">
             <button
-              onClick={openSplitEditor}
-              className="px-4 py-2 rounded-lg bg-surface-container text-on-surface text-label-md font-medium hover:bg-surface-container-high transition-colors shadow-sm flex items-center gap-2 border border-outline-variant"
-            >
-              <Settings className="w-5 h-5" />
-              Edit Split
-            </button>
-            <button
               onClick={generatePlan}
               className="px-4 py-2 rounded-lg bg-primary text-on-primary text-label-md font-medium hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-2"
             >
@@ -339,25 +332,25 @@ export default function ExercisePlanPage() {
         {/* Plan Overview */}
         <div className="bg-surface rounded-xl border border-outline-variant shadow-[0_4px_15px_-3px_rgba(15,23,42,0.04)] overflow-hidden">
           <div className="px-5 py-4 border-b border-outline-variant/40 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                 <Activity className="w-5 h-5 text-primary" />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-headline-md font-semibold text-on-surface">Plan Overview</h2>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <h2 className="text-headline-md font-semibold text-on-surface truncate">Plan Overview</h2>
                   {plan && (
-                    <span className="bg-primary text-on-primary px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                    <span className="bg-primary text-on-primary px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0">
                       Active
                     </span>
                   )}
                 </div>
-                <p className="text-label-md text-on-surface-variant mt-0.5">
+                <p className="text-label-md text-on-surface-variant mt-0.5 truncate">
                   {plan ? plan.name : 'No plan generated yet'}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={openSplitEditor}
                 className="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface text-label-md font-medium hover:bg-surface-container-high transition-colors border border-outline-variant/60 flex items-center gap-1.5"
@@ -890,16 +883,16 @@ export default function ExercisePlanPage() {
                     const query = e.target.value.toLowerCase();
                     setSelectedExercise(query);
                   }}
-                  className="flex-1 h-10 px-4 rounded-lg border border-outline-variant bg-surface-container-lowest text-body-md outline-none focus:border-primary"
+                  className="flex-1 min-w-0 h-10 px-4 rounded-lg border border-outline-variant bg-surface-container-lowest text-body-md outline-none focus:border-primary"
                 />
-                <div className="relative w-28 shrink-0">
+                <div className="relative w-20 sm:w-28 shrink-0">
                   <input
                     type="number"
                     step="0.5"
                     min="0"
                     value={addWeight}
                     onChange={(e) => setAddWeight(e.target.value)}
-                    placeholder="kg"
+                    placeholder="0"
                     className="w-full h-10 px-3 pr-7 rounded-lg border border-outline-variant bg-surface-container-lowest text-body-md outline-none focus:border-primary"
                   />
                   <span className="absolute right-2 top-1/2 -translate-y-1/2 text-label-md text-on-surface-variant">kg</span>

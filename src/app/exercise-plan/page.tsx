@@ -80,13 +80,27 @@ export default function ExercisePlanPage() {
       grouped[ex.day].push(ex);
     });
     const planSplit = plan.split && plan.split.length > 0 ? plan.split : undefined;
-    return Object.entries(grouped).map(([day, exercises], idx) => ({
-      day,
-      label: planSplit?.[idx]
-        ? planSplit[idx].map((g) => muscleLabels[g] || g).join(' + ')
-        : day,
-      exercises,
-    }));
+    if (!planSplit) {
+      return Object.entries(grouped).map(([day, exs]) => ({
+        day,
+        label: day,
+        exercises: exs,
+      }));
+    }
+    // Derive days from the split so every planned day shows (even when empty)
+    // and labels stay aligned with their day.
+    const days = planSplit.map((groups, idx) => {
+      const day = PLAN_DAY_NAMES[idx] || `Day ${idx + 1}`;
+      return {
+        day,
+        label: groups.map((g) => muscleLabels[g] || g).join(' + '),
+        exercises: grouped[day] || [],
+      };
+    });
+    Object.entries(grouped).forEach(([day, exs]) => {
+      if (!days.some((d) => d.day === day)) days.push({ day, label: day, exercises: exs });
+    });
+    return days;
   }, [plan]);
 
   const todayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date().getDay()];
@@ -192,9 +206,15 @@ export default function ExercisePlanPage() {
   };
 
   const addExerciseToDay = (day: string, exerciseId: string) => {
-    if (!plan) return;
+    if (!plan || !day) return;
     const dbEx = exercises.find((e) => e.id === exerciseId);
     if (!dbEx) return;
+    // Skip duplicates — same exerciseId twice in one day breaks React keys.
+    if (plan.exercises.some((e) => e.day === day && e.exerciseId === exerciseId)) {
+      setShowAddModal(false);
+      setAddWeight('');
+      return;
+    }
     const parsedWeight = parseFloat(addWeight);
     const weight = !isNaN(parsedWeight) && parsedWeight > 0
       ? Math.round(parsedWeight * 2) / 2
@@ -704,6 +724,11 @@ export default function ExercisePlanPage() {
               {/* Exercise Database Quick Access */}
               <div className="bg-surface rounded-xl border border-outline-variant shadow-sm p-4">
                 <h3 className="text-headline-md text-on-surface mb-3 text-lg">Quick Add</h3>
+                {planDays.length === 0 ? (
+                  <p className="text-label-md text-on-surface-variant">
+                    No training days yet — generate your plan first.
+                  </p>
+                ) : (
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {filteredExercises.slice(0, 8).map((ex) => (
                     <button
@@ -722,6 +747,7 @@ export default function ExercisePlanPage() {
                     </button>
                   ))}
                 </div>
+                )}
               </div>
             </div>
           </div>
@@ -880,7 +906,12 @@ export default function ExercisePlanPage() {
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                {filteredExercises
+                {planDays.length === 0 ? (
+                  <p className="text-body-md text-on-surface-variant text-center py-8">
+                    No training days yet — generate your plan first.
+                  </p>
+                ) : (
+                filteredExercises
                   .filter((ex) => !selectedExercise || ex.name.toLowerCase().includes(selectedExercise.toLowerCase()))
                   .map((ex) => (
                     <button
@@ -900,7 +931,8 @@ export default function ExercisePlanPage() {
                       </div>
                       <Plus className="w-5 h-5 text-primary" />
                     </button>
-                  ))}
+                  ))
+                )}
               </div>
             </div>
           </div>

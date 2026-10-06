@@ -47,9 +47,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} h-full`} data-scroll-behavior="smooth">
       <head>
-        <meta http-equiv="Content-Security-Policy" content={CONTENT_SECURITY_POLICY} />
-        <meta http-equiv="X-Frame-Options" content="DENY" />
-        <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+        <meta httpEquiv="Content-Security-Policy" content={CONTENT_SECURITY_POLICY} />
+        <meta httpEquiv="X-Frame-Options" content="DENY" />
+        <meta httpEquiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
       </head>
       <body className="min-h-full bg-surface text-on-surface antialiased">
         <DatabaseInit>

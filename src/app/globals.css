@@ -112,6 +112,11 @@ body {
   border-radius: var(--radius-md);
 }
 
+/* Danger-modal confirm input: tint the standard focus ring to match the error tone */
+#delete-confirm:focus-visible {
+  outline-color: var(--color-error);
+}
+
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }

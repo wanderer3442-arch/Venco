@@ -18,7 +18,9 @@ import {
   User,
   FileText,
   CheckCircle,
+  ArrowRight,
 } from 'lucide-react';
+import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { useStore } from '@/lib/store-context';
 import { allFoods } from '@/lib/food-database';
@@ -64,11 +66,23 @@ export default function ExportReportsPage() {
   const [includeNotes, setIncludeNotes] = useState(true);
   const [reportId, setReportId] = useState('');
   const [reportDate, setReportDate] = useState('');
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     setReportId(Date.now().toString(36).toUpperCase().slice(-6));
     setReportDate(new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }));
+    setHydrated(true);
   }, []);
+
+  const profileComplete = Boolean(
+    hydrated &&
+      profile?.age &&
+      profile?.height &&
+      profile?.weight &&
+      profile?.gender &&
+      profile?.activityLevel &&
+      profile?.goal
+  );
 
   const toggleSection = (id: string) => {
     setCheckedSections((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -569,6 +583,10 @@ export default function ExportReportsPage() {
   };
 
   const handleExport = async () => {
+    if (!profileComplete) {
+      setExportError('Complete your profile in Essentials first.');
+      return;
+    }
     setGenerating(true);
     setExportError('');
     try {
@@ -587,18 +605,28 @@ export default function ExportReportsPage() {
   return (
     <DashboardLayout title="Download Hub" subtitle="Export your personalized fitness and nutrition protocol">
       <div className="max-w-7xl mx-auto pb-8">
-        <div className="mb-8">
-          <h1 className="text-headline-lg font-bold text-on-surface tracking-tight mb-2">Download Hub</h1>
-          <p className="text-body-lg text-on-surface-variant max-w-2xl">
-            Export your personalized fitness and nutrition protocol. Select your format and data preferences below.
-          </p>
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8 xl:col-span-9 order-2 lg:order-1">
             <div className="bg-surface-container-low rounded-xl p-2 sm:p-4 md:p-6 flex items-center justify-center min-h-[400px] md:min-h-[800px] overflow-x-auto relative">
               <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#6c7a71 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
 
+              {!hydrated ? (
+                <div
+                  className="bg-white w-full max-w-3xl aspect-[1/1.414] rounded-sm relative z-10 animate-pulse p-8 sm:p-10 space-y-5"
+                  style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)' }}
+                >
+                  <div className="h-6 w-40 bg-gray-200 rounded" />
+                  <div className="h-3 w-56 bg-gray-100 rounded" />
+                  <div className="h-24 w-full bg-gray-100 rounded" />
+                  <div className="h-4 w-1/3 bg-gray-200 rounded" />
+                  <div className="grid grid-cols-4 gap-3">
+                    <div className="h-16 bg-gray-100 rounded-lg" />
+                    <div className="h-16 bg-gray-100 rounded-lg" />
+                    <div className="h-16 bg-gray-100 rounded-lg" />
+                    <div className="h-16 bg-gray-100 rounded-lg" />
+                  </div>
+                </div>
+              ) : profileComplete ? (
               <div className="bg-white w-full max-w-3xl aspect-[1/1.414] rounded-sm relative z-10 flex flex-col scale-95 md:scale-100 transform origin-top transition-transform hover:scale-[1.01] duration-300 overflow-hidden min-w-[320px]" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)' }}>
 
                 {/* Report Header */}
@@ -944,11 +972,35 @@ export default function ExportReportsPage() {
                 </div>
 
               </div>
+              ) : (
+                <div
+                  className="bg-white w-full max-w-3xl aspect-[1/1.414] rounded-sm relative z-10 flex flex-col items-center justify-center text-center px-8 sm:px-10"
+                  style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)' }}
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-[#006C49]/10 flex items-center justify-center mb-5">
+                    <FileText className="w-7 h-7 text-[#006C49]" />
+                  </div>
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">
+                    Complete your profile to generate your report
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-500 max-w-sm mb-6 leading-relaxed">
+                    Your nutrition targets, workout plan and health metrics are calculated from your Essentials stats.
+                    Fill them in once and your personalized protocol will appear here.
+                  </p>
+                  <Link
+                    href="/calculator"
+                    className="inline-flex items-center gap-2 bg-[#006C49] text-white text-xs sm:text-sm font-bold px-5 py-3 rounded-lg hover:bg-[#004D33] transition-colors"
+                  >
+                    Open Essentials
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
 
           <div className="lg:col-span-4 xl:col-span-3 order-1 lg:order-2">
-            <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-xl p-6 sticky top-24 shadow-sm">
+            <div className="bg-surface-container-low border border-outline-variant/40 rounded-xl p-6 pb-24 sticky top-24 shadow-sm max-h-[calc(100vh-8rem)] overflow-y-auto">
               <h3 className="text-headline-md font-bold text-on-surface mb-6 border-b border-outline-variant/30 pb-4">Export Settings</h3>
               <div className="space-y-6">
                 <div>
@@ -1027,8 +1079,8 @@ export default function ExportReportsPage() {
                 <div className="pt-6 mt-2 border-t border-outline-variant/20">
                   <button
                     onClick={handleExport}
-                    disabled={generating}
-                    className="w-full bg-primary hover:bg-primary/90 text-on-primary text-label-md font-bold py-4 rounded-lg shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+                    disabled={generating || !profileComplete}
+                    className="w-full bg-primary hover:bg-primary/90 text-on-primary text-label-md font-bold py-4 rounded-lg shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {generating ? (
                       <span className="w-5 h-5 border-2 border-on-primary/30 border-t-on-primary rounded-full animate-spin" />
@@ -1038,7 +1090,11 @@ export default function ExportReportsPage() {
                     {generating ? 'Generating...' : 'Download Now'}
                   </button>
                   <p className="text-center text-xs text-on-surface-variant mt-3">
-                    {format === 'pdf' ? 'PDF document' : 'CSV spreadsheet'}
+                    {!profileComplete
+                      ? 'Complete your profile in Essentials to enable export'
+                      : format === 'pdf'
+                        ? 'PDF document'
+                        : 'CSV spreadsheet'}
                   </p>
                   {exportError && (
                     <p className="text-center text-xs text-error mt-2">{exportError}</p>

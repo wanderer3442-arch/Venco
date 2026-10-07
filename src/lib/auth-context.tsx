@@ -46,6 +46,7 @@ interface AuthContextType extends AuthState {
   signup: (email: string, username: string, password: string) => Promise<{ success: boolean; error?: string }>;
   login: (emailOrUsername: string, password: string) => Promise<{ success: boolean; error?: string; lockoutSeconds?: number }>;
   logout: () => void;
+  deleteAccount: () => void;
   updateUsername: (username: string) => void;
 }
 
@@ -306,6 +307,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('gymathome_auth');
   };
 
+  // ─── Delete Account ─────────────────────────────────────────────────────────
+  // Permanently removes the user record, all of their stored app data
+  // (meals, workouts, metrics, badges, preferences) and the session.
+  // Everything lives on-device, so this is a complete erasure.
+
+  const deleteAccount = () => {
+    const userId = authState.user?.id;
+    if (userId) {
+      saveUsers(getUsers().filter((u) => u.id !== userId));
+      localStorage.removeItem(`gymathome_store_${userId}`);
+    }
+    localStorage.removeItem('gymathome_auth');
+    setAuthState({ user: null, isAuthenticated: false });
+  };
+
   // ─── Update Username ─────────────────────────────────────────────────────────
 
   const updateUsername = (username: string) => {
@@ -330,7 +346,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ ...authState, signup, login, logout, updateUsername }}>
+    <AuthContext.Provider value={{ ...authState, signup, login, logout, deleteAccount, updateUsername }}>
       {children}
     </AuthContext.Provider>
   );

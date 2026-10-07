@@ -13,6 +13,9 @@ import {
   Save,
   CheckCircle,
   Award,
+  Trash2,
+  TriangleAlert,
+  X,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -26,9 +29,12 @@ import {
 import { useAuth } from '@/lib/auth-context';
 import { useStore } from '@/lib/store-context';
 import { estimateExerciseCalories } from '@/lib/calculations';
+import { useBackHandler } from '@/lib/back-handler';
+import { useRouter } from 'next/navigation';
 
 export default function ProfilePage() {
-  const { user, updateUsername } = useAuth();
+  const { user, updateUsername, deleteAccount } = useAuth();
+  const router = useRouter();
   const {
     profile,
     updateProfile,
@@ -53,6 +59,10 @@ export default function ProfilePage() {
   const [editGoal, setEditGoal] = useState(profile.goal || 'maintain');
   const [editActivity, setEditActivity] = useState(profile.activityLevel || 'moderate');
   const [saved, setSaved] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+
+  useBackHandler(showDeleteModal, () => setShowDeleteModal(false));
 
   const totalWorkouts = exercises.length;
   const totalMealsLogged = meals.length;
@@ -481,6 +491,107 @@ export default function ProfilePage() {
             )}
           </div>
         </div>
+
+        {/* Danger zone — account deletion */}
+        <div className="bg-surface rounded-xl border border-error/40 p-6 mt-6">
+          <h2 className="text-headline-md font-semibold text-on-surface mb-2 flex items-center gap-2">
+            <Trash2 className="w-5 h-5 text-error" />
+            Delete Account
+          </h2>
+          <p className="text-sm text-on-surface-variant mb-1">
+            Permanently deletes your account and every workout, meal, health metric, badge and preference
+            stored on this device. This cannot be undone.
+          </p>
+          <p className="text-sm text-on-surface-variant mb-4">
+            Want a backup first?{' '}
+            <a href="/export-reports" className="text-primary font-medium underline underline-offset-2">
+              Export your data
+            </a>
+            .
+          </p>
+          <button
+            onClick={() => {
+              setDeleteConfirmText('');
+              setShowDeleteModal(true);
+            }}
+            className="px-4 py-2.5 rounded-lg border border-error text-error text-sm font-semibold hover:bg-error/5 active:scale-98 transition"
+          >
+            Delete account…
+          </button>
+        </div>
+
+        {/* Delete confirmation modal */}
+        {showDeleteModal && (
+          <div
+            className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 sm:p-4"
+            onClick={() => setShowDeleteModal(false)}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-account-title"
+          >
+            <div
+              className="bg-surface rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md p-6 border border-outline-variant shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-full bg-error-container">
+                    <TriangleAlert className="w-5 h-5 text-error" />
+                  </div>
+                  <h3 id="delete-account-title" className="text-lg font-semibold text-on-surface">
+                    Delete account?
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  aria-label="Close"
+                  className="p-1.5 rounded-lg hover:bg-surface-container"
+                >
+                  <X className="w-5 h-5 text-on-surface-variant" />
+                </button>
+              </div>
+
+              <p className="text-sm text-on-surface-variant mb-4">
+                Your account and all data on this device will be erased immediately &mdash; profile,
+                workouts, meals, metrics and badges. This cannot be recovered.
+              </p>
+
+              <label htmlFor="delete-confirm" className="block text-sm text-on-surface mb-2">
+                Type <span className="font-bold">DELETE</span> to confirm
+              </label>
+              <input
+                id="delete-confirm"
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="DELETE"
+                autoCapitalize="characters"
+                autoComplete="off"
+                className="w-full px-4 py-3 rounded-lg border border-outline-variant bg-surface-container-low text-on-surface placeholder:text-on-surface-variant/60 focus:border-error"
+              />
+
+              <div className="flex gap-3 mt-5">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="flex-1 px-4 py-3 rounded-lg border border-outline-variant text-on-surface text-sm font-semibold hover:bg-surface-container"
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={deleteConfirmText.trim() !== 'DELETE'}
+                  onClick={() => {
+                    deleteAccount();
+                    setShowDeleteModal(false);
+                    router.push('/login');
+                  }}
+                  className="flex-1 px-4 py-3 rounded-lg bg-error text-white text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110"
+                >
+                  Delete forever
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

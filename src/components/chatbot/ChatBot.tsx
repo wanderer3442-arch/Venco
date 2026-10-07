@@ -33,6 +33,19 @@ const AI_REPORT_HREF = `/report-problem?cat=${encodeURIComponent('AI chatbot iss
 
 const FREE_DAILY_LIMIT = 30;
 
+// The AI sometimes emits markdown (**bold**, * bullets) — the chat renders plain
+// text, so convert it to real emphasis instead of showing raw asterisks.
+function renderContent(content: string) {
+  const normalized = content.replace(/^[\*\-]\s+/gm, '• ');
+  return normalized.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
+    part.startsWith('**') && part.endsWith('**') && part.length > 4 ? (
+      <strong key={i} className="font-semibold">{part.slice(2, -2)}</strong>
+    ) : (
+      <span key={i}>{part}</span>
+    )
+  );
+}
+
 function getChatCountKey(): string {
   const today = new Date().toISOString().split('T')[0];
   return `gymathome_chat_count_${today}`;
@@ -58,7 +71,7 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
     {
       id: 1,
       role: 'assistant',
-      content: "Hello! I'm V, your Gym at Home AI Health Assistant. How can I help you today?",
+      content: "Hey! I'm V 👋 — your gym buddy around here. What's on your mind today?",
       timestamp: '10:30 AM',
       followUps: ['Analyze my progress', 'Suggest a meal', 'Give me exercise tips'],
     },
@@ -79,7 +92,7 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
     setMessages(prev =>
       prev.map(m =>
         m.id === 1 && m.role === 'assistant'
-          ? { ...m, content: `Hello ${user.username}! I'm V, your Gym at Home AI Health Assistant. How can I help you today?` }
+          ? { ...m, content: `Hey ${user.username}! V here 👋 — good to see you! What are we working on today?` }
           : m
       )
     );
@@ -162,7 +175,7 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
       const limitMessage: Message = {
         id: messages.length + 1,
         role: 'assistant',
-        content: `You've reached today's limit of ${FREE_DAILY_LIMIT} messages. Try again tomorrow!`,
+        content: `Whoa — you hit today's ${FREE_DAILY_LIMIT}-message limit! Even gym buddies need a rest day 😅 Come back tomorrow and we'll keep going.`,
         timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
         followUps: ['Workout tips', 'Health tips'],
       };
@@ -275,10 +288,10 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
                       ? 'bg-primary text-on-primary rounded-tr-sm'
                       : 'bg-surface-container text-on-surface rounded-tl-sm'
                   }`}
-                >
-                  {msg.content}
-                </div>
-                <div className="flex items-center gap-1 mt-1">
+                  >
+                    {renderContent(msg.content)}
+                  </div>
+                  <div className="flex items-center gap-1 mt-1">
                   <p className="text-xs text-on-surface-variant">{msg.timestamp}</p>
                   {msg.role === 'assistant' && (
                     <Link
@@ -439,7 +452,7 @@ export default function ChatBot({ mode = 'floating', onClose }: ChatBotProps) {
                         : 'bg-surface-container text-on-surface rounded-tl-sm'
                     }`}
                   >
-                    {msg.content}
+                    {renderContent(msg.content)}
                   </div>
                   <div className="flex items-center gap-1 mt-0.5">
                     <p className="text-[10px] text-on-surface-variant">{msg.timestamp}</p>

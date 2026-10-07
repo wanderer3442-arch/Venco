@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // GYM AT HOME — CERTIFIED HEALTH, NUTRITION & EXERCISE KNOWLEDGE BASE
-// Sources: WHO, CDC, ACSM, AHA, USDA, NASM, ACE, Harvard T.H. Chan School
+// Sources: WHO, CDC, ACSM, AHA, USDA, ICMR-NIN (India), NASM, ACE, Harvard T.H. Chan School
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // ─── NUTRITION GUIDELINES (USDA DRI / WHO) ──────────────────────────────────
@@ -36,6 +36,39 @@ export const MACRO_GUIDELINES = {
     women: { target: 2.7, unit: 'L/day', source: 'IOM 2004' },
     exercise: { additional: '500-1000 mL per hour of exercise', source: 'ACSM' },
   },
+} as const;
+
+// ─── INDIAN NUTRITION GUIDELINES (ICMR-NIN 2020 / DGI 2024) ─────────────────
+
+export const INDIAN_GUIDELINES = {
+  protein: {
+    rda: { value: 0.83, unit: 'g/kg/day', note: 'safe intake for healthy sedentary adults (EAR 0.66)', source: 'ICMR-NIN 2020' },
+    sedentaryAdults: { men: 54, women: 46, unit: 'g/day', source: 'ICMR-NIN 2020' },
+    training: { min: 1.6, max: 2.2, unit: 'g/kg/day', note: 'DGI 2024: intakes above 1.6 g/kg add no further strength gains', source: 'ISSN 2017 / ICMR-NIN DGI 2024' },
+  },
+  macros: {
+    carbohydrate: { min: 50, max: 55, unit: '% energy', source: 'ICMR-NIN DGI 2024' },
+    protein: { min: 10, max: 15, unit: '% energy', source: 'ICMR-NIN DGI 2024' },
+    fat: { min: 20, max: 30, unit: '% energy', source: 'ICMR-NIN DGI 2024' },
+  },
+  limits: {
+    sugar: { max: 25, unit: 'g/day (or <5% of energy)', source: 'ICMR-NIN DGI 2024' },
+    salt: { max: 5, unit: 'g/day', source: 'ICMR-NIN DGI 2024 / WHO' },
+    cookingOil: { range: '25-30', unit: 'g/day', source: 'ICMR-NIN DGI 2024' },
+  },
+  fiber: { target: 30, unit: 'g/day (~40 g per 2000 kcal)', source: 'ICMR-NIN 2020' },
+  calcium: { target: 1000, unit: 'mg/day adults', source: 'ICMR-NIN 2020' },
+  myPlateForDay: {
+    note: 'ICMR-NIN "My Plate for the Day" for a 2000 kcal day',
+    foods: 'cereals/millets 250g, vegetables 400g, fruits 100g, pulses/egg/meat 85g, milk/curd 300mL, nuts & seeds 35g, fats & oils 27g',
+    source: 'ICMR-NIN DGI 2024',
+  },
+  indiaSpecificNotes: [
+    'B12 deficiency affects 43-67% of Indian children (ICMR-NIN study) — vegetarians should include curd, eggs, fortified foods or a B12 supplement',
+    'Indian diets have low iron bioavailability (phytate) — ICMR-NIN iron targets are much higher than US values, especially for women; pair dal/leafy greens with vitamin C',
+    'Whole foods first — DGI 2024 is cautious on routine protein supplements; shakes are a convenience, not a necessity',
+    'Everyday Indian protein per serving: 1 cup cooked dal ~12-15g, paneer 100g ~18g, egg ~6g, curd 100g ~3.5g, milk 250mL ~8g, 1 roti ~3g',
+  ],
 } as const;
 
 export const VITAMIN_RDA: Record<string, { rda: number; unit: string; foodSources: string[]; deficiency: string }> = {
@@ -513,4 +546,7 @@ export const FAQ: Record<string, { answer: string; source: string }> = {
   'stretching before or after workout': { answer: 'Dynamic stretching BEFORE workout (leg swings, arm circles). Static stretching AFTER workout (hold 30-60 seconds). Static stretching cold muscles can increase injury risk.', source: 'ACSM' },
   'how to improve flexibility': { answer: 'Static stretching after workouts: hold 30-60 seconds, 2-4 reps per muscle. Yoga 2-3x/week. Foam rolling. Daily mobility work. Consistency is key — flexibility takes weeks to improve.', source: 'ACSM' },
   'what foods to avoid': { answer: 'Limit: trans fats, excessive sugar, processed meats, excessive alcohol, sugary drinks, refined carbs (white bread, pastries), excessive sodium. Focus on whole, minimally processed foods.', source: 'Harvard T.H. Chan' },
+  'usda guidelines for indians': { answer: 'Yes — the core numbers (protein per kg, TDEE, hydration) are body-based and work for everyone. India adds its own layer: ICMR-NIN 2020 sets protein at 0.83 g/kg (vs USDA 0.8), fiber 30g/day, and DGI 2024 caps sugar at 25g and salt at 5g per day.', source: 'ICMR-NIN 2020 / DGI 2024' },
+  'icmr nin guidelines': { answer: "ICMR-NIN is India's national nutrition authority. Its 2020 RDA + 2024 Dietary Guidelines for Indians: protein 0.83 g/kg/day, fiber 30g/day, plate balance 50-55% carbs / 10-15% protein / 20-30% fat, sugar <25g/day, salt <5g/day, cooking oil 25-30g/day.", source: 'ICMR-NIN' },
+  'indian protein sources vegetarian': { answer: 'Solid Indian options: dal/khichdi ~12-15g per cup, paneer ~18g per 100g, eggs ~6g each, curd ~3.5g per 100g, milk ~8g per 250mL, sprouts, rajma, chana, soya chunks ~52g per 100g dry. Combine cereals + pulses for complete amino acids.', source: 'ICMR-NIN / IFCT 2017' },
 };

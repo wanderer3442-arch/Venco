@@ -37,9 +37,15 @@ export const chatResponses: ChatResponse[] = [
   },
   {
     keywords: ['who are you', 'what are you', 'tell me about yourself', 'your name'],
-    response: "I'm V — think of me as a fitness nerd who's read way too many research papers so you don't have to. I pull advice from WHO, CDC, Harvard, and sports nutrition guidelines to give you stuff that actually works.\n\nNot a doctor though — for medical stuff, always check with a real one.",
+    response: "I'm V — think of me as a fitness nerd who's read way too many research papers so you don't have to. I pull advice from WHO, CDC, Harvard, ICMR-NIN (India's guidelines), and sports nutrition research to give you stuff that actually works.\n\nNot a doctor though — for medical stuff, always check with a real one.",
     followUp: ['What can you do?', 'Health tips', 'Meal suggestions'],
     category: 'greeting',
+  },
+  {
+    keywords: ['icmr', 'icmr nin', 'indian guidelines', 'indian rda', 'rda for indians', 'dietary guidelines for indians', 'usda guidelines for indians', 'indian nutrition standards'],
+    response: `Great question — the global numbers work for Indians too, but we've got our own official guidelines as well:\n\n🇮🇳 ICMR-NIN (India's nutrition authority):\n• Protein: 0.83 g/kg/day for sedentary adults — training targets 1.6-2.2 g/kg, same as ISSN\n• Plate balance: 50-55% carbs, 10-15% protein, 20-30% fat\n• Fiber 30g/day | Calcium 1000mg/day\n• Limits: sugar <25g, salt <5g, cooking oil 25-30g per day\n\n🌍 vs USDA: nearly identical for active people — protein per kg, TDEE math and hydration are body-based, not country-based.\n\n💡 India-specific watch-outs: B12 (especially if vegetarian — curd, eggs, fortified foods) and iron (dal + greens + vitamin C helps absorption).`,
+    followUp: ['Indian food protein sources', 'Vegetarian B12 sources', 'Calculate my macros'],
+    category: 'nutrition',
   },
 
   // ─── NUTRITION — MACROS ────────────────────────────────────────────────────
